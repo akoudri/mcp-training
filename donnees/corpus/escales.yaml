@@ -1,0 +1,147 @@
+# Référence commune du corpus documentaire (sous-projet 1) et de la base PHAROS (sous-projet 3).
+operateur: "PHAROS — Société d'exploitation du terminal multivrac"
+escales:
+  - escale_id: ESC-2026-0405
+    navire: "Mistral Bleu"
+    imo: "9405117"
+    quai: 1
+    debut: 2026-10-05T07:00:00+02:00
+    fin: 2026-10-05T19:00:00+02:00
+    armateur: "Compagnie Armoricaine de Navigation"
+    agent: "Agence Maritime Rance"
+    contrat:
+      document_id: CM-0405
+      nb_pages: 44
+      signature: 2026-01-12
+      prise_effet: 2026-02-01
+      echeance: 2027-01-31
+      sujets: [penalites, delais, manutention, assurance]
+      valeurs: {montant_horaire: 1200, franchise_h: 4, plafond: 28800, delai_mise_a_quai_h: 3, cadence_min: 22, nb_portiques: 2, montant_garanti: 2500000, assureur: "Mutuelle Maritime de l'Ouest"}
+    connaissements: [{document_id: BL-0405-1, nb_pages: 2}]
+    avis_escale: {document_id: AE-0405, nb_pages: 1}
+
+  - escale_id: ESC-2026-0406
+    navire: "Cap Fréhel"
+    imo: "9406228"
+    quai: 2
+    debut: 2026-10-05T13:00:00+02:00
+    fin: 2026-10-06T02:00:00+02:00
+    armateur: "Transports Maritimes du Ponant"
+    agent: "Consignation Iroise"
+    contrat: null            # escale SANS contrat de manutention (erreur métier du LAB 1)
+    connaissements: [{document_id: BL-0406-1, nb_pages: 1}, {document_id: BL-0406-2, nb_pages: 2}]
+    avis_escale: {document_id: AE-0406, nb_pages: 1}
+
+  - escale_id: ESC-2026-0408
+    navire: "Île de Sein"
+    imo: "9408440"
+    quai: 3
+    debut: 2026-10-06T06:00:00+02:00
+    fin: 2026-10-06T18:00:00+02:00
+    armateur: "Compagnie Armoricaine de Navigation"
+    agent: "Agence Maritime Rance"
+    contrat:
+      document_id: CM-0408
+      nb_pages: 48
+      signature: 2025-11-03
+      prise_effet: 2026-01-01
+      echeance: 2026-12-31
+      sujets: [penalites, delais, manutention]   # contrat SANS clause d'assurance
+      valeurs: {montant_horaire: 1500, franchise_h: 6, plafond: 36000, delai_mise_a_quai_h: 4, cadence_min: 25, nb_portiques: 2}
+    connaissements: [{document_id: BL-0408-1, nb_pages: 2}]
+    avis_escale: {document_id: AE-0408, nb_pages: 1}
+
+  - escale_id: ESC-2026-0409
+    navire: "Port-Cros"
+    imo: "9409551"
+    quai: 4
+    debut: 2026-10-06T09:00:00+02:00
+    fin: 2026-10-07T09:00:00+02:00
+    armateur: "Méditerranée Vrac Services"
+    agent: "Consignation Iroise"
+    contrat:
+      document_id: CM-0409
+      nb_pages: 80                                # contrat de 80 pages (LAB 7)
+      signature: 2025-09-15
+      prise_effet: 2025-10-01
+      echeance: 2027-09-30
+      sujets: [penalites, delais, manutention, assurance]
+      valeurs: {montant_horaire: 2100, franchise_h: 8, plafond: 50400, delai_mise_a_quai_h: 2, cadence_min: 30, nb_portiques: 3, montant_garanti: 4000000, assureur: "Groupement des Assureurs du Littoral"}
+    connaissements: [{document_id: BL-0409-1, nb_pages: 2}, {document_id: BL-0409-2, nb_pages: 1}, {document_id: BL-0409-3, nb_pages: 2}]
+    avis_escale: {document_id: AE-0409, nb_pages: 2}
+
+  - escale_id: ESC-2026-0410
+    navire: "Belle-Île"
+    imo: "9410662"
+    quai: 1
+    debut: 2026-10-07T05:30:00+02:00
+    fin: 2026-10-07T16:00:00+02:00
+    armateur: "Transports Maritimes du Ponant"
+    agent: "Consignation Iroise"
+    contrat:
+      document_id: CM-0410
+      nb_pages: 52
+      signature: 2026-02-20
+      prise_effet: 2026-03-01
+      echeance: 2027-02-28
+      sujets: [penalites, delais, manutention, assurance]
+      valeurs: {montant_horaire: 1350, franchise_h: 5, plafond: 32400, delai_mise_a_quai_h: 3, cadence_min: 24, nb_portiques: 2, montant_garanti: 3000000, assureur: "Mutuelle Maritime de l'Ouest"}
+    connaissements: [{document_id: BL-0410-1, nb_pages: 1}]
+    avis_escale: {document_id: AE-0410, nb_pages: 1}
+
+  - escale_id: ESC-2026-0411
+    navire: "Albatros"
+    imo: "9411773"
+    quai: 2
+    debut: 2026-10-07T12:00:00+02:00
+    fin: 2026-10-07T23:30:00+02:00
+    armateur: "Méditerranée Vrac Services"
+    agent: "Agence Maritime Rance"
+    contrat:
+      document_id: CM-0411
+      nb_pages: 40
+      signature: 2026-04-02
+      prise_effet: 2026-05-01
+      echeance: 2027-04-30
+      sujets: [penalites, delais, manutention, assurance]
+      valeurs: {montant_horaire: 1100, franchise_h: 4, plafond: 26400, delai_mise_a_quai_h: 4, cadence_min: 20, nb_portiques: 1, montant_garanti: 2000000, assureur: "Groupement des Assureurs du Littoral"}
+    connaissements: [{document_id: BL-0411-1, nb_pages: 2}]
+    avis_escale: {document_id: AE-0411, nb_pages: 1}
+
+  - escale_id: ESC-2026-0412          # escale de référence de tout le parcours
+    navire: "Vent d'Autan"
+    imo: "9412884"
+    quai: 3
+    debut: 2026-10-08T06:00:00+02:00
+    fin: 2026-10-08T20:00:00+02:00
+    armateur: "Compagnie Armoricaine de Navigation"
+    agent: "Agence Maritime Rance"
+    contrat:
+      document_id: CM-0412
+      nb_pages: 56
+      signature: 2026-03-02
+      prise_effet: 2026-04-01
+      echeance: 2027-03-31
+      sujets: [penalites, delais, manutention, assurance]
+      valeurs: {montant_horaire: 1850, franchise_h: 6, plafond: 44400, delai_mise_a_quai_h: 2, cadence_min: 28, nb_portiques: 3, montant_garanti: 3500000, assureur: "Mutuelle Maritime de l'Ouest"}
+    connaissements: [{document_id: BL-0412-1, nb_pages: 2}, {document_id: BL-0412-2, nb_pages: 1}]
+    avis_escale: {document_id: AE-0412, nb_pages: 1}
+
+  - escale_id: ESC-2026-0414
+    navire: "Ouessant"
+    imo: "9414006"
+    quai: 4
+    debut: 2026-10-09T08:00:00+02:00
+    fin: 2026-10-09T21:00:00+02:00
+    armateur: "Transports Maritimes du Ponant"
+    agent: "Consignation Iroise"
+    contrat:
+      document_id: CM-0414
+      nb_pages: 60
+      signature: 2026-05-18
+      prise_effet: 2026-06-01
+      echeance: 2027-05-31
+      sujets: [penalites, delais, manutention, assurance]
+      valeurs: {montant_horaire: 1600, franchise_h: 6, plafond: 38400, delai_mise_a_quai_h: 3, cadence_min: 26, nb_portiques: 2, montant_garanti: 3000000, assureur: "Mutuelle Maritime de l'Ouest"}
+    connaissements: [{document_id: BL-0414-1, nb_pages: 2}]
+    avis_escale: {document_id: AE-0414, nb_pages: 1}

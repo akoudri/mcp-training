@@ -1,0 +1,51 @@
+annexes:
+  - titre: "Barème des prestations de manutention"
+    colonnes: [Prestation, Unité, "Tarif (€ HT)"]
+    lignes:
+      - [Déchargement conteneur 20 pieds, mouvement, "142,00"]
+      - [Déchargement conteneur 40 pieds, mouvement, "186,00"]
+      - [Chargement conteneur 20 pieds, mouvement, "138,00"]
+      - [Chargement conteneur 40 pieds, mouvement, "181,00"]
+      - [Conteneur frigorifique, branchement et surveillance par jour, "64,00"]
+      - [Colis lourd de plus de 40 tonnes, tonne, "18,50"]
+      - [Saisissage ou désaisissage, unité, "22,00"]
+      - [Transfert vers aire d'entreposage, mouvement, "31,00"]
+      - [Pesée certifiée VGM, unité, "27,00"]
+      - [Heures supplémentaires de nuit, équipe et par heure, "410,00"]
+      - [Heures supplémentaires dimanche et jour férié, équipe et par heure, "560,00"]
+      - [Immobilisation d'un portique à la demande de l'armateur, heure, "690,00"]
+  - titre: "Liste des équipements du terminal"
+    colonnes: [Équipement, Référence, Capacité]
+    lignes:
+      - [Portique de quai, PQ-01, "65 tonnes sous spreader"]
+      - [Portique de quai, PQ-02, "65 tonnes sous spreader"]
+      - [Portique de quai, PQ-03, "50 tonnes sous spreader"]
+      - [Cavalier gerbeur, CG-11, "1 sur 3"]
+      - [Cavalier gerbeur, CG-12, "1 sur 3"]
+      - [Chariot élévateur à mât, CE-21, "45 tonnes"]
+      - [Grue mobile portuaire, GM-31, "124 tonnes"]
+      - [Tracteur de terminal, TT-41, "70 tonnes"]
+      - [Remorque de terminal, RT-51, "60 tonnes"]
+      - [Pont-bascule, PB-61, "80 tonnes"]
+  - titre: "Procédures de sécurité applicables à bord et à quai"
+    colonnes: [Situation, Mesure, Responsable]
+    lignes:
+      - [Vent supérieur à 60 km/h, Arrêt des portiques et mise en sécurité, Chef de quai]
+      - [Orage annoncé à moins de 10 km, Évacuation des zones sous portique, Chef de quai]
+      - [Marchandise dangereuse endommagée, Isolement de la zone et alerte capitainerie, Chef d'équipe]
+      - [Chute d'une unité de charge, Arrêt des opérations et constat contradictoire, Chef de quai]
+      - [Accident de personne, Alerte des secours et arrêt de la zone, Tout témoin]
+      - [Coupure électrique, Mise en sécurité des conteneurs frigorifiques, Électricien de permanence]
+      - [Visibilité inférieure à 200 mètres, Réduction de cadence et balisage renforcé, Chef de quai]
+      - [Intrusion en zone d'accès restreint, Arrêt des opérations et alerte sûreté, Agent de sûreté]
+  - titre: "Relevé type des mouvements par escale"
+    colonnes: [Heure, Portique, Mouvement]
+    lignes:
+      - ["06:10", PQ-01, Déchargement 40 pieds]
+      - ["06:12", PQ-02, Déchargement 20 pieds]
+      - ["06:15", PQ-01, Déchargement 40 pieds]
+      - ["06:18", PQ-03, Déchargement frigorifique]
+      - ["06:21", PQ-02, Déchargement 20 pieds]
+      - ["06:24", PQ-01, Chargement 40 pieds]
+      - ["06:27", PQ-03, Chargement 20 pieds]
+      - ["06:30", PQ-02, Chargement 40 pieds]
