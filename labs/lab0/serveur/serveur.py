@@ -113,9 +113,18 @@ def creer_serveur(outil_jumeau: bool = False) -> FastMCP:
 
 
 def main() -> None:
+    from pathlib import Path
+
+    from starlette.middleware import Middleware
+
+    from labs.lab0.serveur.journal import JournalJSONL
+
     serveur = creer_serveur(outil_jumeau=os.environ.get("PHAROS_OUTIL_JUMEAU") == "1")
+    intergiciels = []
+    if os.environ.get("VERBEUX") == "1":
+        intergiciels.append(Middleware(JournalJSONL, chemin=Path("logs/pharos-docs-demo.jsonl")))
     serveur.run(transport="http", host="0.0.0.0", port=int(os.environ.get("PORT", "8000")),
-                path="/mcp", json_response=True, show_banner=False)
+                path="/mcp", json_response=True, show_banner=False, middleware=intergiciels)
 
 
 if __name__ == "__main__":
