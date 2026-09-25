@@ -1,6 +1,9 @@
+SERVICES_SOCLE := mcpjam
+
 ouvrir = { command -v wslview >/dev/null && wslview $(1); } || { command -v xdg-open >/dev/null && xdg-open $(1) >/dev/null 2>&1; } || true
 
 up: ## Démarre le socle (observateur, client)
+	@mkdir -p config/mcpjam && test -f config/mcpjam/client.config.json || echo '{"mcpServers": {}}' > config/mcpjam/client.config.json
 	$(DC) up -d observateur $(SERVICES_SOCLE)
 	@echo "Observateur : http://localhost:7001 (mot de passe : pharos)"
 
@@ -21,3 +24,15 @@ inspector: ## Ouvre l'Inspector (observateur du trafic MCP)
 	@$(call ouvrir,http://localhost:7001)
 
 .PHONY: up down logs test fixtures inspector
+
+client: ## Ouvre le client graphique MCPJam
+	@mkdir -p config/mcpjam
+	@test -f config/mcpjam/client.config.json || echo '{"mcpServers": {}}' > config/mcpjam/client.config.json
+	$(DC) up -d mcpjam
+	@echo "Client graphique : http://localhost:7000"
+	@$(call ouvrir,http://localhost:7000)
+
+client-redemarrer: ## Redémarre le client (après changement de configuration)
+	$(DC) restart mcpjam
+
+.PHONY: client client-redemarrer

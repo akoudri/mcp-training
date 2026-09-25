@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "pharos-docs-demo": {
+      "url": "http://observateur:8100/mcp"
+    }
+  }
+}
