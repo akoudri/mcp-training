@@ -1,0 +1,28 @@
+name: pharos
+
+x-python: &python
+  image: pharos/python:1
+  build: {context: ., dockerfile: images/python/Dockerfile}
+  working_dir: /app
+  volumes: [".:/app"]
+  env_file: [{path: .env, required: false}]
+  user: "${PHAROS_UID:-1000}:${PHAROS_GID:-1000}"
+  networks: [pharos]
+
+networks:
+  pharos: {}
+
+services:
+  atelier:
+    <<: *python
+    profiles: [outils]
+
+  observateur:
+    image: mitmproxy/mitmproxy:${MITMPROXY_VERSION:-12.2.3}
+    command: >
+      mitmweb --web-host 0.0.0.0 --web-port 8081 --set web_open_browser=false
+      --set web_password=pharos
+      --mode reverse:http://pharos-docs-demo:8000@8100
+    ports: ["7001:8081", "8100:8100"]
+    networks: [pharos]
+    restart: unless-stopped
