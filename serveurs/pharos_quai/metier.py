@@ -50,15 +50,15 @@ def _quai(numero: int) -> dict:
 
 
 def _normaliser(nom: str) -> str:
-    s = nom.replace("'", "'").strip().casefold()
-    for article in ("le ", "la ", "l'"):
+    s = nom.replace("’", "'").strip().casefold()
+    for article in ("le ", "la ", "l’"):
         if s.startswith(article):
             return s[len(article):].strip()
     return s
 
 
 def _navire(nom: str) -> str:
-    """Nom canonique du navire (« le vent d'autan » → « Vent d'Autan »)."""
+    """Nom canonique du navire (« le vent’autan » → « Vent’Autan »)."""
     connus = {_normaliser(e.navire): e.navire for e in _escales()}
     try:
         return connus[_normaliser(nom)]
