@@ -30,13 +30,14 @@ de l'empreinte et vérifie que cette mutation la fait échouer.
 
 | Lab | Modèle | Protocole | Résultat | Date |
 |---|---|---|---|---|
-| 1 | google/gemini-3.6-flash | banc 5 × 3 sur la solution | Q1 3/3 · Q2 consignée (cf. Détail) · Q3 3/3 · Q4 0/3 — échec documenté, non imputable au serveur (cf. Détail) · Q5 3/3 (isError) · coût 0,0259 $ | 2026-09-26 |
+| 1 | google/gemini-3.6-flash | banc 5 × 3 sur la solution | Q1 3/3 · Q2 consignée (cf. Détail) · Q3 3/3 · Q4 0/3 hors contexte → 3/3 dans la conversation de Q3 (réétalonnage) · Q5 3/3 (isError) · coût 0,0259 $ | 2026-09-26 |
 
-Décision du contrôleur : la question 4 est désormais consignée sans verdict pour le banc (`constat: true`
-dans `outils/questions/lab1.yaml`), au même titre que la question 2 — elle suppose la conversation de la
-question 3 (« ce contrat »), absente du protocole mono-tour du banc ; le critère du vérificateur ne juge
-plus que les questions 1 et 3. Le brief du LAB 1 sera retouché pour poser la question 4 dans la même
-conversation que la question 3.
+Décision (2026-09-27, validée par le formateur) : la question 4 se pose **dans la même conversation
+que la question 3** — le brief du LAB 1 et `labs/lab1/questions.md` le disent ; le banc rejoue ce tour
+(`contexte:` dans `outils/questions/lab1.yaml`) et le critère juge de nouveau les questions 1, 3 et 4.
+Réétalonnage de Q4 dans ce protocole (banc 1 × 3 sur la solution, 2026-09-27) : **3/3**,
+`rechercher_clause(escale_id=ESC-2026-0412, sujet=assurance)` → Article 8 — Assurance ; coût 0,0027 $.
+Le premier passage ci-dessous (Q4 0/3, question posée hors contexte) est conservé pour mémoire.
 
 ### Détail — banc LAB 1 (google/gemini-3.6-flash)
 
