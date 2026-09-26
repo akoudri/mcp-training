@@ -11,7 +11,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from outils.labs import DEPARTS, copier_gabarits
+from outils.labs import DEPARTS, copier_gabarits, nom_dossier
 
 
 class Refus(Exception):
@@ -70,6 +70,10 @@ def depart(racine: Path, lab: int, distant: str = "origin") -> list[str]:
         if _git(racine, "rev-parse", "--verify", "--quiet", source, verifier=False).returncode:
             raise Refus(f"le checkpoint {source} est introuvable : vérifier l'accès au dépôt (git fetch {distant}), "
                         "ou prévenir le formateur.")
+        dossier_gabarits = f"gabarits/{nom_dossier(lab)}"
+        if not _git(racine, "ls-tree", "-d", source, dossier_gabarits, verifier=False).stdout.strip():
+            raise Refus(f"le checkpoint {source} est antérieur au kit du LAB {lab} (pas de {dossier_gabarits} "
+                        f"dans son arbre) : prévenir le formateur.")
         _git(racine, "switch", "--quiet", "--no-track", "-c", branche, source)
         messages.append(f"Branche {branche} créée depuis {source}.")
     messages += gabarits(racine, lab)

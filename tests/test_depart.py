@@ -99,6 +99,16 @@ def test_lab_inconnu(travail):
         d.depart(travail, 9)
 
 
+def test_checkpoint_sans_gabarits_refuse(travail):
+    # etat/pr2-fin (départ du LAB 2) pointe ici sur « main », qui ne contient que gabarits/lab01 :
+    # checkpoint antérieur au kit du LAB 2.
+    git(travail, "push", "-q", "origin", "main:refs/heads/etat/pr2-fin")
+    with pytest.raises(d.Refus, match="gabarits"):
+        d.depart(travail, 2)
+    assert subprocess.run(["git", "rev-parse", "--verify", "--quiet", "binome-3-lab02"],
+                          cwd=travail).returncode != 0
+
+
 def test_main_refus_code_1(travail, monkeypatch, capsys):
     monkeypatch.chdir(travail)
     (travail / ".env").write_text("")
