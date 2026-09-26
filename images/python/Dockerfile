@@ -5,6 +5,6 @@ COPY pyproject.toml uv.lock ./
 RUN uv export --frozen --no-hashes --all-groups -o /tmp/exigences.txt \
  && uv pip install --system -r /tmp/exigences.txt \
  && rm /tmp/exigences.txt
-ENV PYTHONPATH=/app/src:/app \
+ENV PYTHONPATH=/app/src:/app:/app/client \
     PYTHONUNBUFFERED=1 \
     PHAROS_DOCUMENTS=/app/donnees/documents

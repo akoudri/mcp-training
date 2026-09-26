@@ -20,6 +20,6 @@ dev = ["pytest>=8.3", "pytest-asyncio>=0.24"]
 package = false
 
 [tool.pytest.ini_options]
-pythonpath = ["src", "."]
+pythonpath = ["src", ".", "client"]
 testpaths = ["tests"]
 asyncio_mode = "auto"

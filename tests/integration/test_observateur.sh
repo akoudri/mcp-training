@@ -24,7 +24,7 @@ make up && make lab0-up && attendre && lister
 echo "--- ordre inverse : serveur d'abord, observateur ensuite (make lab0-up démarre les deux : on passe par compose)"
 make down && docker compose -f compose.yaml -f compose/lab0.yaml up -d pharos-docs-demo && make up && attendre && lister
 echo "--- ports réservés : 502 tant que leur serveur n'existe pas"
-for p in 8101 8102 8103 8104 8105; do
+for p in 8101 8102 8103 8104 8105 8201 8204; do
   code=$(curl -s -o /dev/null -w '%{http_code}' -X POST "localhost:$p/mcp")
   echo "port $p : $code"; [ "$code" = 502 ]
 done

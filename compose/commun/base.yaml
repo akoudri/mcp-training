@@ -1,0 +1,18 @@
+# Service Python commun des labs, repris par « extends » (voir compose/labN.yaml).
+# Dans un sous-dossier exprès : le Makefile charge tous les compose/*.yaml comme surcharges,
+# et python-base ne doit pas devenir un service du projet.
+# Les chemins relatifs de ce fichier sont résolus depuis ce fichier : ../.. est la racine du dépôt.
+services:
+  python-base:
+    image: pharos/python:1
+    build: {context: ../.., dockerfile: images/python/Dockerfile}
+    # Image propre au kit : jamais tirée d'un registre, construite ici si absente.
+    pull_policy: never
+    working_dir: /app
+    volumes: ["../..:/app"]
+    user: "${PHAROS_UID:-1000}:${PHAROS_GID:-1000}"
+    networks: [pharos]
+    environment:
+      # Clé de signature des handles (LAB 2, 3, 5) : valeur de salle, pas un secret (le LAB 5 la fait tourner).
+      CLE_SERVEUR: "${CLE_SERVEUR:-pharos-salle-2026}"
+    restart: unless-stopped

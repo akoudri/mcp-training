@@ -1,15 +1,7 @@
 services:
   pharos-docs-demo:
-    image: pharos/python:1
-    # Même image que l'atelier : jamais tirée d'un registre, construite localement si absente.
-    build: {context: ., dockerfile: images/python/Dockerfile}
-    pull_policy: never
-    working_dir: /app
-    volumes: [".:/app"]
-    user: "${PHAROS_UID:-1000}:${PHAROS_GID:-1000}"
-    networks: [pharos]
+    extends: {file: compose/commun/base.yaml, service: python-base}
     environment:
       VERBEUX: "${VERBEUX:-0}"
       PHAROS_OUTIL_JUMEAU: "${PHAROS_OUTIL_JUMEAU:-0}"
     command: python -m watchfiles --filter python "python -m labs.lab0.serveur.serveur" labs/lab0 src
-    restart: unless-stopped

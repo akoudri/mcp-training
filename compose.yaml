@@ -18,6 +18,8 @@ services:
   atelier:
     <<: *python
     profiles: [outils]
+    environment:
+      CLE_SERVEUR: "${CLE_SERVEUR:-pharos-salle-2026}"
 
   observateur:
     image: mitmproxy/mitmproxy:${MITMPROXY_VERSION:-12.2.3}
@@ -30,12 +32,14 @@ services:
       --mode reverse:http://pharos-ops:8000@8103
       --mode reverse:http://pharos-legacy:8000@8104
       --mode reverse:http://pharos-quai:8000@8105
-    # Ports 8101-8105 réservés aux serveurs des labs suivants : ils répondent 502 tant que le serveur n'existe pas.
+      --mode reverse:http://repartiteur-docs:8000@8201
+      --mode reverse:http://repartiteur-legacy:8000@8204
+    # Ports 8101-8105, 8201 et 8204 réservés aux serveurs et répartiteurs des labs suivants : 502 tant qu'ils n'existent pas.
     # connection_strategy=lazy : le nom du serveur n'est résolu qu'à la requête (sinon mitmproxy coupe la connexion
     # sans réponse HTTP, et la requête n'apparaît pas dans l'observateur).
     # Publié sur 127.0.0.1 seulement : en salle, un voisin ne doit ni lire ce trafic ni joindre ces services.
     # Le LAB 14 exposera explicitement ce qu'il doit exposer.
-    ports: ["127.0.0.1:7001:8081", "127.0.0.1:8100-8105:8100-8105"]
+    ports: ["127.0.0.1:7001:8081", "127.0.0.1:8100-8105:8100-8105", "127.0.0.1:8201:8201", "127.0.0.1:8204:8204"]
     networks: [pharos]
     restart: unless-stopped
 
