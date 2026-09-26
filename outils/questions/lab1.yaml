@@ -12,6 +12,7 @@
 - question: "Y a-t-il une clause d'assurance dans ce contrat ?"
   attendu: rechercher_clause
   arguments_attendus: {sujet: assurance}
+  constat: true
 - question: "Quelle est la pénalité pour l'escale ESC-2026-9999 ?"
   attendu: rechercher_clause
   resultat_attendu: erreur_metier

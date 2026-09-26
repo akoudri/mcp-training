@@ -3,9 +3,10 @@ from pathlib import Path
 from fastmcp import FastMCP
 from fastmcp.exceptions import ToolError
 
+from outils import banc
 from outils.verifier import lab1
 from outils.verifier.commun import Etat
-from tests.aides import charger_module, servir
+from tests.aides import charger_module, servir, serveur_demo
 
 
 async def test_le_squelette_ne_passe_pas():
@@ -81,3 +82,33 @@ async def test_erreurs_metier_acceptent_les_formes_alternatives():
         rapport = await lab1.v.executer(url=f"{base}/mcp", sans_modele=True)
     resultat = _resultat(rapport, "Les trois erreurs métier disent quoi faire au tour suivant (étape 2).")
     assert resultat.etat is Etat.OK, resultat.detail
+
+
+async def test_question_4_consignee_sans_verdict(monkeypatch):
+    """Q4 dépend de la conversation de Q3 (banc mono-tour) : elle ne doit plus peser sur le critère."""
+    q1 = banc.Question(1, "Q1", "lister_documents", {"escale_id": "ESC-2026-0412"})
+    q2 = banc.Question(2, "Q2", "rechercher_clause", {"sujet": "penalites"}, constat=True)
+    q3 = banc.Question(3, "Q3", "extraire_dates_contractuelles", {"escale_id": "ESC-2026-0412"})
+    q4 = banc.Question(4, "Q4", "rechercher_clause", {"sujet": "assurance"}, constat=True)
+
+    executions = [
+        banc.Execution(q1, "lister_documents", {"escale_id": "ESC-2026-0412"}, True),
+        banc.Execution(q2, "rechercher_clause", {"sujet": "penalites"}, None),
+        banc.Execution(q3, "extraire_dates_contractuelles", {"escale_id": "ESC-2026-0412"}, True),
+        banc.Execution(q4, None, {}, None),
+    ]
+
+    async def _faux_banc(*args, **kwargs):
+        return executions
+
+    monkeypatch.setattr(banc, "executer_banc", _faux_banc)
+    with servir(serveur_demo().http_app(path="/mcp", json_response=True)) as base:
+        rapport = await lab1.v.executer(url=f"{base}/mcp", sans_modele=False)
+
+    resultat = _resultat(rapport, "Les questions 1, 3 et 4 déclenchent le bon outil sans reformulation humaine.")
+    assert resultat.etat is Etat.OK, resultat.detail
+    assert "question 4" in resultat.detail.lower() and "question 3" in resultat.detail.lower()
+
+    constat_q2 = _resultat(rapport, "Le résultat de la question 2 est consigné tel quel, y compris s'il est mauvais.")
+    assert "rechercher_clause" in constat_q2.detail
+    assert constat_q2.detail.count("premier appel") == 2   # Q2 et Q4
