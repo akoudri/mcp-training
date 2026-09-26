@@ -95,7 +95,19 @@ def creer_serveur(outil_jumeau: bool = False) -> FastMCP:
         """Recherche, dans le contrat de manutention d'une escale, l'article qui traite d'un sujet
         donné, et renvoie son titre, sa page de début et son texte. C'est le moyen le plus direct de
         répondre à une question sur les pénalités de retard, les délais de mise à quai, les moyens
-        de manutention engagés ou l'assurance de l'opérateur portuaire, sans lire le contrat entier."""
+        de manutention engagés ou l'assurance de l'opérateur portuaire, sans lire le contrat entier.
+
+        Le contrat de manutention est identifié automatiquement à partir de l'escale : inutile
+        d'appeler lister_documents au préalable pour obtenir son identifiant. La recherche porte
+        uniquement sur les articles numérotés du contrat (« Article 1 », « Article 2 »…), pas sur
+        le préambule, les annexes ni les connaissements ou avis d'escale de la même escale.
+
+        La réponse contient l'identifiant du contrat (document_id), le titre complet de l'article
+        (article), le numéro de la page où il commence (page) et le texte des pages qu'il couvre
+        (texte), tronqué à quatre mille caractères pour les articles les plus longs. Pour citer
+        l'article en entier ou lire ce qui l'entoure, appeler ensuite lire_document sur ce contrat
+        avec la plage de pages voulue. Un seul sujet est traité par appel : pour une question qui
+        mêle pénalités et délais, faire deux appels successifs."""
         return _rechercher_clause(escale_id, sujet)
 
     if outil_jumeau:

@@ -30,3 +30,10 @@ async def test_le_jumeau_augmente_le_total():
 async def test_formatage_annonce_une_approximation():
     texte = tokens_catalogue.formater(await tokens_catalogue.mesurer_serveur(creer_serveur()))
     assert "approximation" in texte and "Total" in texte and "rechercher_clause" in texte
+
+
+async def test_un_seul_outil_depasse_la_fourchette_de_fa1():
+    # Extension A : comparer à « 150 à 400 tokens par outil » annoncé en FA1 ; rechercher_clause dépasse.
+    totaux = {m.nom: m.total for m in await tokens_catalogue.mesurer_serveur(creer_serveur())}
+    assert totaux["rechercher_clause"] > 400
+    assert 150 <= totaux["lire_document"] <= 400 and 150 <= totaux["lister_documents"] <= 400
