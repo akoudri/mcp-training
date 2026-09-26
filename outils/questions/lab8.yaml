@@ -1,0 +1,6 @@
+# Banc du premier appel — LAB 8, extension A : les valeurs possibles de « sens » (bloc 13.3).
+# Réussi si le modèle appelle requete_mouvements avec quai=5 et sens=debarquement (la valeur de la base,
+# sans accent). Mesurer avant d'ajouter les valeurs possibles au dictionnaire, puis après.
+- question: "Combien de conteneurs ont été débarqués quai 5 hier ?"
+  attendu: requete_mouvements
+  arguments_attendus: {quai: 5, sens: debarquement}
