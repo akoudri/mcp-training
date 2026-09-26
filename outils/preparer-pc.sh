@@ -42,9 +42,17 @@ echo "==> Dépôt pharos-labs"
 cd "$CIBLE"
 [ -f .env ] || cp .env.example .env
 
-echo "==> Construction et préchargement des images (peut prendre plusieurs minutes)"
+echo "==> Construction de l'image Python (peut prendre plusieurs minutes)"
+if ! sudo -u "$USER" sg docker -c "make construire"; then
+  echo "Construction de l'image échouée : relancer « make construire » dans $CIBLE et lire l'erreur." >&2
+  exit 1
+fi
+
+echo "==> Préchargement de l'image de l'observateur"
 FICHIERS_COMPOSE=$(for f in compose/*.yaml; do printf -- '-f %s ' "$f"; done)
-sudo -u "$USER" sg docker -c "make construire && docker compose -f compose.yaml $FICHIERS_COMPOSE pull observateur"
+if ! sudo -u "$USER" sg docker -c "docker compose -f compose.yaml $FICHIERS_COMPOSE pull observateur"; then
+  echo "Préchargement de l'observateur impossible (réseau ?) : il sera téléchargé au premier « make up »."
+fi
 
 echo ""
 echo "Terminé. Copier le .env du binôme dans $CIBLE/.env, puis : cd $CIBLE && make up && make lab0-up && make doctor"

@@ -13,9 +13,14 @@ wsl --install -d Ubuntu-24.04
 
 Write-Host ""
 Write-Host "==> VS Code et extension Remote-WSL"
+$codeCmd = "$env:LOCALAPPDATA\Programs\Microsoft VS Code\bin\code.cmd"
 if (Get-Command winget -ErrorAction SilentlyContinue) {
     winget install -e --id Microsoft.VisualStudioCode --accept-package-agreements --accept-source-agreements
-    & "$env:LOCALAPPDATA\Programs\Microsoft VS Code\bin\code.cmd" --install-extension ms-vscode-remote.remote-wsl
+    if (Test-Path $codeCmd) {
+        & $codeCmd --install-extension ms-vscode-remote.remote-wsl
+    } else {
+        Write-Warning "VS Code introuvable à $codeCmd : l'installer depuis https://code.visualstudio.com puis lancer : code --install-extension ms-vscode-remote.remote-wsl"
+    }
 } else {
     Write-Host "winget introuvable : installer VS Code manuellement depuis https://code.visualstudio.com,"
     Write-Host "puis lancer : code --install-extension ms-vscode-remote.remote-wsl"
