@@ -59,6 +59,9 @@ def essayer(racine: Path, lab: int, ref: str = "HEAD") -> int:
         subprocess.run(["make", "--no-print-directory", "down"], cwd=dossier)
         subprocess.run(["git", "worktree", "remove", "--force", str(dossier)], cwd=racine)
         subprocess.run(["git", "branch", "-D", f"essai/etat/{SORTIES[lab]}"], cwd=racine)
+        # construire() crée aussi essai/etat/fa2-fin (préfixe essai/) : la retirer, sans quoi
+        # elle traîne d'un essai à l'autre.
+        subprocess.run(["git", "branch", "-D", "essai/etat/fa2-fin"], cwd=racine)
 
 
 def main(argv: list[str]) -> int:
