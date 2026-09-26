@@ -8,6 +8,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import os
 import sys
 from dataclasses import dataclass, field
 
@@ -40,17 +41,21 @@ class Echange:
 class ClientTest:
     """Client MCP d'une révision donnée ; « echanges » garde tout le trafic HTTP."""
 
-    def __init__(self, url: str, revision: str = "2026-07-28", nom: str = "pharos-test"):
+    def __init__(self, url: str, revision: str = "2026-07-28", nom: str = "pharos-test", jeton: str | None = None):
         if revision not in REVISIONS:
             raise ValueError(f"révision inconnue : {revision} (attendu : {', '.join(REVISIONS)})")
         self.url, self.revision = url, revision
         self.echanges: list[Echange] = []
         self._en_cours: dict[int, Echange] = {}
+        # jeton : identité de l'appelant (LAB 9 et suivants), envoyée en « Authorization: Bearer ».
+        self.jeton = jeton
         transport = StreamableHttpTransport(url, httpx_client_factory=self._fabrique)
         self._client = Client(transport, mode=REVISIONS[revision],
                               client_info=mcp_types.Implementation(name=nom, version="1.0"))
 
     def _fabrique(self, **options) -> httpx.AsyncClient:
+        if self.jeton:
+            options["headers"] = {**(options.get("headers") or {}), "Authorization": f"Bearer {self.jeton}"}
         return httpx.AsyncClient(event_hooks={"request": [self._requete], "response": [self._reponse]}, **options)
 
     async def _requete(self, requete: httpx.Request) -> None:
@@ -111,8 +116,8 @@ def _resume(echange: Echange) -> str:
             f"   Mcp-Session-Id: {session}   X-Pharos-Instance: {instance}")
 
 
-async def _appeler(url: str, revision: str, outil: str, arguments: dict) -> int:
-    async with ClientTest(url, revision) as c:
+async def _appeler(url: str, revision: str, outil: str, arguments: dict, jeton: str | None = None) -> int:
+    async with ClientTest(url, revision, jeton=jeton) as c:
         r = await c.appeler(outil, arguments)
     texte = "\n".join(getattr(b, "text", "") for b in r.content)
     try:
@@ -132,13 +137,14 @@ def main(argv: list[str]) -> int:
     p.add_argument("url")
     p.add_argument("outil")
     p.add_argument("arguments", nargs="?", default="{}")
+    p.add_argument("--jeton", default=os.environ.get("PHAROS_JETON") or None, help="identité (LAB 9 et suivants)")
     a = p.parse_args(argv)
     try:
         arguments = json.loads(a.arguments or "{}")
     except json.JSONDecodeError:
         print(f"ARGS n'est pas du JSON valide : {a.arguments}")
         return 2
-    return asyncio.run(_appeler(a.url, a.rev, a.outil, arguments))
+    return asyncio.run(_appeler(a.url, a.rev, a.outil, arguments, a.jeton))
 
 
 if __name__ == "__main__":
