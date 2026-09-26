@@ -1,0 +1,37 @@
+name: ci
+on:
+  push: {branches: [main, "etat/**"]}
+  pull_request: {}
+
+jobs:
+  tests:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with: {version: "0.6.12"}
+      - run: uv sync --frozen
+      - run: uv run pytest -q
+
+  socle:
+    runs-on: ubuntu-24.04
+    needs: tests
+    steps:
+      - uses: actions/checkout@v4
+      - run: make construire
+      - run: make up && make lab0-up
+      - name: Attendre que le serveur soit prêt
+        run: |
+          for i in $(seq 1 30); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' -X POST http://127.0.0.1:8100/mcp || true)
+            echo "tentative $i : code $code"
+            case "$code" in
+              4??) echo "serveur prêt (code $code)"; exit 0 ;;
+            esac
+            sleep 2
+          done
+          echo "serveur toujours indisponible après 60s"
+          exit 1
+      - run: make doctor SANS_MODELE=1
+      - if: failure()
+        run: docker compose -f compose.yaml -f compose/lab0.yaml logs --tail=200
