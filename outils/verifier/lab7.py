@@ -122,30 +122,28 @@ def _(ctx):
     fichier = RACINE / "tests" / "empreinte_catalogue.json"
     if not fichier.exists():
         raise Echec("tests/empreinte_catalogue.json absent : make lab7-empreinte, puis un test qui le compare.")
-    noms = [e["name"] for e in json.loads(fichier.read_text(encoding="utf-8"))]
-    if not noms:
+    catalogue = json.loads(fichier.read_text(encoding="utf-8"))
+    if not catalogue:
         raise Echec("tests/empreinte_catalogue.json est vide.")
-    nom = noms[0]
+    nom = catalogue[0]["name"]
     with tempfile.TemporaryDirectory(prefix="pharos-empreinte-") as tmp:
         copie = Path(tmp) / "depot"
-        for dossier in ("serveurs", "src", "outils", "client", "tests/pharos_docs"):
-            if (RACINE / dossier).is_dir():
-                shutil.copytree(RACINE / dossier, copie / dossier,
-                                ignore=shutil.ignore_patterns("__pycache__", ".pytest_cache"))
-        for f in ("pyproject.toml", "tests/empreinte_catalogue.json"):
-            shutil.copy2(RACINE / f, copie / f)
-        serveur = copie / "serveurs" / "pharos_docs" / "serveur.py"
-        texte = serveur.read_text(encoding="utf-8")
-        nouveau, n = re.subn(rf"\bdef {nom}\(", f"def {nom}_renomme(", texte)
-        if n == 0:
-            nouveau, n = re.subn(rf"(name\s*=\s*[\"']){nom}([\"'])", rf"\g<1>{nom}_renomme\g<2>", texte)
-        if n == 0:
-            raise Echec(f"impossible de renommer {nom} automatiquement : faire l'essai à la main, puis remettre le nom.")
-        serveur.write_text(nouveau, encoding="utf-8")
-        resultat = _pytest(copie, RACINE / "donnees" / "documents")
+        shutil.copytree(RACINE, copie, ignore=shutil.ignore_patterns(
+            ".git", ".venv", "solutions", "__pycache__", ".pytest_cache", "logs", "sortie", ".superpowers"))
+        documents = copie / "donnees" / "documents"
+        intact = _pytest(copie, documents)
+        if intact.returncode != 0:
+            raise Echec("la suite n'est pas verte sur une copie intacte : impossible de vérifier l'empreinte. "
+                        "Corriger d'abord la suite (voir le critère décisif).")
+        fichier_copie = copie / "tests" / "empreinte_catalogue.json"
+        catalogue_copie = json.loads(fichier_copie.read_text(encoding="utf-8"))
+        catalogue_copie[0]["name"] += "_renomme"   # simule un outil renommé, sans toucher au code source
+        fichier_copie.write_text(json.dumps(catalogue_copie, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        resultat = _pytest(copie, documents)
     if resultat.returncode == 0:
-        raise Echec(f"la suite reste verte après le renommage de {nom} : le test d'empreinte ne compare pas le catalogue.")
-    return f"renommer {nom} fait échouer la suite, comme attendu"
+        raise Echec("la suite reste verte quand le catalogue ne correspond plus à l'empreinte : le test "
+                    "d'empreinte ne compare pas le catalogue.")
+    return f"renommer {nom} dans l'empreinte fait échouer la suite, comme attendu"
 
 
 @v.critere("Critère décisif — la suite est verte et tourne en moins de dix secondes, sans appeler aucun modèle.")
