@@ -8,3 +8,8 @@ async def test_sans_ressources():
         rapport = await lab7.v.executer(url=f"{base}/mcp", sans_modele=True)
     assert rapport.resultats[0].etat is Etat.ECHEC and "ressources" in rapport.resultats[0].detail
     assert rapport.code_sortie == 1
+
+
+def test_ignores_copie_exclut_env():
+    from outils.verifier import lab7
+    assert ".env" in lab7.IGNORES_COPIE

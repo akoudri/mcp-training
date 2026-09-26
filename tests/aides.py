@@ -95,6 +95,6 @@ def serveur_demo() -> FastMCP:
 def etat_complet(destination: Path, lab: int) -> Path:
     """Copie du kit (comme une branche etat/*) avec gabarits et solutions superposés jusqu'au lab."""
     shutil.copytree(RACINE_KIT, destination, dirs_exist_ok=True, ignore=shutil.ignore_patterns(
-        ".git", ".venv", "solutions", "__pycache__", ".pytest_cache", "logs", "sortie", ".superpowers"))
+        ".git", ".venv", "solutions", "__pycache__", ".pytest_cache", "logs", "sortie", ".superpowers", ".env"))
     superposer(destination, RACINE_KIT / "gabarits", RACINE_KIT / "solutions", lab)
     return destination

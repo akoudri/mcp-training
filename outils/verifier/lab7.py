@@ -24,6 +24,8 @@ SEUIL_S = 10.0
 FAMILLES = ["schémas (énumération refusée avant le code métier)", "erreurs métier (les trois du LAB 1)",
             "formes et bornes (extrait borné)", "handles (expiré, altéré, hors portée)",
             "ressources (taille, type, lecture)", "empreinte du catalogue"]
+IGNORES_COPIE = (".git", ".venv", "solutions", "__pycache__", ".pytest_cache", "logs", "sortie",
+                 ".superpowers", ".env")
 
 v = Verification("LAB 7 — pharos-docs v1", URL, "make lab1-up")
 
@@ -128,8 +130,7 @@ def _(ctx):
     nom = catalogue[0]["name"]
     with tempfile.TemporaryDirectory(prefix="pharos-empreinte-") as tmp:
         copie = Path(tmp) / "depot"
-        shutil.copytree(RACINE, copie, ignore=shutil.ignore_patterns(
-            ".git", ".venv", "solutions", "__pycache__", ".pytest_cache", "logs", "sortie", ".superpowers"))
+        shutil.copytree(RACINE, copie, ignore=shutil.ignore_patterns(*IGNORES_COPIE))
         documents = copie / "donnees" / "documents"
         intact = _pytest(copie, documents)
         if intact.returncode != 0:
