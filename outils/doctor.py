@@ -9,7 +9,7 @@ from dataclasses import dataclass
 
 import httpx
 
-OPENROUTER = "https://openrouter.ai/api/v1/chat/completions"
+from pharos.openrouter import MESSAGES_HTTP, URL as OPENROUTER
 URLS_SOCLE = {"observateur": "http://observateur:8081/"}
 URL_SERVEUR = "http://observateur:8100/mcp"
 OUTILS_ATTENDUS = {"lister_documents", "lire_document", "rechercher_clause"}
@@ -52,10 +52,7 @@ def verifier_modele(client: httpx.Client, cle: str | None, modele: str) -> Verif
         r = client.post(OPENROUTER, json=corps, headers={"Authorization": f"Bearer {cle}"}, timeout=30)
     except httpx.HTTPError as exc:
         return Verification("modèle", False, f"OpenRouter injoignable ({exc.__class__.__name__}) : vérifier l'accès Internet ou le proxy.")
-    messages = {401: "clé invalide ou révoquée : demander une nouvelle clé au formateur.",
-                402: "crédit épuisé sur cette clé : prévenir le formateur.",
-                404: f"modèle introuvable : vérifier PHAROS_MODELE ({modele}).",
-                400: f"requête refusée pour le modèle {modele} : vérifier qu'il accepte les outils."}
+    messages = {code: gabarit.format(modele=modele) for code, gabarit in MESSAGES_HTTP.items()}
     if r.status_code != 200:
         return Verification("modèle", False, messages.get(r.status_code, f"réponse HTTP {r.status_code} d'OpenRouter."))
     choix = (r.json().get("choices") or [{}])[0]
