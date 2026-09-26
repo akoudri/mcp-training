@@ -1,0 +1,16 @@
+services:
+  pharos-docs-a:
+    extends: {file: compose/commun/base.yaml, service: python-base}
+    environment: {PHAROS_INSTANCE: a}
+    command: python -m watchfiles --filter python "python -m serveurs.pharos_docs.serveur" serveurs src
+  pharos-docs-b:
+    extends: {file: compose/commun/base.yaml, service: python-base}
+    environment: {PHAROS_INSTANCE: b}
+    command: python -m watchfiles --filter python "python -m serveurs.pharos_docs.serveur" serveurs src
+  repartiteur-docs:
+    extends: {file: compose/commun/base.yaml, service: python-base}
+    environment:
+      AMONT_A: http://pharos-docs-a:8000
+      AMONT_B: http://pharos-docs-b:8000
+      AFFINITE: "0"
+    command: python -m outils.repartiteur

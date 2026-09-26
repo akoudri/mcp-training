@@ -12,8 +12,8 @@ from pathlib import Path
 DEPARTS = {1: "fa2-fin", 2: "pr2-fin", 3: "pr3-fin", 4: "pr5-fin", 5: "or1-fin", 6: "or2-fin", 7: "sr1-fin"}
 SORTIES = {1: "pr2-fin", 2: "pr3-fin", 3: "pr5-fin", 4: "or1-fin", 5: "or2-fin", 6: "sr1-fin", 7: "tq1-fin"}
 # Cibles make qui démarrent les services d'un lab, et ports à attendre (via l'observateur).
-DEMARRAGE: dict[int, list[str]] = {1: ["lab1-up"], 4: ["lab4-docs"]}
-PORTS_PRETS: dict[int, list[int]] = {1: [8101], 4: [8101]}
+DEMARRAGE: dict[int, list[str]] = {1: ["lab1-up"], 4: ["lab4-docs"], 5: ["lab5-deux-instances"]}
+PORTS_PRETS: dict[int, list[int]] = {1: [8101], 4: [8101], 5: [8201]}
 IGNORES = {"__pycache__", ".pytest_cache"}
 
 
