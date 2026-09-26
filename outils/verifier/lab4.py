@@ -11,6 +11,7 @@ import contextlib
 import copy
 import importlib
 import json
+import os
 
 from outils.verifier.commun import Echec, Verification
 from pharos.openrouter import Appel, ErreurModele, Reponse
@@ -33,6 +34,11 @@ def _modules():
 
 def appel(ident: str, nom: str, arguments: dict) -> tuple[str, str, dict]:
     return ident, nom, arguments
+
+
+def _normaliser_nombre(texte: str) -> str:
+    """Espaces insécables françaises des milliers (fine « \u202f », normale « \xa0 ») → espace normale."""
+    return texte.replace("\u202f", " ").replace("\xa0", " ")
 
 
 class ModeleSimule:
@@ -59,12 +65,20 @@ class ModeleSimule:
 
 @contextlib.contextmanager
 def _simule(modele, simule: ModeleSimule):
+    """Remplace modele.completer/estimer_tokens par le simulé ; coupe aussi la clé réelle : un import
+    direct de la fonction (au lieu de l'attribut du module) ne doit jamais pouvoir dépenser de crédit."""
     anciens = modele.completer, modele.estimer_tokens
+    ancienne_cle = os.environ.get("OPENROUTER_API_KEY")
     modele.completer, modele.estimer_tokens = simule.completer, simule.estimer
+    os.environ["OPENROUTER_API_KEY"] = ""
     try:
         yield
     finally:
         modele.completer, modele.estimer_tokens = anciens
+        if ancienne_cle is None:
+            os.environ.pop("OPENROUTER_API_KEY", None)
+        else:
+            os.environ["OPENROUTER_API_KEY"] = ancienne_cle
 
 
 async def _scenario(ctx, simule: ModeleSimule, **options):
@@ -72,12 +86,17 @@ async def _scenario(ctx, simule: ModeleSimule, **options):
     boucle, modele, _ = _modules()
     with _simule(modele, simule):
         try:
-            return await asyncio.to_thread(boucle.executer, "Question simulée sur l'escale ESC-2026-0412.",
-                                           url=ctx.url, **options), None
-        except NotImplementedError as exc:
-            raise Echec("executer() lève NotImplementedError : la boucle n'est pas encore écrite.") from exc
-        except Exception as exc:  # les arrêts attendus sont examinés par le critère
-            return None, exc
+            resultat, exc = await asyncio.to_thread(boucle.executer, "Question simulée sur l'escale ESC-2026-0412.",
+                                                     url=ctx.url, **options), None
+        except NotImplementedError as e:
+            raise Echec("executer() lève NotImplementedError : la boucle n'est pas encore écrite.") from e
+        except Exception as e:  # les arrêts attendus sont examinés par le critère
+            resultat, exc = None, e
+    if not simule.recus:
+        raise Echec("la boucle n'a pas appelé modele.completer(...) : appeler le modèle par l'attribut du "
+                     "module (from pharos_client import modele ; modele.completer(...)), pas par un import "
+                     "direct de la fonction.")
+    return resultat, exc
 
 
 async def _nominal(ctx):
@@ -100,7 +119,7 @@ async def _(ctx):
         reponse, enregistrements = await asyncio.to_thread(boucle.executer, Q1, url=ctx.url)
     except NotImplementedError as exc:
         raise Echec("la boucle n'est pas encore écrite.") from exc
-    normal = reponse.replace(" ", " ").replace("\xa0", " ")
+    normal = _normaliser_nombre(reponse)
     if "1 850" not in normal and "1850" not in normal:
         raise Echec(f"la réponse ne cite pas la pénalité de 1 850 € par heure : « {reponse[:200]} »")
     return f"{len(enregistrements)} appel(s) d'outil — à consigner dans labs/lab4/mesures.md, sans corriger."

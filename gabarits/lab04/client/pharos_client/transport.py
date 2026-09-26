@@ -45,9 +45,12 @@ class Session:
                 pret.set_result(None)
                 await self._fin.wait()
         except BaseException as exc:
-            if not pret.done():
-                pret.set_exception(exc)
-            raise
+            if pret.done():
+                raise
+            # échec avant que la session soit prête (ex. serveur injoignable) : __enter__ échoue via
+            # « pret », et __exit__ ne sera jamais appelé pour récupérer cette tâche — ne pas la laisser
+            # se terminer sur une exception non récupérée (bruit « Task exception was never retrieved »).
+            pret.set_exception(exc)
 
     def __enter__(self) -> "Session":
         self._fil.start()

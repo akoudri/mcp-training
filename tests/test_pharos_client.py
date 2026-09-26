@@ -1,3 +1,5 @@
+import gc
+import logging
 from pathlib import Path
 
 import pytest
@@ -49,6 +51,20 @@ def test_session_serveur_injoignable(client):
     with pytest.raises(Exception):
         with transport.Session("http://127.0.0.1:1/mcp"):
             pass
+
+
+def test_session_injoignable_ne_journalise_pas_de_tache_perdue(client, caplog):
+    """Échec de connexion : la tâche de maintien qui échoue avant d'être prête ne doit jamais être
+    récupérée sans que son exception ait été lue — sinon asyncio journalise du bruit sur stderr."""
+    transport, *_ = client
+    with caplog.at_level(logging.DEBUG, logger="asyncio"):
+        with pytest.raises(Exception):
+            with transport.Session("http://127.0.0.1:1/mcp"):
+                pass
+        gc.collect()  # force la collecte du cycle Session -> tâche -> coroutine -> Session
+    bruit = [r.getMessage() for r in caplog.records
+             if r.name == "asyncio" and "Task exception was never retrieved" in r.getMessage()]
+    assert not bruit, bruit
 
 
 def test_modele_reexporte(client):
