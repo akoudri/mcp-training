@@ -19,9 +19,15 @@ RACINE_KIT = Path(__file__).resolve().parents[1]
 
 
 def serveur_legacy_d_origine() -> bool:
-    """Vrai si serveurs/pharos_legacy/serveur.py est le serveur d'origine (2025-11-25), faux sur un état de lab migré."""
-    from serveurs.pharos_legacy import serveur
-    return getattr(serveur, "REVISION", None) == "2025-11-25"
+    """Vrai si serveurs/pharos_legacy/serveur.py est le serveur d'origine (2025-11-25), faux sur un état de lab migré.
+
+    Lu comme du texte, sans l'importer : un serveur en cours d'écriture (erreur de syntaxe) ne doit pas
+    empêcher la collecte de toute la suite."""
+    chemin = RACINE_KIT / "serveurs" / "pharos_legacy" / "serveur.py"
+    try:
+        return 'REVISION = "2025-11-25"' in chemin.read_text(encoding="utf-8")
+    except OSError:
+        return False
 
 
 origine_seulement = pytest.mark.skipif(not serveur_legacy_d_origine(),
