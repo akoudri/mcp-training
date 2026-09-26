@@ -1,4 +1,4 @@
-"""pharos-docs v0 — solution de référence du LAB 1."""
+"""pharos-docs v0 — solution de référence du LAB 5 : handles d'état."""
 
 from __future__ import annotations
 

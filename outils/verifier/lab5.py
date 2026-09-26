@@ -79,8 +79,8 @@ def _refus_utile(r) -> str | None:
         return "accepté (isError attendu)"
     if t.startswith("Error calling tool") or "Traceback" in t:
         return "exception non rattrapée (lever ToolError)"
-    if "ouvrir_dossier" not in t and "rouvr" not in t.casefold():
-        return f"le message ne dit pas quoi faire (rouvrir le dossier) : « {t[:120]} »"
+    if "ouvr" not in t.casefold():
+        return f"le message ne dit pas quoi faire (ouvrir ou rouvrir le dossier) : « {t[:120]} »"
     return None
 
 
