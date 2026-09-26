@@ -38,6 +38,7 @@ class Escale:
     navire: str
     imo: str
     quai: int
+    tirant_eau_m: float
     debut: datetime
     fin: datetime
     armateur: str
@@ -86,6 +87,7 @@ def charger(chemin: Path = DOSSIER / "escales.yaml") -> Corpus:
     escales = [
         Escale(
             escale_id=e["escale_id"], navire=e["navire"], imo=str(e["imo"]), quai=int(e["quai"]),
+            tirant_eau_m=float(e["tirant_eau_m"]),
             debut=e["debut"], fin=e["fin"], armateur=e["armateur"], agent=e["agent"],
             contrat=_contrat(e.get("contrat")),
             connaissements=[DocSimple(**d) for d in e["connaissements"]],

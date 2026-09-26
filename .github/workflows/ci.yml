@@ -43,7 +43,7 @@ jobs:
     needs: tests
     strategy:
       fail-fast: false
-      matrix: {lab: [1, 4, 5, 7]}    # les plans 2 et 3 ajoutent 2, 3 et 6
+      matrix: {lab: [1, 2, 3, 4, 5, 7]}    # le plan 3 ajoute 6
     steps:
       - uses: actions/checkout@v4
         with: {fetch-depth: 0}

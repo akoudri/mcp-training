@@ -5,40 +5,33 @@ from __future__ import annotations
 import contextlib
 import importlib.util
 import shutil
-import socket
 import sys
-import threading
-import time
 from pathlib import Path
 
-import uvicorn
+import pytest
 from fastmcp import FastMCP
 from fastmcp.exceptions import ToolError
 
 from outils.construire_etats import superposer
+from outils.servir import servir  # noqa: F401  (réexporté pour les tests)
 
 RACINE_KIT = Path(__file__).resolve().parents[1]
 
 
-@contextlib.contextmanager
-def servir(app):
-    """Sert une application ASGI dans un fil ; rend son URL de base."""
-    with socket.socket() as s:
-        s.bind(("127.0.0.1", 0))
-        port = s.getsockname()[1]
-    serveur = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=port, log_level="warning", lifespan="on"))
-    fil = threading.Thread(target=serveur.run, daemon=True)
-    fil.start()
-    limite = time.monotonic() + 10
-    while not serveur.started:
-        if time.monotonic() > limite:
-            raise RuntimeError("le serveur de test n'a pas démarré")
-        time.sleep(0.02)
+def serveur_legacy_d_origine() -> bool:
+    """Vrai si serveurs/pharos_legacy/serveur.py est le serveur d'origine (2025-11-25), faux sur un état de lab migré.
+
+    Lu comme du texte, sans l'importer : un serveur en cours d'écriture (erreur de syntaxe) ne doit pas
+    empêcher la collecte de toute la suite."""
+    chemin = RACINE_KIT / "serveurs" / "pharos_legacy" / "serveur.py"
     try:
-        yield f"http://127.0.0.1:{port}"
-    finally:
-        serveur.should_exit = True
-        fil.join(10)
+        return 'REVISION = "2025-11-25"' in chemin.read_text(encoding="utf-8")
+    except OSError:
+        return False
+
+
+origine_seulement = pytest.mark.skipif(not serveur_legacy_d_origine(),
+                                       reason="état de lab : serveurs/pharos_legacy/serveur.py est migré")
 
 
 def charger_module(chemin: Path, nom: str):

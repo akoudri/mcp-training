@@ -14,7 +14,7 @@ L'observateur déclare dès le LAB 0 les ports 8100 à 8105, 8201 et 8204 : les 
 | 8101 | pharos-docs (réservé, LAB 1+) | `observateur:8101` |
 | 8102 | pharos-data (réservé, LAB 8+) | `observateur:8102` |
 | 8103 | pharos-ops (réservé, LAB 10+) | `observateur:8103` |
-| 8104 | pharos-legacy (réservé, LAB 2+) | `observateur:8104` |
+| 8104 | pharos-legacy, une instance (LAB 2, 3) | `observateur:8104` |
 | 8105 | pharos-quai (réservé, LAB 6) | `observateur:8105` |
 | 8201 | répartiteur de pharos-docs, deux instances (LAB 5) | `observateur:8201` |
-| 8204 | répartiteur de pharos-legacy, deux instances (LAB 2, 3) | `observateur:8204` |
+| 8204 | répartiteur de pharos-legacy, deux instances (LAB 2 sans affinité, LAB 3 avec) | `observateur:8204` |

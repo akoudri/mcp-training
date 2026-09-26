@@ -5,6 +5,7 @@ escales:
     navire: "Mistral Bleu"
     imo: "9405117"
     quai: 1
+    tirant_eau_m: 9.8
     debut: 2026-10-05T07:00:00+02:00
     fin: 2026-10-05T19:00:00+02:00
     armateur: "Compagnie Armoricaine de Navigation"
@@ -24,6 +25,7 @@ escales:
     navire: "Cap Fréhel"
     imo: "9406228"
     quai: 2
+    tirant_eau_m: 11.2
     debut: 2026-10-05T13:00:00+02:00
     fin: 2026-10-06T02:00:00+02:00
     armateur: "Transports Maritimes du Ponant"
@@ -36,6 +38,7 @@ escales:
     navire: "Île de Sein"
     imo: "9408440"
     quai: 3
+    tirant_eau_m: 12.5
     debut: 2026-10-06T06:00:00+02:00
     fin: 2026-10-06T18:00:00+02:00
     armateur: "Compagnie Armoricaine de Navigation"
@@ -55,6 +58,7 @@ escales:
     navire: "Port-Cros"
     imo: "9409551"
     quai: 4
+    tirant_eau_m: 13.4
     debut: 2026-10-06T09:00:00+02:00
     fin: 2026-10-07T09:00:00+02:00
     armateur: "Méditerranée Vrac Services"
@@ -74,6 +78,7 @@ escales:
     navire: "Belle-Île"
     imo: "9410662"
     quai: 1
+    tirant_eau_m: 10.1
     debut: 2026-10-07T05:30:00+02:00
     fin: 2026-10-07T16:00:00+02:00
     armateur: "Transports Maritimes du Ponant"
@@ -93,6 +98,7 @@ escales:
     navire: "Albatros"
     imo: "9411773"
     quai: 2
+    tirant_eau_m: 11.8
     debut: 2026-10-07T12:00:00+02:00
     fin: 2026-10-07T23:30:00+02:00
     armateur: "Méditerranée Vrac Services"
@@ -112,6 +118,7 @@ escales:
     navire: "Vent d'Autan"
     imo: "9412884"
     quai: 3
+    tirant_eau_m: 12.9
     debut: 2026-10-08T06:00:00+02:00
     fin: 2026-10-08T20:00:00+02:00
     armateur: "Compagnie Armoricaine de Navigation"
@@ -131,6 +138,7 @@ escales:
     navire: "Ouessant"
     imo: "9414006"
     quai: 4
+    tirant_eau_m: 8.7
     debut: 2026-10-09T08:00:00+02:00
     fin: 2026-10-09T21:00:00+02:00
     armateur: "Transports Maritimes du Ponant"
