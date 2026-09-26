@@ -1,0 +1,13 @@
+# Quais de la base PHAROS (LAB 8 et suivants). Écrit à la main.
+# Les quais 1 à 4 sont ceux de donnees/quai/quais.yaml (LAB 6), à l'identique (test du kit) ;
+# pharos-quai continue de lire son propre fichier, qui n'en compte que quatre.
+# latitude, longitude : position du poste à quai, en degrés décimaux (WGS 84). Le serveur les
+# connaît ; aucun outil ne les prend en paramètre (bloc 16.1).
+quais:
+  - {quai: 1, longueur_m: 220, tirant_eau_max_m: 10.5, equipements: ["2 portiques", "1 grue mobile"], latitude: 48.3812, longitude: -4.4931}
+  - {quai: 2, longueur_m: 260, tirant_eau_max_m: 12.0, equipements: ["2 portiques", "40 prises reefer"], latitude: 48.3806, longitude: -4.4887}
+  - {quai: 3, longueur_m: 300, tirant_eau_max_m: 13.5, equipements: ["3 portiques", "60 prises reefer"], latitude: 48.3799, longitude: -4.4839}
+  - {quai: 4, longueur_m: 340, tirant_eau_max_m: 14.5, equipements: ["3 portiques", "1 grue mobile", "80 prises reefer"], latitude: 48.3791, longitude: -4.4786}
+  - {quai: 5, longueur_m: 180, tirant_eau_max_m: 9.0, equipements: ["1 grue mobile"], latitude: 48.3778, longitude: -4.4733}
+  - {quai: 6, longueur_m: 200, tirant_eau_max_m: 9.5, equipements: ["1 portique", "20 prises reefer"], latitude: 48.3769, longitude: -4.4690}
+  - {quai: 7, longueur_m: 360, tirant_eau_max_m: 15.0, equipements: ["4 portiques", "100 prises reefer"], latitude: 48.3757, longitude: -4.4641}
