@@ -8,4 +8,7 @@ lab0-outil-jumeau: ## LAB 0 — extension B : active l'outil jumeau
 	VERBEUX=$(or $(VERBEUX),0) PHAROS_OUTIL_JUMEAU=1 $(DC) up -d --force-recreate pharos-docs-demo
 	@echo "Outil jumeau actif. Dans VS Code : palette > « MCP: List Servers » > pharos-docs-demo > Restart."
 
-.PHONY: lab0-up lab0-outil-jumeau
+tokens-catalogue: ## Coût en tokens du catalogue d'un serveur (SERVEUR=url, défaut pharos-docs-demo)
+	@$(DC) run --rm -T atelier python -m outils.tokens_catalogue $(or $(SERVEUR),http://observateur:8100/mcp)
+
+.PHONY: lab0-up lab0-outil-jumeau tokens-catalogue
