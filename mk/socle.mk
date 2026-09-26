@@ -24,6 +24,10 @@ inspector: ## Ouvre l'Inspector (observateur du trafic MCP)
 
 .PHONY: up down logs test fixtures inspector
 
+construire: ## Construit l'image Python du kit
+	docker build -t pharos/python:1 -f images/python/Dockerfile .
+.PHONY: construire
+
 client: ## Ouvre VS Code sur le dépôt (client graphique)
 	@command -v code >/dev/null || { echo "VS Code (commande code) introuvable : voir PREPARATION.md"; exit 1; }
 	code .
