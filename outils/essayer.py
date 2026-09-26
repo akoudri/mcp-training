@@ -58,6 +58,7 @@ def essayer(racine: Path, lab: int, ref: str = "HEAD") -> int:
     finally:
         subprocess.run(["make", "--no-print-directory", "down"], cwd=dossier)
         subprocess.run(["git", "worktree", "remove", "--force", str(dossier)], cwd=racine)
+        subprocess.run(["git", "branch", "-D", f"essai/etat/{SORTIES[lab]}"], cwd=racine)
 
 
 def main(argv: list[str]) -> int:

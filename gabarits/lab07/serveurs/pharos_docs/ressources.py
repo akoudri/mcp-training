@@ -3,8 +3,7 @@
 La taille est celle du contenu renvoyé par resources/read, en octets UTF-8 — la calculer juste est votre
 travail : l'hôte décide sur elle d'attacher ou de proposer.
 
-    mcp.add_resource(RessourceAvecTaille(uri=…, name=…, mime_type="text/plain", text=texte,
-                                         taille=len(texte.encode("utf-8"))))
+    mcp.add_resource(RessourceAvecTaille(uri=…, name=…, mime_type="text/plain", text=texte, taille=…))
 """
 
 from __future__ import annotations
