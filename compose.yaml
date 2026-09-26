@@ -36,3 +36,16 @@ services:
       MCPJAM_ALLOWED_HOSTS: "localhost,127.0.0.1"
     networks: [pharos]
     restart: unless-stopped
+
+  inspector:
+    image: node:22-slim
+    profiles: [outils]
+    command: npx -y @modelcontextprotocol/inspector@2.8.0
+    environment:
+      HOST: "0.0.0.0"
+      CLIENT_PORT: "6274"
+      DANGEROUSLY_BIND_ALL_INTERFACES: "true"
+      DANGEROUSLY_OMIT_AUTH: "true"
+      ALLOWED_ORIGINS: "http://localhost:7002,http://127.0.0.1:7002"
+    ports: ["7002:6274"]
+    networks: [pharos]

@@ -36,3 +36,10 @@ client-redemarrer: ## Redémarre le client (après changement de configuration)
 	$(DC) restart mcpjam
 
 .PHONY: client client-redemarrer
+
+inspector-client: ## Démarre l'Inspector officiel (appels manuels)
+	$(DC) --profile outils up -d inspector
+	@echo "Inspector officiel : http://localhost:7002 — URL du serveur : http://observateur:8100/mcp (transport Streamable HTTP)"
+	@$(call ouvrir,http://localhost:7002)
+
+.PHONY: inspector-client
