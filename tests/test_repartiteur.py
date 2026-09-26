@@ -62,6 +62,21 @@ def test_instance_injoignable_502():
     assert panne.headers["x-pharos-instance"] == "b"
 
 
+def test_instance_hors_service_502_apres_delai_connexion():
+    # Adresse non routable (RFC 5737-like, réservée aux tests réseau) : la connexion ne sera ni
+    # acceptée ni refusée, elle doit expirer sur le délai de connexion (5 s) et rendre le 502.
+    debut = time.monotonic()
+    with servir(amont("a")) as a, httpx.Client() as http:
+        r = creer_repartiteur(a, "http://10.255.255.1:9")
+        with servir(r) as base:
+            http.post(f"{base}/mcp")
+            panne = http.post(f"{base}/mcp", timeout=7)
+    delai = time.monotonic() - debut
+    assert panne.status_code == 502 and "instance b injoignable" in panne.text
+    assert panne.headers["x-pharos-instance"] == "b"
+    assert delai < 7
+
+
 def test_flux_relaye_sans_tampon():
     with servir(amont("a")) as a, servir(amont("b")) as b, servir(creer_repartiteur(a, b)) as r:
         debut = time.monotonic()

@@ -25,7 +25,9 @@ def creer_repartiteur(amont_a: str, amont_b: str, affinite: bool = False) -> Sta
     instances = {"a": amont_a.rstrip("/"), "b": amont_b.rstrip("/")}
     tour = itertools.cycle("ab")
     sessions: dict[str, str] = {}
-    http = httpx.AsyncClient(timeout=None)
+    # Pas de délai de lecture (les flux SSE doivent rester ouverts) ; un délai de connexion
+    # court garantit que le 502 promis est bien rendu si l'amont ne répond jamais à la connexion.
+    http = httpx.AsyncClient(timeout=httpx.Timeout(None, connect=5.0))
 
     async def relayer(requete: Request) -> Response:
         session = requete.headers.get("mcp-session-id")
