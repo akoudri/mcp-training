@@ -1,7 +1,10 @@
 """pharos-docs-demo — serveur de démonstration du LAB 0.
 
 Ses descriptions sont volontairement longues : l'extension A du LAB 0 mesure ce
-qu'elles coûtent en tokens. Ce ne sont PAS les outils à écrire au LAB 1.
+qu'elles coûtent en tokens. lister_documents et rechercher_clause portent les noms
+imposés par le brief du LAB 0 et coïncident avec deux outils du LAB 1 : pour ne pas
+en livrer la solution, leurs erreurs métier sont volontairement pauvres (écrire des
+erreurs utiles au modèle est l'objet du LAB 1).
 """
 
 from __future__ import annotations
@@ -34,13 +37,10 @@ SujetArg = Annotated[Sujet, Field(description=(
 def _contrat(escale_id: str) -> extraction.Document:
     docs = extraction.documents_de_escale(escale_id)
     if not docs:
-        raise ToolError(
-            f"Escale inconnue : {escale_id}. Le format attendu est ESC-AAAA-NNNN (par exemple "
-            "ESC-2026-0412). Utiliser lister_documents pour vérifier les documents d'une escale.")
+        raise ToolError("Escale inconnue.")
     contrat = next((d for d in docs if d.type == "contrat_manutention"), None)
     if contrat is None:
-        presents = ", ".join(f"{d.document_id} ({d.type})" for d in docs)
-        raise ToolError(f"L'escale {escale_id} n'a pas de contrat de manutention. Documents présents : {presents}.")
+        raise ToolError("Pas de contrat de manutention pour cette escale.")
     return contrat
 
 
@@ -85,8 +85,7 @@ def creer_serveur(outil_jumeau: bool = False) -> FastMCP:
         cible = TITRES_SUJETS[sujet]
         section = next((s for s in sections if cible in s.titre.casefold()), None)
         if section is None:
-            presents = [k for k, v in TITRES_SUJETS.items() if any(v in s.titre.casefold() for s in sections)]
-            raise ToolError(f"Le contrat {contrat.document_id} ne contient pas de clause sur « {sujet} ». Sujets présents : {', '.join(presents)}.")
+            raise ToolError("Clause introuvable.")
         pages = extraction.texte_du_document(contrat.document_id)[section.page_debut - 1:section.page_fin]
         return {"document_id": contrat.document_id, "article": section.titre, "page": section.page_debut,
                 "texte": "\n".join(p.texte for p in pages)[:4000]}
@@ -96,9 +95,7 @@ def creer_serveur(outil_jumeau: bool = False) -> FastMCP:
         """Recherche, dans le contrat de manutention d'une escale, l'article qui traite d'un sujet
         donné, et renvoie son titre, sa page de début et son texte. C'est le moyen le plus direct de
         répondre à une question sur les pénalités de retard, les délais de mise à quai, les moyens
-        de manutention engagés ou l'assurance de l'opérateur portuaire, sans lire le contrat entier.
-        Si le contrat ne contient pas d'article sur ce sujet, la liste des sujets présents est
-        renvoyée."""
+        de manutention engagés ou l'assurance de l'opérateur portuaire, sans lire le contrat entier."""
         return _rechercher_clause(escale_id, sujet)
 
     if outil_jumeau:

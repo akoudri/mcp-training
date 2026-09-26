@@ -71,13 +71,17 @@ async def test_rechercher_clause_penalites():
 
 
 @pytest.mark.parametrize("args, attendu", [
-    ({"escale_id": "ESC-2026-9999", "sujet": "penalites"}, "ESC-AAAA-NNNN"),
-    ({"escale_id": "ESC-2026-0406", "sujet": "penalites"}, "connaissement"),
-    ({"escale_id": "ESC-2026-0408", "sujet": "assurance"}, "penalites"),
+    ({"escale_id": "ESC-2026-9999", "sujet": "penalites"}, "Escale inconnue."),
+    ({"escale_id": "esc-2026-0412", "sujet": "penalites"}, "Escale inconnue."),
+    ({"escale_id": "ESC-2026-0406", "sujet": "penalites"}, "Pas de contrat de manutention pour cette escale."),
+    ({"escale_id": "ESC-2026-0408", "sujet": "assurance"}, "Clause introuvable."),
 ])
-async def test_rechercher_clause_erreurs_metier(args, attendu):
+async def test_rechercher_clause_erreurs_metier_volontairement_pauvres(args, attendu):
+    # Le LAB 1 fait écrire aux participants des erreurs utiles au modèle : le LAB 0 n'en livre pas la solution.
     r = await appeler("rechercher_clause", args)
-    assert r.is_error and attendu in r.content[0].text
+    assert r.is_error
+    assert r.content[0].text == attendu
+    assert "Traceback" not in r.content[0].text
 
 
 async def test_sujet_hors_enumeration_refuse():

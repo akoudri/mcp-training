@@ -28,7 +28,7 @@ escales:
     fin: 2026-10-06T02:00:00+02:00
     armateur: "Transports Maritimes du Ponant"
     agent: "Consignation Iroise"
-    contrat: null            # escale SANS contrat de manutention (erreur métier du LAB 1)
+    contrat: null            # escale sans contrat de manutention
     connaissements: [{document_id: BL-0406-1, nb_pages: 1}, {document_id: BL-0406-2, nb_pages: 2}]
     avis_escale: {document_id: AE-0406, nb_pages: 1}
 
@@ -46,7 +46,7 @@ escales:
       signature: 2025-11-03
       prise_effet: 2026-01-01
       echeance: 2026-12-31
-      sujets: [penalites, delais, manutention]   # contrat SANS clause d'assurance
+      sujets: [penalites, delais, manutention]   # contrat sans clause d'assurance
       valeurs: {montant_horaire: 1500, franchise_h: 6, plafond: 36000, delai_mise_a_quai_h: 4, cadence_min: 25, nb_portiques: 2}
     connaissements: [{document_id: BL-0408-1, nb_pages: 2}]
     avis_escale: {document_id: AE-0408, nb_pages: 1}
@@ -61,7 +61,7 @@ escales:
     agent: "Consignation Iroise"
     contrat:
       document_id: CM-0409
-      nb_pages: 80                                # contrat de 80 pages (LAB 7)
+      nb_pages: 80                                # contrat de 80 pages
       signature: 2025-09-15
       prise_effet: 2025-10-01
       echeance: 2027-09-30
