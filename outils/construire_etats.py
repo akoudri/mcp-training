@@ -2,7 +2,9 @@
 
 etat/<sortie du lab N> = base, puis pour k = 1..N : gabarits du lab k (sans écraser), puis
 instantané solutions/labkk (en écrasant) ; le dossier solutions/ est retiré. Un seul commit
-par état, dont le parent est la base. etat/fa2-fin n'est jamais touché.
+par état, dont le parent est la base. etat/fa2-fin (le point de départ du LAB 1) est avancé en
+avance rapide sur la base : créé s'il n'existe pas, avancé s'il en est un ancêtre, refusé s'il a
+divergé — sans quoi le LAB 1 partirait d'un checkpoint antérieur à l'outillage du kit.
 Bibliothèque standard uniquement : lancé par python3 sur le poste.
 """
 
@@ -27,7 +29,10 @@ class Refus(Exception):
 
 
 def _git(racine: Path, *args: str, verifier: bool = True) -> subprocess.CompletedProcess:
-    return subprocess.run(["git", *args], cwd=racine, capture_output=True, text=True, check=verifier)
+    resultat = subprocess.run(["git", *args], cwd=racine, capture_output=True, text=True)
+    if verifier and resultat.returncode:
+        raise Refus(f"git {' '.join(args)} a échoué : {resultat.stderr.strip()}")
+    return resultat
 
 
 def superposer(destination: Path, gabarits: Path, solutions: Path | None, lab: int) -> list[str]:
@@ -51,6 +56,32 @@ def _extraire_solutions(racine: Path, ref: str, destination: Path) -> Path | Non
     return destination / "solutions"
 
 
+def _avancer_fa2_fin(racine: Path, prefixe: str, base_sha: str, pousser: bool, distant: str) -> str:
+    """Avance etat/fa2-fin (point de départ du LAB 1) en avance rapide sur la base.
+
+    Créé sur la base s'il n'existe pas encore ; avancé s'il en est un ancêtre ; refusé s'il a divergé."""
+    cible = f"{prefixe}etat/fa2-fin"
+    existe = _git(racine, "rev-parse", "--verify", "--quiet", f"refs/heads/{cible}", verifier=False).returncode == 0
+    if existe:
+        sha_actuel = _git(racine, "rev-parse", cible).stdout.strip()
+        if sha_actuel == base_sha:
+            message = f"{cible} déjà à jour ({base_sha[:7]})."
+        else:
+            ancetre = _git(racine, "merge-base", "--is-ancestor", cible, base_sha, verifier=False).returncode == 0
+            if not ancetre:
+                raise Refus(f"{cible} a divergé de la base : le faire pointer manuellement vers la base, "
+                            "ou choisir une autre base.")
+            _git(racine, "branch", "-f", cible, base_sha)
+            message = f"{cible} avancé en avance rapide sur {base_sha[:7]}."
+    else:
+        _git(racine, "branch", cible, base_sha)
+        message = f"{cible} créé sur {base_sha[:7]}."
+    if pousser:
+        _git(racine, "push", "--quiet", "--force-with-lease", distant, f"{cible}:{cible}")
+        message += f" — poussé vers {distant}."
+    return message
+
+
 def construire(racine: Path, base: str = "main", solutions: str = "solutions", labs=None, prefixe: str = "",
                pousser: bool = False, distant: str = "origin") -> list[str]:
     labs = sorted(labs or SORTIES)
@@ -61,7 +92,7 @@ def construire(racine: Path, base: str = "main", solutions: str = "solutions", l
     if pousser and _git(racine, "status", "--porcelain").stdout.strip():
         raise Refus("des modifications ne sont pas commitées : les enregistrer avant de pousser des états.")
     base_sha = _git(racine, "rev-parse", f"{base}^{{commit}}").stdout.strip()
-    messages = []
+    messages = [_avancer_fa2_fin(racine, prefixe, base_sha, pousser, distant)]
     with tempfile.TemporaryDirectory(prefix="pharos-etats-") as tmp:
         tmp = Path(tmp)
         source_solutions = _extraire_solutions(racine, solutions, tmp / "sol")

@@ -53,7 +53,10 @@ def test_etats_cumules(depot):
     assert fichier(depot, "etat/or1-fin", "client/pharos_client/boucle.py").stdout == "# solution boucle\n"
     assert fichier(depot, "etat/or1-fin", "solutions/lab01/serveurs/pharos_docs/serveur.py").returncode != 0
     assert git(depot, "rev-parse", "etat/or1-fin^") == base
+    # etat/fa2-fin est avancé en avance rapide sur la base : ici la base n'a pas bougé depuis sa
+    # création, donc il reste au même sha (pas un « jamais touché » : un avancement sans effet).
     assert git(depot, "rev-parse", "etat/fa2-fin") == fa2
+    assert any("fa2-fin" in m for m in messages)
     assert any("LAB 2 : pas d'instantané" in m for m in messages)
     assert len(git(depot, "worktree", "list").splitlines()) == 1
 
@@ -87,6 +90,54 @@ def test_pousser(depot, tmp_path):
 def test_pousser_refuse_si_arbre_modifie(depot):
     (depot / "README.md").write_text("modifié\n")
     with pytest.raises(ce.Refus, match="modifications"):
+        ce.construire(depot, labs=[1], pousser=True)
+
+
+def test_fa2_fin_ancetre_avance_sur_la_base(depot):
+    ecrire(depot, "AUTRE.md", "suite du kit\n")
+    git(depot, "add", "-A")
+    git(depot, "commit", "-q", "-m", "suite du kit")
+    nouvelle_base = git(depot, "rev-parse", "main")
+    messages = ce.construire(depot, labs=[1])
+    assert git(depot, "rev-parse", "etat/fa2-fin") == nouvelle_base
+    assert any("fa2-fin" in m and "avancé" in m for m in messages)
+
+
+def test_fa2_fin_divergent_refuse(depot):
+    git(depot, "switch", "-q", "etat/fa2-fin")
+    ecrire(depot, "DIVERGENCE.md", "autre historique\n")
+    git(depot, "add", "-A")
+    git(depot, "commit", "-q", "-m", "divergence")
+    git(depot, "switch", "-q", "main")
+    avant = git(depot, "rev-parse", "etat/fa2-fin")
+    with pytest.raises(ce.Refus, match="divergé"):
+        ce.construire(depot, labs=[1])
+    assert git(depot, "rev-parse", "etat/fa2-fin") == avant
+
+
+def test_pousser_fa2_fin(depot, tmp_path):
+    distant = tmp_path / "distant.git"
+    git(tmp_path, "init", "-q", "--bare", str(distant))
+    git(depot, "remote", "add", "origin", str(distant))
+    ce.construire(depot, labs=[1], pousser=True)
+    assert git(distant, "rev-parse", "etat/fa2-fin") == git(depot, "rev-parse", "etat/fa2-fin")
+
+
+def test_pousser_refuse_si_le_distant_a_avance(depot, tmp_path):
+    distant = tmp_path / "distant.git"
+    git(tmp_path, "init", "-q", "--bare", str(distant))
+    git(depot, "remote", "add", "origin", str(distant))
+    ce.construire(depot, labs=[1], pousser=True)
+    clone = tmp_path / "clone"
+    git(tmp_path, "clone", "-q", str(distant), str(clone))
+    git(clone, "config", "user.name", "concurrent")
+    git(clone, "config", "user.email", "concurrent@example.invalid")
+    git(clone, "switch", "-q", "etat/pr2-fin")
+    ecrire(clone, "AILLEURS.md", "avance concurrente\n")
+    git(clone, "add", "-A")
+    git(clone, "commit", "-q", "-m", "avance concurrente")
+    git(clone, "push", "-q", "origin", "etat/pr2-fin")
+    with pytest.raises(ce.Refus, match="stale info|rejected"):
         ce.construire(depot, labs=[1], pousser=True)
 
 
