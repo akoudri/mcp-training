@@ -121,6 +121,22 @@ async def test_outil_inconnu_ne_plante_pas():
     assert ex[0].ok is False and ex[0].est_erreur is True
 
 
+def test_argument_multiligne_ne_casse_pas_le_tableau():
+    q = Question(1, "Q ?", "rechercher_clause")
+    e = banc.Execution(q, "rechercher_clause", {"sujet": "ligne1\nligne2\r\nligne3"}, True)
+    cellule = banc._cellule(e)
+    assert "\n" not in cellule and "\r" not in cellule
+    assert "ligne1 ligne2 ligne3" in cellule
+
+
+async def test_attendu_aucun_reussit_sans_appel_et_echoue_avec_appel():
+    q = Question(1, "Météo prévue jeudi sur le quai 3 ?", banc.AUCUN)
+    script = {q.texte: [None, ("lister_documents", {"escale_id": "ESC-2026-0412"})]}
+    ex = await banc.executer_banc(serveur(), [q], executions=2, completer=modele(script))
+    assert [e.ok for e in ex] == [True, False]
+    assert "aucun" in banc.formater(ex)
+
+
 def test_sans_modele(monkeypatch, capsys):
     monkeypatch.setenv("SANS_MODELE", "1")
     assert banc.main(["http://127.0.0.1:1/mcp", "--questions", "absent.yaml"]) == 0

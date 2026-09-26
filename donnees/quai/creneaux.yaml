@@ -1,0 +1,465 @@
+# Généré par « python -m donnees.quai.creneaux » — ne pas modifier à la main.
+marees:
+  '2026-10-06':
+  - - 03:10
+    - 06:10
+  - - '15:30'
+    - '18:30'
+  '2026-10-07':
+  - - 03:50
+    - 06:50
+  - - '16:10'
+    - '19:10'
+  '2026-10-08':
+  - - 04:30
+    - 07:30
+  - - '16:50'
+    - '19:50'
+creneaux:
+  '2026-10-06':
+    1:
+    - debut: 00:00
+      fin: 02:00
+      escale_id: null
+    - debut: 02:00
+      fin: 04:00
+      escale_id: null
+    - debut: 04:00
+      fin: 06:00
+      escale_id: null
+    - debut: 06:00
+      fin: 08:00
+      escale_id: null
+    - debut: 08:00
+      fin: '10:00'
+      escale_id: null
+    - debut: '10:00'
+      fin: '12:00'
+      escale_id: null
+    - debut: '12:00'
+      fin: '14:00'
+      escale_id: null
+    - debut: '14:00'
+      fin: '16:00'
+      escale_id: null
+    - debut: '16:00'
+      fin: '18:00'
+      escale_id: null
+    - debut: '18:00'
+      fin: '20:00'
+      escale_id: null
+    - debut: '20:00'
+      fin: '22:00'
+      escale_id: null
+    - debut: '22:00'
+      fin: '24:00'
+      escale_id: null
+    2:
+    - debut: 00:00
+      fin: 02:00
+      escale_id: ESC-2026-0406
+    - debut: 02:00
+      fin: 04:00
+      escale_id: null
+    - debut: 04:00
+      fin: 06:00
+      escale_id: null
+    - debut: 06:00
+      fin: 08:00
+      escale_id: null
+    - debut: 08:00
+      fin: '10:00'
+      escale_id: null
+    - debut: '10:00'
+      fin: '12:00'
+      escale_id: null
+    - debut: '12:00'
+      fin: '14:00'
+      escale_id: null
+    - debut: '14:00'
+      fin: '16:00'
+      escale_id: null
+    - debut: '16:00'
+      fin: '18:00'
+      escale_id: null
+    - debut: '18:00'
+      fin: '20:00'
+      escale_id: null
+    - debut: '20:00'
+      fin: '22:00'
+      escale_id: null
+    - debut: '22:00'
+      fin: '24:00'
+      escale_id: null
+    3:
+    - debut: 00:00
+      fin: 02:00
+      escale_id: null
+    - debut: 02:00
+      fin: 04:00
+      escale_id: null
+    - debut: 04:00
+      fin: 06:00
+      escale_id: null
+    - debut: 06:00
+      fin: 08:00
+      escale_id: ESC-2026-0408
+    - debut: 08:00
+      fin: '10:00'
+      escale_id: ESC-2026-0408
+    - debut: '10:00'
+      fin: '12:00'
+      escale_id: ESC-2026-0408
+    - debut: '12:00'
+      fin: '14:00'
+      escale_id: ESC-2026-0408
+    - debut: '14:00'
+      fin: '16:00'
+      escale_id: ESC-2026-0408
+    - debut: '16:00'
+      fin: '18:00'
+      escale_id: ESC-2026-0408
+    - debut: '18:00'
+      fin: '20:00'
+      escale_id: null
+    - debut: '20:00'
+      fin: '22:00'
+      escale_id: null
+    - debut: '22:00'
+      fin: '24:00'
+      escale_id: null
+    4:
+    - debut: 00:00
+      fin: 02:00
+      escale_id: null
+    - debut: 02:00
+      fin: 04:00
+      escale_id: null
+    - debut: 04:00
+      fin: 06:00
+      escale_id: null
+    - debut: 06:00
+      fin: 08:00
+      escale_id: null
+    - debut: 08:00
+      fin: '10:00'
+      escale_id: ESC-2026-0409
+    - debut: '10:00'
+      fin: '12:00'
+      escale_id: ESC-2026-0409
+    - debut: '12:00'
+      fin: '14:00'
+      escale_id: ESC-2026-0409
+    - debut: '14:00'
+      fin: '16:00'
+      escale_id: ESC-2026-0409
+    - debut: '16:00'
+      fin: '18:00'
+      escale_id: ESC-2026-0409
+    - debut: '18:00'
+      fin: '20:00'
+      escale_id: ESC-2026-0409
+    - debut: '20:00'
+      fin: '22:00'
+      escale_id: ESC-2026-0409
+    - debut: '22:00'
+      fin: '24:00'
+      escale_id: ESC-2026-0409
+  '2026-10-07':
+    1:
+    - debut: 00:00
+      fin: 02:00
+      escale_id: null
+    - debut: 02:00
+      fin: 04:00
+      escale_id: null
+    - debut: 04:00
+      fin: 06:00
+      escale_id: ESC-2026-0410
+    - debut: 06:00
+      fin: 08:00
+      escale_id: ESC-2026-0410
+    - debut: 08:00
+      fin: '10:00'
+      escale_id: ESC-2026-0410
+    - debut: '10:00'
+      fin: '12:00'
+      escale_id: ESC-2026-0410
+    - debut: '12:00'
+      fin: '14:00'
+      escale_id: ESC-2026-0410
+    - debut: '14:00'
+      fin: '16:00'
+      escale_id: ESC-2026-0410
+    - debut: '16:00'
+      fin: '18:00'
+      escale_id: null
+    - debut: '18:00'
+      fin: '20:00'
+      escale_id: null
+    - debut: '20:00'
+      fin: '22:00'
+      escale_id: null
+    - debut: '22:00'
+      fin: '24:00'
+      escale_id: null
+    2:
+    - debut: 00:00
+      fin: 02:00
+      escale_id: null
+    - debut: 02:00
+      fin: 04:00
+      escale_id: null
+    - debut: 04:00
+      fin: 06:00
+      escale_id: null
+    - debut: 06:00
+      fin: 08:00
+      escale_id: null
+    - debut: 08:00
+      fin: '10:00'
+      escale_id: null
+    - debut: '10:00'
+      fin: '12:00'
+      escale_id: null
+    - debut: '12:00'
+      fin: '14:00'
+      escale_id: ESC-2026-0411
+    - debut: '14:00'
+      fin: '16:00'
+      escale_id: ESC-2026-0411
+    - debut: '16:00'
+      fin: '18:00'
+      escale_id: ESC-2026-0411
+    - debut: '18:00'
+      fin: '20:00'
+      escale_id: ESC-2026-0411
+    - debut: '20:00'
+      fin: '22:00'
+      escale_id: ESC-2026-0411
+    - debut: '22:00'
+      fin: '24:00'
+      escale_id: ESC-2026-0411
+    3:
+    - debut: 00:00
+      fin: 02:00
+      escale_id: null
+    - debut: 02:00
+      fin: 04:00
+      escale_id: null
+    - debut: 04:00
+      fin: 06:00
+      escale_id: null
+    - debut: 06:00
+      fin: 08:00
+      escale_id: null
+    - debut: 08:00
+      fin: '10:00'
+      escale_id: null
+    - debut: '10:00'
+      fin: '12:00'
+      escale_id: null
+    - debut: '12:00'
+      fin: '14:00'
+      escale_id: null
+    - debut: '14:00'
+      fin: '16:00'
+      escale_id: null
+    - debut: '16:00'
+      fin: '18:00'
+      escale_id: null
+    - debut: '18:00'
+      fin: '20:00'
+      escale_id: null
+    - debut: '20:00'
+      fin: '22:00'
+      escale_id: null
+    - debut: '22:00'
+      fin: '24:00'
+      escale_id: null
+    4:
+    - debut: 00:00
+      fin: 02:00
+      escale_id: ESC-2026-0409
+    - debut: 02:00
+      fin: 04:00
+      escale_id: ESC-2026-0409
+    - debut: 04:00
+      fin: 06:00
+      escale_id: ESC-2026-0409
+    - debut: 06:00
+      fin: 08:00
+      escale_id: ESC-2026-0409
+    - debut: 08:00
+      fin: '10:00'
+      escale_id: ESC-2026-0409
+    - debut: '10:00'
+      fin: '12:00'
+      escale_id: null
+    - debut: '12:00'
+      fin: '14:00'
+      escale_id: null
+    - debut: '14:00'
+      fin: '16:00'
+      escale_id: null
+    - debut: '16:00'
+      fin: '18:00'
+      escale_id: null
+    - debut: '18:00'
+      fin: '20:00'
+      escale_id: null
+    - debut: '20:00'
+      fin: '22:00'
+      escale_id: null
+    - debut: '22:00'
+      fin: '24:00'
+      escale_id: null
+  '2026-10-08':
+    1:
+    - debut: 00:00
+      fin: 02:00
+      escale_id: null
+    - debut: 02:00
+      fin: 04:00
+      escale_id: null
+    - debut: 04:00
+      fin: 06:00
+      escale_id: null
+    - debut: 06:00
+      fin: 08:00
+      escale_id: null
+    - debut: 08:00
+      fin: '10:00'
+      escale_id: null
+    - debut: '10:00'
+      fin: '12:00'
+      escale_id: null
+    - debut: '12:00'
+      fin: '14:00'
+      escale_id: null
+    - debut: '14:00'
+      fin: '16:00'
+      escale_id: null
+    - debut: '16:00'
+      fin: '18:00'
+      escale_id: null
+    - debut: '18:00'
+      fin: '20:00'
+      escale_id: null
+    - debut: '20:00'
+      fin: '22:00'
+      escale_id: null
+    - debut: '22:00'
+      fin: '24:00'
+      escale_id: null
+    2:
+    - debut: 00:00
+      fin: 02:00
+      escale_id: null
+    - debut: 02:00
+      fin: 04:00
+      escale_id: null
+    - debut: 04:00
+      fin: 06:00
+      escale_id: null
+    - debut: 06:00
+      fin: 08:00
+      escale_id: null
+    - debut: 08:00
+      fin: '10:00'
+      escale_id: null
+    - debut: '10:00'
+      fin: '12:00'
+      escale_id: null
+    - debut: '12:00'
+      fin: '14:00'
+      escale_id: null
+    - debut: '14:00'
+      fin: '16:00'
+      escale_id: null
+    - debut: '16:00'
+      fin: '18:00'
+      escale_id: null
+    - debut: '18:00'
+      fin: '20:00'
+      escale_id: null
+    - debut: '20:00'
+      fin: '22:00'
+      escale_id: null
+    - debut: '22:00'
+      fin: '24:00'
+      escale_id: null
+    3:
+    - debut: 00:00
+      fin: 02:00
+      escale_id: null
+    - debut: 02:00
+      fin: 04:00
+      escale_id: null
+    - debut: 04:00
+      fin: 06:00
+      escale_id: null
+    - debut: 06:00
+      fin: 08:00
+      escale_id: ESC-2026-0412
+    - debut: 08:00
+      fin: '10:00'
+      escale_id: ESC-2026-0412
+    - debut: '10:00'
+      fin: '12:00'
+      escale_id: ESC-2026-0412
+    - debut: '12:00'
+      fin: '14:00'
+      escale_id: ESC-2026-0412
+    - debut: '14:00'
+      fin: '16:00'
+      escale_id: ESC-2026-0412
+    - debut: '16:00'
+      fin: '18:00'
+      escale_id: ESC-2026-0412
+    - debut: '18:00'
+      fin: '20:00'
+      escale_id: ESC-2026-0412
+    - debut: '20:00'
+      fin: '22:00'
+      escale_id: null
+    - debut: '22:00'
+      fin: '24:00'
+      escale_id: null
+    4:
+    - debut: 00:00
+      fin: 02:00
+      escale_id: null
+    - debut: 02:00
+      fin: 04:00
+      escale_id: null
+    - debut: 04:00
+      fin: 06:00
+      escale_id: null
+    - debut: 06:00
+      fin: 08:00
+      escale_id: null
+    - debut: 08:00
+      fin: '10:00'
+      escale_id: null
+    - debut: '10:00'
+      fin: '12:00'
+      escale_id: null
+    - debut: '12:00'
+      fin: '14:00'
+      escale_id: null
+    - debut: '14:00'
+      fin: '16:00'
+      escale_id: null
+    - debut: '16:00'
+      fin: '18:00'
+      escale_id: null
+    - debut: '18:00'
+      fin: '20:00'
+      escale_id: null
+    - debut: '20:00'
+      fin: '22:00'
+      escale_id: null
+    - debut: '22:00'
+      fin: '24:00'
+      escale_id: null

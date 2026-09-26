@@ -1,0 +1,23 @@
+# Quais du terminal PHAROS (LAB 6). Écrit à la main.
+# tirant_eau_max_m : tirant d'eau maximal admis au quai, à pleine mer. Chaque escale de
+# donnees/corpus/escales.yaml tient dans son quai (test du kit).
+quais:
+  - quai: 1
+    longueur_m: 220
+    tirant_eau_max_m: 10.5
+    equipements: ["2 portiques", "1 grue mobile"]
+  - quai: 2
+    longueur_m: 260
+    tirant_eau_max_m: 12.0
+    equipements: ["2 portiques", "40 prises reefer"]
+  - quai: 3
+    longueur_m: 300
+    tirant_eau_max_m: 13.5
+    equipements: ["3 portiques", "60 prises reefer"]
+  - quai: 4
+    longueur_m: 340
+    tirant_eau_max_m: 14.5
+    equipements: ["3 portiques", "1 grue mobile", "80 prises reefer"]
+maree:
+  # Au-delà de ce tirant d'eau, un navire n'accoste que dans une fenêtre de pleine mer (creneaux.yaml).
+  seuil_tirant_eau_m: 12.0

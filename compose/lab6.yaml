@@ -1,0 +1,4 @@
+services:
+  pharos-quai:
+    extends: {file: compose/commun/base.yaml, service: python-base}
+    command: python -m watchfiles --filter python "python -m serveurs.pharos_quai.serveur" serveurs src

@@ -1,0 +1,12 @@
+# Banc du premier appel — LAB 6 (les cinq questions du brief). « attendu » : nom d'origine de l'outil ;
+# make lab6-mesurer le traduit dans le nom actuel, retrouvé par son schéma (tests/empreinte_schemas_quai.json).
+- question: "Quelles escales sont prévues aujourd'hui ?"
+  attendu: get_data
+- question: "Quel est le tirant d'eau maximal du quai 3 ?"
+  attendu: info_quai
+- question: "Le Vent d'Autan a-t-il un créneau jeudi matin ?"
+  attendu: search
+- question: "Quelles escales sont prévues au quai 3 demain ?"
+  attendu: get_data_2
+- question: "À quelle heure le Vent d'Autan peut-il accoster jeudi ?"
+  attendu: process
