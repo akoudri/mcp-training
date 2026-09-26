@@ -1,0 +1,4 @@
+services:
+  pharos-docs:
+    extends: {file: compose/commun/base.yaml, service: python-base}
+    command: python -m watchfiles --filter python "python -m serveurs.pharos_docs.serveur" serveurs src
