@@ -60,6 +60,30 @@ def test_charger_questions(tmp_path):
     assert qs[1].constat and qs[1].arguments_attendus == {"sujet": "penalites"}
 
 
+
+def test_charger_questions_avec_contexte(tmp_path):
+    f = tmp_path / "q.yaml"
+    f.write_text("- question: Et l'assurance ?\n  attendu: x\n  contexte:\n"
+                 "    - {role: user, content: Question précédente}\n"
+                 "    - {role: assistant, content: Réponse précédente}\n", encoding="utf-8")
+    [q] = banc.charger_questions(f)
+    assert q.contexte == ({"role": "user", "content": "Question précédente"},
+                          {"role": "assistant", "content": "Réponse précédente"})
+
+
+async def test_contexte_rejoue_avant_la_question():
+    vus = []
+    q = Question(1, "Et l'assurance ?", "rechercher_clause",
+                 contexte=({"role": "user", "content": "Avant"}, {"role": "assistant", "content": "Réponse"}))
+
+    def completer(messages, outils, **_):
+        vus.append([m["content"] for m in messages])
+        return Reponse({"role": "assistant", "content": None}, [Appel("a1", "rechercher_clause", {})], {})
+
+    await banc.executer_banc(serveur(), [q], completer=completer)
+    assert vus[0][1:] == ["Avant", "Réponse", "Et l'assurance ?"]
+
+
 async def test_premier_appel_juge():
     script = {Q1.texte: [("lister_documents", {"escale_id": "ESC-2026-0412"})],
               Q2.texte: [("lister_documents", {"escale_id": "?"})],

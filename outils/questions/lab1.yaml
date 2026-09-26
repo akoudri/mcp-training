@@ -11,8 +11,11 @@
   arguments_attendus: {escale_id: ESC-2026-0412}
 - question: "Y a-t-il une clause d'assurance dans ce contrat ?"
   attendu: rechercher_clause
-  arguments_attendus: {sujet: assurance}
-  constat: true
+  arguments_attendus: {escale_id: ESC-2026-0412, sujet: assurance}
+  # Posée dans la même conversation que la question 3 : le banc rejoue ce tour.
+  contexte:
+    - {role: user, content: "À quelle date expire le contrat de l'escale ESC-2026-0412 ?"}
+    - {role: assistant, content: "Le contrat de manutention CM-0412 de l'escale ESC-2026-0412 arrive à échéance le 31 mars 2027."}
 - question: "Quelle est la pénalité pour l'escale ESC-2026-9999 ?"
   attendu: rechercher_clause
   resultat_attendu: erreur_metier

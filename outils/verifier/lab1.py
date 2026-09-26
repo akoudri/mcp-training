@@ -146,20 +146,16 @@ async def _(ctx):
         raise Echec(f"dates attendues absentes : {', '.join(manquantes) or '—'}. Reçu : « {t[:200]} »")
 
 
-NOTE_Q4 = ("Question 4 consignée sans verdict : elle dépend du contexte de la question 3 (« ce contrat »), "
-           "absent du protocole mono-tour du banc.")
-
-
 @v.critere("Les questions 1, 3 et 4 déclenchent le bon outil sans reformulation humaine.", modele=True)
 async def _(ctx):
     executions = await banc.executer_banc(ctx.url, banc.charger_questions(QUESTIONS), executions=1, executer=True)
     ctx.cache["banc"] = executions
     table = banc.formater(executions, "Premier appel des cinq questions")
-    detail = f"{NOTE_Q4}\n{table}"
-    ratees = [n for n in (1, 3) if not all(e.ok for e in executions if e.question.numero == n)]
+    ratees = [n for n in (1, 3, 4) if not all(e.ok for e in executions if e.question.numero == n)]
     if ratees:
-        raise Echec(f"questions ratées : {', '.join(map(str, ratees))}\n{detail}")
-    return detail
+        raise Echec(f"questions ratées : {', '.join(map(str, ratees))} — reprendre la description de l'outil "
+                    f"attendu et celle de ses paramètres (à quoi il sert, quand l'appeler)\n{table}")
+    return table
 
 
 @v.critere("La question 5 produit une erreur métier lisible : aucune trace de pile, aucun plantage du serveur.")
@@ -198,11 +194,7 @@ async def _(ctx):
 def _(ctx):
     executions = ctx.cache.get("banc", [])
     vu2 = next((e for e in executions if e.question.numero == 2), None)
-    vu4 = next((e for e in executions if e.question.numero == 4), None)
     consigne = "Consigner dans labs/lab1/resultats.md ce que le modèle a fait pour la question 2."
     if vu2 is None:
         return consigne
-    detail = consigne + f"\nBanc : premier appel {vu2.outil or 'aucun'}({vu2.arguments})."
-    if vu4 is not None:
-        detail += f"\nBanc (Q4) : premier appel {vu4.outil or 'aucun'}({vu4.arguments})."
-    return detail
+    return consigne + f"\nBanc : premier appel {vu2.outil or 'aucun'}({vu2.arguments})."

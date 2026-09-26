@@ -31,6 +31,7 @@ class Question:
     arguments_attendus: dict = field(default_factory=dict)
     resultat_attendu: str | None = None     # "erreur_metier" : le premier appel doit produire isError
     constat: bool = False                   # consignée sans verdict (LAB 1, question 2)
+    contexte: tuple = ()                    # tours précédents rejoués avant la question (LAB 1, Q4 après Q3)
 
 
 @dataclass
@@ -47,7 +48,8 @@ class Execution:
 def charger_questions(chemin) -> list[Question]:
     donnees = yaml.safe_load(Path(chemin).read_text(encoding="utf-8"))
     return [Question(i, q["question"], q["attendu"], q.get("arguments_attendus") or {},
-                     q.get("resultat_attendu"), bool(q.get("constat")))
+                     q.get("resultat_attendu"), bool(q.get("constat")),
+                     tuple(dict(m) for m in q.get("contexte") or ()))
             for i, q in enumerate(donnees, 1)]
 
 
@@ -75,7 +77,8 @@ async def executer_banc(cible, questions: list[Question], executions: int = 1, e
         outils = openrouter.outils_openai(await client.list_tools())
         for q in questions:
             for _ in range(executions):
-                messages = [{"role": "system", "content": CONSIGNE}, {"role": "user", "content": q.texte}]
+                messages = [{"role": "system", "content": CONSIGNE}, *q.contexte,
+                            {"role": "user", "content": q.texte}]
                 reponse = await asyncio.to_thread(completer, messages, outils)
                 premier = reponse.appels[0] if reponse.appels else None
                 resultat = est_erreur = None
