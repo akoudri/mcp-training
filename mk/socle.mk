@@ -35,3 +35,9 @@ inspector-client: ## Démarre l'Inspector officiel (appels manuels)
 	@$(call ouvrir,http://localhost:7002)
 
 .PHONY: inspector-client
+
+doctor: ## Vérifie l'environnement : trois lignes OK attendues
+	@docker info >/dev/null 2>&1 || { echo "  socle     ÉCHEC  Docker ne répond pas : démarrer le service Docker (sudo service docker start sous WSL)."; exit 1; }
+	@$(DC) run --rm -T atelier python -m outils.doctor $(if $(SANS_MODELE),--sans-modele)
+
+.PHONY: doctor
