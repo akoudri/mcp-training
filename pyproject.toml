@@ -4,10 +4,12 @@ version = "0.1.0"
 description = "Kit des labs de la formation « Créer des agents IA avec MCP » — fil rouge PHAROS"
 requires-python = ">=3.12,<3.13"
 dependencies = [
-    "fastmcp==4.0.10",
+    "asyncpg>=0.30",
+    "fastmcp[tasks]==4.0.10",
     "httpx>=0.28",
     "pypdf>=5.0",
     "reportlab>=4.2",
+    "sqlglot>=27,<28",
     "pyyaml>=6.0",
     "tiktoken>=0.8",
     "watchfiles>=1.0",

@@ -4,7 +4,7 @@
 # Les chemins relatifs de ce fichier sont résolus depuis ce fichier : ../.. est la racine du dépôt.
 services:
   python-base:
-    image: pharos/python:1
+    image: pharos/python:2
     build: {context: ../.., dockerfile: images/python/Dockerfile}
     # Image propre au kit : jamais tirée d'un registre, construite ici si absente.
     pull_policy: never
