@@ -5,4 +5,4 @@ __pycache__/
 .env
 logs/
 sortie/
-config/mcpjam/
+.vscode/mcp.json

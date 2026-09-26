@@ -27,16 +27,6 @@ services:
     networks: [pharos]
     restart: unless-stopped
 
-  mcpjam:
-    image: pharos/mcpjam:3.12.0
-    build: {context: images/mcpjam}
-    ports: ["7000:6274"]
-    volumes: ["./config/mcpjam:/config"]
-    environment:
-      MCPJAM_ALLOWED_HOSTS: "localhost,127.0.0.1"
-    networks: [pharos]
-    restart: unless-stopped
-
   inspector:
     image: node:22-slim
     profiles: [outils]
