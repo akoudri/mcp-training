@@ -83,3 +83,11 @@ def test_plusieurs_repertoires_et_fichiers_hors_convention(tmp_path, monkeypatch
 def test_repertoire_absent_ignore(monkeypatch):
     monkeypatch.setenv("PHAROS_DOCUMENTS", f"{DOCS}:/inexistant")
     assert extraction.documents_de_escale("ESC-2026-0412")
+
+
+def test_documents_tries_et_complets(monkeypatch):
+    monkeypatch.setenv("PHAROS_DOCUMENTS", "donnees/documents")
+    docs = extraction.documents()
+    assert len(docs) == 27
+    assert [d.document_id for d in docs] == sorted(d.document_id for d in docs)
+    assert next(d for d in docs if d.document_id == "CM-0409").nb_pages == 80

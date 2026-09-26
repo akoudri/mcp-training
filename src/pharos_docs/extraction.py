@@ -99,6 +99,11 @@ def documents_de_escale(escale_id: str) -> list[Document]:
     return [doc for _, doc in _index().values() if doc.escale_id == escale_id]
 
 
+def documents() -> list[Document]:
+    """Tous les documents indexés, triés par identifiant."""
+    return sorted((doc for _, doc in _index().values()), key=lambda d: d.document_id)
+
+
 def texte_du_document(document_id: str) -> list[Page]:
     entree = _index().get(document_id)
     if entree is None:

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import contextlib
 import importlib.util
+import shutil
 import socket
 import sys
 import threading
@@ -13,6 +14,10 @@ from pathlib import Path
 import uvicorn
 from fastmcp import FastMCP
 from fastmcp.exceptions import ToolError
+
+from outils.construire_etats import superposer
+
+RACINE_KIT = Path(__file__).resolve().parents[1]
 
 
 @contextlib.contextmanager
@@ -85,3 +90,11 @@ def serveur_demo() -> FastMCP:
         raise RuntimeError("panne interne")
 
     return mcp
+
+
+def etat_complet(destination: Path, lab: int) -> Path:
+    """Copie du kit (comme une branche etat/*) avec gabarits et solutions superposés jusqu'au lab."""
+    shutil.copytree(RACINE_KIT, destination, dirs_exist_ok=True, ignore=shutil.ignore_patterns(
+        ".git", ".venv", "solutions", "__pycache__", ".pytest_cache", "logs", "sortie", ".superpowers"))
+    superposer(destination, RACINE_KIT / "gabarits", RACINE_KIT / "solutions", lab)
+    return destination
