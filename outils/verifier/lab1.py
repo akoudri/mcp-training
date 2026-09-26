@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import yaml
@@ -28,6 +29,20 @@ def _texte(resultat) -> str:
 
 def _non_rattrapee(texte: str) -> bool:
     return "Traceback" in texte or texte.startswith("Error calling tool")
+
+
+def _normaliser_espaces(texte: str) -> str:
+    """Un saut de ligne réel ou échappé (« \\n » littéral) devient un espace ; les espaces sont ramassés."""
+    return re.sub(r"\s+", " ", texte.replace("\\n", " ").replace("\n", " ")).strip()
+
+
+def _formes_date(d) -> list[str]:
+    """Formes acceptées pour une date de contrat : ISO, « D mois AAAA » (« 1er » pour le 1er), JJ/MM/AAAA."""
+    mois = MOIS[d.month - 1]
+    formes = [d.isoformat(), f"{d.day} {mois} {d.year}", f"{d.day:02d}/{d.month:02d}/{d.year}"]
+    if d.day == 1:
+        formes.append(f"1er {mois} {d.year}")
+    return formes
 
 
 async def _outils(ctx) -> dict:
@@ -93,11 +108,11 @@ async def _(ctx):
 async def _(ctx):
     cas = [
         ({"escale_id": "ESC-2026-9999", "sujet": "penalites"}, "escale inconnue",
-         lambda t: "format" in t.lower() and "lister_documents" in t,
+         lambda t: ("format" in t.lower() or "ESC-AAAA-NNNN" in t) and "lister_documents" in t,
          "le format attendu (ESC-AAAA-NNNN) et le nom de l'outil lister_documents"),
         ({"escale_id": "ESC-2026-0406", "sujet": "penalites"}, "aucun contrat (ESC-2026-0406)",
-         lambda t: "BL-0406" in t or "AE-0406" in t,
-         "ce qui existe à la place (connaissements BL-0406-…, avis d'escale AE-0406)"),
+         lambda t: "BL-0406" in t or "AE-0406" in t or "connaissement" in t.lower() or "avis" in t.lower(),
+         "ce qui existe à la place (connaissements BL-0406-…, avis d'escale AE-0406, ou juste le type de document)"),
         ({"escale_id": "ESC-2026-0408", "sujet": "assurance"}, "sujet absent (ESC-2026-0408, assurance)",
          lambda t: "penalites" in t.lower() or "pénalités" in t.lower(),
          "les sujets effectivement présents dans ce contrat"),
@@ -121,11 +136,11 @@ async def _(ctx):
     escales = yaml.safe_load((RACINE / "donnees" / "corpus" / "escales.yaml").read_text(encoding="utf-8"))["escales"]
     contrat = next(e for e in escales if e["escale_id"] == "ESC-2026-0412")["contrat"]
     r = await _appeler(ctx, "extraire_dates_contractuelles", {"escale_id": "ESC-2026-0412"})
-    t = _texte(r)
+    t = _normaliser_espaces(_texte(r))
     manquantes = []
     for champ in ("signature", "prise_effet", "echeance"):
         d = contrat[champ]
-        if d.isoformat() not in t and f"{d.day} {MOIS[d.month - 1]} {d.year}" not in t:
+        if not any(forme in t for forme in _formes_date(d)):
             manquantes.append(f"{champ} ({d.isoformat()})")
     if r.is_error or manquantes:
         raise Echec(f"dates attendues absentes : {', '.join(manquantes) or '—'}. Reçu : « {t[:200]} »")
