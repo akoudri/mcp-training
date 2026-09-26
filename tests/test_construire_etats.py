@@ -141,6 +141,77 @@ def test_pousser_refuse_si_le_distant_a_avance(depot, tmp_path):
         ce.construire(depot, labs=[1], pousser=True)
 
 
+def test_fa2_fin_absent_localement_part_du_suivi(depot, tmp_path):
+    """Branche locale etat/fa2-fin absente mais <distant>/etat/fa2-fin présente sur un ancêtre
+    de la base (cas d'un clone neuf) : avancée depuis cette ref de suivi (pas créée à neuf sur
+    la base en ignorant le distant), puis poussée."""
+    distant = tmp_path / "distant.git"
+    git(tmp_path, "init", "-q", "--bare", str(distant))
+    git(depot, "remote", "add", "origin", str(distant))
+    git(depot, "push", "-q", "origin", "etat/fa2-fin")
+    git(depot, "branch", "-D", "etat/fa2-fin")
+    git(depot, "fetch", "-q", "origin", "etat/fa2-fin")
+    ecrire(depot, "AUTRE.md", "suite du kit\n")
+    git(depot, "add", "-A")
+    git(depot, "commit", "-q", "-m", "suite du kit")
+    nouvelle_base = git(depot, "rev-parse", "main")
+    messages = ce.construire(depot, labs=[1], pousser=True)
+    assert git(depot, "rev-parse", "etat/fa2-fin") == nouvelle_base
+    assert git(distant, "rev-parse", "etat/fa2-fin") == nouvelle_base
+    assert any("fa2-fin" in m and "avancé" in m for m in messages)
+
+
+def test_fa2_fin_suivi_divergent_refuse(depot, tmp_path):
+    """<distant>/etat/fa2-fin (branche locale absente) sur un commit qui n'est pas ancêtre de la
+    base → Refus, distant inchangé (pas seulement l'ascendance locale qui compte)."""
+    distant = tmp_path / "distant.git"
+    git(tmp_path, "init", "-q", "--bare", str(distant))
+    git(depot, "remote", "add", "origin", str(distant))
+    git(depot, "push", "-q", "origin", "etat/fa2-fin")
+    git(depot, "branch", "-D", "etat/fa2-fin")
+    clone = tmp_path / "clone"
+    git(tmp_path, "clone", "-q", str(distant), str(clone))
+    git(clone, "config", "user.name", "tiers")
+    git(clone, "config", "user.email", "tiers@example.invalid")
+    git(clone, "switch", "-q", "etat/fa2-fin")
+    ecrire(clone, "DIVERGENCE.md", "autre historique\n")
+    git(clone, "add", "-A")
+    git(clone, "commit", "-q", "-m", "divergence")
+    git(clone, "push", "-q", "origin", "etat/fa2-fin")
+    git(depot, "fetch", "-q", "origin", "etat/fa2-fin")
+    avant = git(distant, "rev-parse", "etat/fa2-fin")
+    with pytest.raises(ce.Refus, match="divergé"):
+        ce.construire(depot, labs=[1])
+    assert git(distant, "rev-parse", "etat/fa2-fin") == avant
+
+
+def test_fa2_fin_pousse_apres_lassemblage_pas_avant(depot, tmp_path):
+    """Si l'assemblage d'un des états échoue (ici : push refusé pour un autre lab), le push de
+    etat/fa2-fin — fait après l'assemblage de tous les états — n'a pas lieu : le distant ne se
+    retrouve pas à moitié avancé."""
+    distant = tmp_path / "distant.git"
+    git(tmp_path, "init", "-q", "--bare", str(distant))
+    git(depot, "remote", "add", "origin", str(distant))
+    ce.construire(depot, labs=[4], pousser=True)
+    fa2_avant = git(distant, "rev-parse", "etat/fa2-fin")
+    ecrire(depot, "AUTRE.md", "suite du kit\n")
+    git(depot, "add", "-A")
+    git(depot, "commit", "-q", "-m", "suite du kit")
+    clone = tmp_path / "clone"
+    git(tmp_path, "clone", "-q", str(distant), str(clone))
+    git(clone, "config", "user.name", "concurrent")
+    git(clone, "config", "user.email", "concurrent@example.invalid")
+    git(clone, "switch", "-q", "etat/or1-fin")
+    ecrire(clone, "AILLEURS.md", "avance concurrente\n")
+    git(clone, "add", "-A")
+    git(clone, "commit", "-q", "-m", "avance concurrente")
+    git(clone, "push", "-q", "origin", "etat/or1-fin")
+    with pytest.raises(ce.Refus, match="stale info|rejected"):
+        ce.construire(depot, labs=[1, 4], pousser=True)
+    assert git(depot, "rev-parse", "etat/fa2-fin") == git(depot, "rev-parse", "main")
+    assert git(distant, "rev-parse", "etat/fa2-fin") == fa2_avant
+
+
 def test_superposer(tmp_path):
     ecrire(tmp_path, "g/lab01/a.txt", "gabarit")
     ecrire(tmp_path, "g/lab01/b.txt", "gabarit b")
