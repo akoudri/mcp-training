@@ -2,6 +2,9 @@
 
 Indexe les PDF nommés <escale_id>__<type>__<document_id>.pdf présents dans les
 répertoires de PHAROS_DOCUMENTS (séparés par « : »).
+
+Si deux répertoires contiennent un document de même document_id, le dernier
+répertoire de PHAROS_DOCUMENTS l'emporte : son fichier masque les précédents.
 """
 
 from __future__ import annotations

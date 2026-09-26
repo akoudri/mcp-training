@@ -20,7 +20,7 @@ l'agent) prime sur le brief d'origine. Ce document couvre :
 |---|---|---|---|
 | 1 | Sur un Ubuntu 24.04 vierge **et** un Windows 11 + WSL2, en suivant `PREPARATION.md` sans autre intervention, `make doctor` affiche trois `OK`. | ⏳ à vérifier par le formateur | Aucune VM vierge disponible pour l'agent. La mécanique de `make doctor` est vérifiée par ailleurs sur ce poste : `make doctor SANS_MODELE=1` → `socle OK` / `serveur OK` (2 lignes) ; `make doctor` sans `.env` → `modèle ÉCHEC clé absente : renseigner OPENROUTER_API_KEY dans .env…` (comportement voulu, cf. constraints.md §5). Procédure complète : § « Machines vierges » ci-dessous. |
 | 2 | Le socle du LAB 0 se déroule de bout en bout avec le modèle par défaut : les trois outils apparaissent dans VS Code, la question de référence produit une réponse, et l'observateur montre au moins un `tools/call` correspondant. | ✅ vérifié côté serveur / ⏳ partie VS Code + modèle réel à vérifier par le formateur | Côté serveur, sans modèle, depuis l'hôte (`fastmcp.Client("http://localhost:8100/mcp")`) : 3 outils exposés (`lire_document`, `lister_documents`, `rechercher_clause`) ; `lister_documents("ESC-2026-0412")` → 4 documents ; `rechercher_clause("ESC-2026-0412", "penalites")` renvoie l'article 7 contenant « 1 850 € ». Les deux appels apparaissent dans l'observateur (`GET /flows` de l'API mitmweb, `Authorization: Bearer pharos`) : 12 flux `POST /mcp`, dont un `tools/call rechercher_clause` et un `tools/call lister_documents` sur `ESC-2026-0412`, contenus vérifiés octet par octet. Partie VS Code + modèle OpenRouter réel : aucune clé disponible pour l'agent → procédure « V4 + chat réel » ci-dessous. |
-| 3 | Les extensions A, B et C fonctionnent comme décrites dans le brief. | ✅ mécanique vérifiée / ⏳ instabilité du choix (extension B) à vérifier par le formateur | **A** : `make tokens-catalogue` → `rechercher_clause 319`, `lire_document 263`, `lister_documents 185`, total `767 tokens pour 3 outils`. **B (mécanique)** ✅ : `make lab0-outil-jumeau` → 4 outils listés (`chercher_clause_contrat`, `lire_document`, `lister_documents`, `rechercher_clause`) ; `make lab0-up` → retour à 3 outils. **B (observation attendue)** ⏳ : l'extension demande de reposer la question de référence trois fois, en conversation vierge, avec un vrai modèle, pour constater que **le choix entre `rechercher_clause` et son jumeau devient instable** — cela nécessite un LLM réel (aucune clé disponible pour l'agent) et n'a pas été observé ici ; à faire par le formateur, procédure 2 ci-dessous. **C** ✅ : `make lab0-up VERBEUX=1` + un appel `lister_documents` → `logs/pharos-docs-demo.jsonl` contient des lignes `"sens": "recu"` et `"sens": "emis"` (requête et réponse JSON-RPC complètes) ; `make lab0-up` puis suppression de `logs/` effectuées. |
+| 3 | Les extensions A, B et C fonctionnent comme décrites dans le brief. | ✅ mécanique vérifiée / ⏳ instabilité du choix (extension B) à vérifier par le formateur | **A** : `make tokens-catalogue` → `rechercher_clause 499`, `lire_document 263`, `lister_documents 185`, total `947 tokens pour 3 outils` (après allongement de la description de `rechercher_clause` à la relecture finale : un outil hors de la fourchette 150-400 de FA1, les deux autres dedans). **B (mécanique)** ✅ : `make lab0-outil-jumeau` → 4 outils listés (`chercher_clause_contrat`, `lire_document`, `lister_documents`, `rechercher_clause`) ; `make lab0-up` → retour à 3 outils. **B (observation attendue)** ⏳ : l'extension demande de reposer la question de référence trois fois, en conversation vierge, avec un vrai modèle, pour constater que **le choix entre `rechercher_clause` et son jumeau devient instable** — cela nécessite un LLM réel (aucune clé disponible pour l'agent) et n'a pas été observé ici ; à faire par le formateur, procédure 2 ci-dessous. **C** ✅ : `make lab0-up VERBEUX=1` + un appel `lister_documents` → `logs/pharos-docs-demo.jsonl` contient des lignes `"sens": "recu"` et `"sens": "emis"` (requête et réponse JSON-RPC complètes) ; `make lab0-up` puis suppression de `logs/` effectuées. |
 | 4 | `make test` passe ; la CI de `pharos-labs` est verte. | ✅ vérifié | `uv run pytest -q` → `63 passed`. `make test` (dans le conteneur `atelier`) → `63 passed`. `gh run list -L 3` → deux dernières exécutions `ci` à l'état `ok` (runs `36205862747`, `36205750504`). |
 | 5 | Deux générations du corpus produisent des PDF identiques. | ✅ vérifié | `uv run pytest tests/test_generer.py -q` → `6 passed`, dont `test_generation_deterministe` (comparaison SHA-256 octet par octet entre deux générations dans des répertoires distincts) et `test_documents_versionnes_a_jour` (le corpus versionné dans `donnees/documents/` correspond à une génération fraîche). |
 | 6 | Les retouches du §18 sont faites dans le dépôt de la formation. | ✅ vérifié | Dépôt `mcp-training`, tâche 16, commits `7d29755` (« docs: aligne le LAB 0, le deck et la spec sur le socle construit ») et `76ffe86` (« docs: retire les mentions résiduelles de MCPJam de la spec ») : ligne « Fourni » du LAB 0 mise à jour (client VS Code au lieu de « client graphique préconfiguré ») et piège « cache des outils » complété avec la manipulation VS Code (`labs/LAB00_premier_contact.md`, vérifié ligne 33 et section Pièges & indices). Deck (`Formation Agent MCP.pptx`) retouché aux slides **3 (PRÉ-TRAVAIL, P2)** et **484 (BLOC 25.1, piège FastMCP)**, cf. `task-16-report.md` — **`*.pptx` est volontairement dans `.gitignore` du dépôt de la formation : ces retouches sont sur disque, pas dans un commit**, donc non vérifiables par `git log` (seules `labs/LAB00_premier_contact.md` et la spec le sont). Une mention résiduelle de « MCPJam » subsiste au deck, slide 400 (BLOC 20.3, liste générale d'hôtes MCP Apps) : **hors périmètre du §18** (ce n'est pas la désignation du client des labs), reportée au formateur — voir « Écarts constatés » ci-dessous. |
@@ -47,7 +47,8 @@ formateur.
    `docs/decisions/client-graphique.md` (faire confiance au dossier, saisir la clé OpenRouter dans
    **Manage Language Models → Add Models → OpenRouter**, choisir `google/gemini-3.6-flash`, copier
    `labs/lab0/client.config.json` en `.vscode/mcp.json`, démarrer le serveur MCP via la palette).
-5. En conversation vierge, mode *Agent*, poser **trois fois** mot pour mot :
+5. En conversation vierge, mode **PHAROS** (sélecteur de mode du chat ; pas *Agent*, qui peut lire
+   la réponse dans les fichiers du dépôt), poser **trois fois** mot pour mot :
    > Résume les obligations de l'opérateur portuaire dans le contrat de manutention de l'escale
    > ESC-2026-0412.
 
@@ -61,7 +62,7 @@ formateur.
      `PHAROS_MODELE` par défaut dans `.env.example` **et** dans `outils/cles_openrouter.py`
      (seul cas où ces deux fichiers peuvent être modifiés — l'agent de la tâche 17 ne les a pas
      touchés, conformément à l'amendement).
-7. Vérifier, si le temps le permet, les 5 points « À vérifier par le formateur » listés en fin de
+7. Vérifier, si le temps le permet, les 6 points « À vérifier par le formateur » listés en fin de
    `docs/decisions/client-graphique.md` (fichier `chatLanguageModels.json`, présélection du modèle,
    absence de mur d'inscription, chat Copilot sous Remote-WSL, fiabilité de l'appel d'outils).
 8. Fin de session :
@@ -100,7 +101,15 @@ intervention :
 2. Consigner toute étape manuelle **non prévue** par `PREPARATION.md` et l'ajouter au document.
 3. **Résultat attendu** : `make doctor` affiche trois `OK` en fin de procédure, sans intervention
    hors `PREPARATION.md`.
-4. **Rappel** : le dépôt `pharos-labs` est **privé**. Prévoir avant la session soit une clé de
+4. **VM Windows (Remote-WSL)** : les ports sont liés à `127.0.0.1` **dans WSL** ; vérifier
+   explicitement que le transfert de ports de WSL les rend joignables depuis Windows :
+   - le navigateur **Windows** ouvre http://localhost:7001 (Inspector — observateur de trafic, mot
+     de passe `pharos`) ;
+   - VS Code (fenêtre Remote-WSL) joint http://localhost:8100/mcp : palette > « MCP: List Servers »
+     > `pharos-docs-demo` > *Start* → 3 outils listés.
+   En cas d'échec, consigner la version de WSL (`wsl --version`) et le mode réseau
+   (`networkingMode` dans `%UserProfile%\.wslconfig`).
+5. **Rappel** : le dépôt `pharos-labs` est **privé**. Prévoir avant la session soit une clé de
    déploiement SSH (lecture seule) provisionnée sur chaque poste, soit un accès en lecture pour le
    centre de formation — `outils/preparer-pc.sh` suppose déjà l'un des deux (voir sa case à cocher
    dans `PREPARATION.md`).
@@ -163,10 +172,10 @@ $ make doctor        # sans .env
   serveur   OK     pharos-docs-demo expose 3 outils via l'observateur
 
 $ make tokens-catalogue
-  rechercher_clause             319          115         108     18
+  rechercher_clause             499          292         108     18
   lire_document                 263           75          79      0
   lister_documents              185           78          51      0
-  Total : 767 tokens pour 3 outils, payés à chaque tour de la boucle.
+  Total : 947 tokens pour 3 outils, payés à chaque tour de la boucle.
 
 $ make lab0-outil-jumeau   # puis vérification côté client fastmcp
 outils (jumeau actif): ['chercher_clause_contrat', 'lire_document', 'lister_documents', 'rechercher_clause'] -> 4

@@ -21,6 +21,8 @@ sudo usermod -aG docker "$USER"
 if grep -qi microsoft /proc/version; then
   # WSL : démarrage de Docker à l'ouverture d'Ubuntu (systemd activé par défaut sur Ubuntu 24.04 WSL)
   sudo systemctl enable --now docker || sudo service docker start
+  # wslu fournit wslview : « make inspector » ouvre ainsi le navigateur Windows
+  sudo apt-get install -y wslu
 fi
 
 echo "==> uv"

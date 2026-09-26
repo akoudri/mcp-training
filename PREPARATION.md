@@ -2,6 +2,11 @@
 
 À faire sur chaque PC, au plus tard la veille. Un poste n'est prêt que si la dernière case est cochée.
 
+## Avant la session (formateur)
+- [ ] Créer une clé OpenRouter plafonnée par binôme (commande lancée depuis un clone du dépôt, sur le poste du formateur) :
+  `OPENROUTER_CLE_GESTION=… uv run python -m outils.cles_openrouter creer --binomes 5 --plafond 5 --expiration <date de fin>`
+- [ ] Distribuer à chaque binôme N son fichier `sortie/binome-N.env` (clé USB ; jamais par un canal partagé).
+
 ## Windows uniquement
 - [ ] Virtualisation activée dans le BIOS/UEFI.
 - [ ] `outils/preparer-pc.ps1` exécuté dans PowerShell **en administrateur** ; PC redémarré si demandé.
@@ -11,6 +16,7 @@
 ## Linux, ou Ubuntu sous WSL
 - [ ] `outils/preparer-pc.sh` exécuté sans erreur (construit l'image via `make construire`, précharge l'image de l'observateur ; accès au dépôt privé : clé SSH de déploiement ou copie depuis la clé USB).
 - [ ] Session rouverte (groupe `docker` pris en compte) : `docker run --rm hello-world` fonctionne sans `sudo`.
+- [ ] Branche du binôme créée dans le dépôt cloné par le script : `cd ~/pharos-labs && git switch -c binome-N` (N = numéro du binôme). Les commits des labs restent locaux jusqu'au LAB 15.
 - [ ] `.env` du binôme copié dans `~/pharos-labs/.env` (fichiers `sortie/binome-N.env` remis par le formateur).
 
 ## Client graphique (par binôme, 5 minutes)
@@ -18,6 +24,7 @@
 - [ ] Faire confiance au dossier (« Yes, I trust the authors »).
 - [ ] Saisir la clé OpenRouter du binôme : Chat → sélecteur de modèle → **Manage Language Models** → **Add Models** → **OpenRouter** → coller la clé.
 - [ ] Choisir le modèle `google/gemini-3.6-flash` dans le sélecteur de modèle du chat.
+- [ ] Sélectionner le mode **PHAROS** dans le sélecteur de mode du chat (et non *Agent* ni *Ask*) : il ne donne au modèle que les outils MCP du serveur, pas la lecture des fichiers du dépôt.
 
 Détail complet de la procédure : `docs/decisions/client-graphique.md`.
 
@@ -37,4 +44,4 @@ Détail complet de la procédure : `docs/decisions/client-graphique.md`.
 Prévenir le formateur avant le premier jour pour tout poste qui reste en échec.
 
 ## Fin de session (formateur)
-- `OPENROUTER_CLE_GESTION=… python -m outils.cles_openrouter revoquer`
+- `OPENROUTER_CLE_GESTION=… uv run python -m outils.cles_openrouter revoquer`
