@@ -48,10 +48,13 @@ Voir `vscode-spike.md` (dossier de spécification) pour le détail des vérifica
    `pharos-docs-demo` → *Start* (ou *Restart* si déjà démarré).
 7. **Vérifier les 3 outils** : dans la zone de saisie du chat, ouvrir l'icône outils et
    confirmer la présence de `lister_documents`, `lire_document`, `rechercher_clause`.
-8. **Poser la question de référence en mode Agent** : sélectionner le mode *Agent* dans
-   le chat, puis poser la question sur l'escale `ESC-2026-0412` (*Vent d'Autan*, jeudi
-   8 octobre 2026, pénalité 1 850 €/heure au-delà de 6 heures de franchise) et vérifier
-   les appels d'outils affichés (« Ran `<outil>` »).
+8. **Sélectionner le mode PHAROS** : dans le sélecteur de mode du chat, choisir **PHAROS**
+   (et non *Agent* ni *Ask*). Ce mode, versionné dans `.github/agents/pharos.agent.md`, ne
+   donne au modèle que les outils du serveur `pharos-docs-demo` : ni lecture des fichiers de
+   l'espace de travail, ni recherche, ni terminal. Sans lui, le mode *Agent* peut lire la
+   réponse directement dans le dépôt (`donnees/corpus/`) sans aucun `tools/call` MCP.
+9. **Poser la question de référence** sur l'escale `ESC-2026-0412` (*Vent d'Autan*, jeudi
+   8 octobre 2026) et vérifier les appels d'outils affichés (« Ran `<outil>` »).
 
 ## À vérifier par le formateur
 
@@ -70,6 +73,8 @@ Ces points ont été établis par lecture de code / documentation lors du spike
    Windows).
 5. La fiabilité de Gemini 3.6 Flash pour l'appel d'outils (y compris à travers
    mitmproxy/l'observateur) sur les trois outils du LAB 0.
+6. Le mode PHAROS ne propose que les outils de pharos-docs-demo (icône outils) ; en mode
+   Ask aucun outil MCP n'est appelé.
 
 **Note pédagogique** : VS Code ouvre une boîte de confirmation avant chaque appel
 d'outil qui n'a pas `readOnlyHint` : c'est voulu pour le LAB 0 (les arguments de
