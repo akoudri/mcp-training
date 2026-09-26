@@ -86,6 +86,8 @@ class Journal(Middleware):
         try:
             resultat = await call_next(context)
         except ToolError as exc:
+            if not erreurs and exc.__cause__ is not None:
+                erreurs.append(f"{exc.__cause__.__class__.__name__}: {exc.__cause__}")
             ecrire(self.serveur, **champs, issue="refus", message=str(exc), erreur_brute=" | ".join(erreurs) or None)
             raise
         except Exception as exc:

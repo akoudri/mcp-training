@@ -79,3 +79,20 @@ async def test_journal_garde_l_erreur_brute_et_la_correlation():
     [ligne] = journal.lire("essai")
     assert ligne["correlation"] == "c-42" and ligne["issue"] == "refus"
     assert "tarif_negocie" in ligne["erreur_brute"] and ligne["message"].startswith("La colonne demandée")
+
+
+async def test_journal_garde_la_cause_d_une_erreur_masquee():
+    """Une exception inattendue (sans consigner_erreur) : fastmcp la masque au client, le journal garde la cause."""
+    mcp = FastMCP("essai", middleware=[journal.Journal("essai")], mask_error_details=True)
+
+    @mcp.tool
+    def casse() -> str:
+        """Lève une exception inattendue, jamais consignée explicitement."""
+        raise ValueError('relation "tarifs" does not exist')
+
+    async with Client(mcp) as c:
+        r = await c.call_tool_mcp("casse", {})
+    assert r.is_error and "tarifs" not in r.content[0].text
+    [ligne] = journal.lire("essai")
+    assert ligne["issue"] == "refus"
+    assert 'relation "tarifs" does not exist' in ligne["erreur_brute"]
