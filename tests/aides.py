@@ -34,6 +34,19 @@ origine_seulement = pytest.mark.skipif(not serveur_legacy_d_origine(),
                                        reason="état de lab : serveurs/pharos_legacy/serveur.py est migré")
 
 
+def serveur_quai_d_origine() -> bool:
+    """Vrai si serveurs/pharos_quai/serveur.py porte le catalogue fourni, faux sur un état de lab réécrit (lu comme du texte)."""
+    chemin = RACINE_KIT / "serveurs" / "pharos_quai" / "serveur.py"
+    try:
+        return 'description="Informations."' in chemin.read_text(encoding="utf-8")
+    except OSError:
+        return False
+
+
+quai_d_origine = pytest.mark.skipif(not serveur_quai_d_origine(),
+                                    reason="état de lab : le catalogue de serveurs/pharos_quai/serveur.py est réécrit")
+
+
 def charger_module(chemin: Path, nom: str):
     """Importe un fichier Python sous un nom unique (gabarits et solutions ne sont pas des paquets du kit)."""
     spec = importlib.util.spec_from_file_location(nom, chemin)

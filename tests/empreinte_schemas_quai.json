@@ -1,0 +1,100 @@
+{
+  "check": {
+    "additionalProperties": false,
+    "properties": {
+      "d": {
+        "format": "date",
+        "type": "string"
+      },
+      "h": {
+        "format": "time",
+        "type": "string"
+      },
+      "id": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "id",
+      "d",
+      "h"
+    ],
+    "type": "object"
+  },
+  "get_data": {
+    "additionalProperties": false,
+    "properties": {
+      "d": {
+        "format": "date",
+        "type": "string"
+      }
+    },
+    "required": [
+      "d"
+    ],
+    "type": "object"
+  },
+  "get_data_2": {
+    "additionalProperties": false,
+    "properties": {
+      "d": {
+        "format": "date",
+        "type": "string"
+      },
+      "f": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "d",
+      "f"
+    ],
+    "type": "object"
+  },
+  "info_quai": {
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "id"
+    ],
+    "type": "object"
+  },
+  "process": {
+    "additionalProperties": false,
+    "properties": {
+      "d": {
+        "format": "date",
+        "type": "string"
+      },
+      "x": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "x",
+      "d"
+    ],
+    "type": "object"
+  },
+  "search": {
+    "additionalProperties": false,
+    "properties": {
+      "d": {
+        "format": "date",
+        "type": "string"
+      },
+      "q": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "q",
+      "d"
+    ],
+    "type": "object"
+  }
+}
