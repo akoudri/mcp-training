@@ -8,6 +8,7 @@ import shutil
 import sys
 from pathlib import Path
 
+import pytest
 from fastmcp import FastMCP
 from fastmcp.exceptions import ToolError
 
@@ -15,6 +16,16 @@ from outils.construire_etats import superposer
 from outils.servir import servir  # noqa: F401  (réexporté pour les tests)
 
 RACINE_KIT = Path(__file__).resolve().parents[1]
+
+
+def serveur_legacy_d_origine() -> bool:
+    """Vrai si serveurs/pharos_legacy/serveur.py est le serveur d'origine (2025-11-25), faux sur un état de lab migré."""
+    from serveurs.pharos_legacy import serveur
+    return getattr(serveur, "REVISION", None) == "2025-11-25"
+
+
+origine_seulement = pytest.mark.skipif(not serveur_legacy_d_origine(),
+                                       reason="état de lab : serveurs/pharos_legacy/serveur.py est migré")
 
 
 def charger_module(chemin: Path, nom: str):

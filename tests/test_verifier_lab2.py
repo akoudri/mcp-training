@@ -7,7 +7,7 @@ from outils.repartiteur import creer_repartiteur
 from outils.verifier import lab2
 from outils.verifier.commun import Etat
 from serveurs.pharos_legacy.serveur import creer_app
-from tests.aides import servir
+from tests.aides import origine_seulement, servir
 
 
 def _etats(rapport) -> list[Etat]:
@@ -19,6 +19,7 @@ def cle(monkeypatch):
     monkeypatch.setenv("CLE_SERVEUR", "cle-de-test")
 
 
+@origine_seulement
 async def test_sur_l_origine_tout_est_a_faire():
     with servir(creer_app()) as a, servir(creer_app()) as b, servir(creer_repartiteur(a, b)) as r:
         rapport = await lab2.v.executer(url=f"{r}/mcp")

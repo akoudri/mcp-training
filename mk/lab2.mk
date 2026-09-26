@@ -1,7 +1,7 @@
 lab2-legacy: ## LAB 2 — démarre pharos-legacy tel quel, en 2025-11-25 (http://localhost:8104/mcp)
 	$(DC) up -d observateur pharos-legacy
 	@echo "pharos-legacy : http://localhost:8104/mcp (poste) — http://observateur:8104/mcp (conteneurs)"
-	@echo "Client 2025-11-25 : VS Code (mkdir -p .vscode && cp labs/lab2/client.config.json .vscode/mcp.json), ou"
+	@echo "Client 2025-11-25 : VS Code (cp labs/lab2/client.config.json .vscode/mcp.json — remplace la configuration du LAB 1), ou"
 	@echo "  make appeler REV=2025-11-25 URL=http://observateur:8104/mcp OUTIL=etat_escale ARGS='{\"escale_id\": \"ESC-2026-0412\"}'"
 	@echo "Trafic : Inspector, http://localhost:7001 (mot de passe pharos)"
 

@@ -94,7 +94,7 @@ async def derouler(url: str, revision: str, escale: str = ESCALE, nom: str = "ph
     return d
 
 
-def attendre(url: str, delai: float = 30) -> None:
+def attendre(url: str, delai: float = 30, conseil: str = "") -> None:
     """Attend que le serveur réponde (tout code < 500) : utile juste après « docker compose up »."""
     fin = time.monotonic() + delai
     while True:
@@ -104,7 +104,8 @@ def attendre(url: str, delai: float = 30) -> None:
         except httpx.HTTPError:
             pass
         if time.monotonic() > fin:
-            raise SystemExit(f"{url} ne répond pas après {delai:.0f} s : le service est-il démarré ?")
+            message = f"{url} ne répond pas après {delai:.0f} s : le service est-il démarré ?"
+            raise SystemExit(f"{message} ({conseil})" if conseil else message)
         time.sleep(1)
 
 

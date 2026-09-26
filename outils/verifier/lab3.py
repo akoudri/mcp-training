@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 
 from outils.repartiteur import creer_repartiteur
-from outils.scenario_legacy import ESCALE, Deroule, derouler
+from outils.scenario_legacy import Deroule, derouler
 from outils.servir import servir
 from outils.verifier.commun import Echec, Verification
 
@@ -92,7 +92,7 @@ async def _(ctx):
         raise Echec("\n".join(problemes))
 
 
-def _lit_les_mouvements(fonction: ast.FunctionDef) -> bool:
+def _lit_les_mouvements(fonction: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
     noms = {n.id for n in ast.walk(fonction) if isinstance(n, ast.Name)}
     chaines = [n.value for n in ast.walk(fonction) if isinstance(n, ast.Constant) and isinstance(n.value, str)]
     return "FICHIER" in noms or any("mouvements.yaml" in c for c in chaines)
@@ -103,7 +103,7 @@ def _(ctx):
     trouvees = [f"{fichier.name}:{noeud.name}"
                 for fichier in sorted((RACINE / "serveurs" / "pharos_legacy").glob("*.py"))
                 for noeud in ast.walk(ast.parse(fichier.read_text(encoding="utf-8")))
-                if isinstance(noeud, ast.FunctionDef) and _lit_les_mouvements(noeud)]
+                if isinstance(noeud, (ast.FunctionDef, ast.AsyncFunctionDef)) and _lit_les_mouvements(noeud)]
     return (f"{len(trouvees)} définition(s) de lecture des mouvements : {', '.join(trouvees) or 'aucune'} "
             "(attendu : 1, metier.py:lire_mouvements).")
 
@@ -156,6 +156,9 @@ def _(ctx):
 
 @v.constat("Sans affinité de session, ce qui arrive au client ancien.")
 async def _(ctx):
+    if (await _deroules(ctx))[ANCIENNE].erreur is not None:
+        return ("Faire d'abord passer le client 2025-11-25 derrière le répartiteur avec affinité ; "
+                "ce constat n'a de sens qu'ensuite.")
     amont_a = os.environ.get("AMONT_LEGACY_A", "http://pharos-legacy-a:8000")
     amont_b = os.environ.get("AMONT_LEGACY_B", "http://pharos-legacy-b:8000")
     try:

@@ -130,7 +130,8 @@ async def _(ctx):
                 problemes.append(f"handle {cas} : erreur protocolaire ({exc}) au lieu d'une erreur métier (isError)")
                 continue
             if not r.is_error:
-                problemes.append(f"handle {cas} : accepté")
+                problemes.append(f"handle {cas} : accepté — le refuser en erreur métier (isError) "
+                                 "qui dit de relancer lister_mouvements")
             elif _texte(r).startswith("Error calling tool") or "Traceback" in _texte(r):
                 problemes.append(f"handle {cas} : exception non rattrapée — dire au client quoi faire")
     if problemes:

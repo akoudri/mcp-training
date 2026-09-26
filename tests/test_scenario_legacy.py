@@ -1,12 +1,14 @@
 """Scénario des deux clients de test (make lab3-clients, vérificateurs des LAB 2 et 3)."""
 
+import pytest
 from fastmcp import FastMCP
 
-from outils.scenario_legacy import PAGES_MAX, afficher, derouler
+from outils.scenario_legacy import PAGES_MAX, afficher, attendre, derouler
 from serveurs.pharos_legacy.serveur import creer_app
-from tests.aides import servir
+from tests.aides import origine_seulement, servir
 
 
+@origine_seulement
 async def test_client_ancien_complet_sur_l_origine():
     with servir(creer_app()) as base:
         d = await derouler(f"{base}/mcp", "2025-11-25")
@@ -15,6 +17,7 @@ async def test_client_ancien_complet_sur_l_origine():
     assert "scénario complet" in afficher(d) and "aucun handle" in afficher(d)
 
 
+@origine_seulement
 async def test_client_recent_refuse_par_l_origine():
     with servir(creer_app()) as base:
         d = await derouler(f"{base}/mcp", "2026-07-28")
@@ -47,6 +50,11 @@ async def test_garde_fou_contre_une_pagination_sans_fin():
     with servir(mcp.http_app(path="/mcp", json_response=True)) as base:
         d = await derouler(f"{base}/mcp", "2025-11-25")
     assert len(d.pages) == PAGES_MAX
+
+
+def test_attendre_leve_avec_le_conseil():
+    with pytest.raises(SystemExit, match="lancer make lab3-deux-instances"):
+        attendre("http://127.0.0.1:9/mcp", delai=0, conseil="lancer make lab3-deux-instances")
 
 
 async def test_page_sans_handle_en_2026():

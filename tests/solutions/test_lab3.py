@@ -56,6 +56,8 @@ async def test_journal_une_ligne_par_requete(serveur, tmp_path):
         d = await derouler(f"{base}/mcp", "2025-11-25")
     lignes = [json.loads(l) for l in (tmp_path / "pharos-legacy.jsonl").read_text(encoding="utf-8").splitlines()]
     assert len(lignes) == len(d.echanges) and {l["revision"] for l in lignes} == {"2025-11-25"}
+    initialize = next(l for l in lignes if l["methode"] == "initialize")
+    assert initialize["client"] == "pharos-test"
 
 
 async def test_la_solution_passe_son_verificateur(serveur, monkeypatch):

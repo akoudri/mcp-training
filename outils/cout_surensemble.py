@@ -58,7 +58,7 @@ async def _principal(url: str) -> int:
 
 def main(argv: list[str]) -> int:
     url = argv[0] if argv else "http://observateur:8204/mcp"
-    attendre(url)
+    attendre(url, conseil="lancer make lab3-deux-instances")
     return asyncio.run(_principal(url))
 
 

@@ -8,7 +8,9 @@ from fastmcp.exceptions import McpError
 
 from outils.client_test import ClientTest
 from serveurs.pharos_legacy.serveur import creer_app
-from tests.aides import servir
+from tests.aides import origine_seulement, servir
+
+pytestmark = origine_seulement
 
 ESCALE = "ESC-2026-0412"
 

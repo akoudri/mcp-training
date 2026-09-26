@@ -172,7 +172,11 @@ async def point_mcp(requete: Request) -> Response:
     if methode == "initialize" or session_id is not None:
         revision = compat.REVISION
         session = sessions.lire(session_id)
-        compat.journaliser(revision, methode, session["client"] if session else None, outil)
+        if methode == "initialize":
+            client = (params.get("clientInfo") or {}).get("name", "inconnu")
+        else:
+            client = session["client"] if session else None
+        compat.journaliser(revision, methode, client, outil)
         if methode == "initialize":
             return compat.repondre_initialize(sessions, id_, params, {"tools": {}}, IDENTITE)
         if session is None:
