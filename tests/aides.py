@@ -74,6 +74,23 @@ def importer_client(dossier: Path):
     return importer_paquet(dossier, "pharos_client")
 
 
+@contextlib.contextmanager
+def sans_paquet(*paquets: str):
+    """Retire de sys.path toute entrée qui expose un des paquets nommés, et les purge de sys.modules ;
+    restaure les deux à la sortie. Sert à isoler un test d'un paquet déjà présent par ailleurs (ex.
+    client/pharos_client, présent sur etat/or1-fin et les états suivants, via le « pythonpath » de pytest)."""
+    for paquet in paquets:
+        _purger(paquet)
+    chemin_original = list(sys.path)
+    sys.path[:] = [p for p in sys.path if not any((Path(p) / paquet).is_dir() for paquet in paquets)]
+    try:
+        yield
+    finally:
+        sys.path[:] = chemin_original
+        for paquet in paquets:
+            _purger(paquet)
+
+
 def serveur_demo() -> FastMCP:
     mcp = FastMCP("demo")
 

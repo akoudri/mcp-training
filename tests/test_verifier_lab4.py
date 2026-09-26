@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from outils.verifier.commun import Etat
-from tests.aides import importer_client, serveur_demo, servir
+from tests.aides import importer_client, sans_paquet, serveur_demo, servir
 
 
 async def test_le_squelette_ne_passe_pas():
@@ -15,9 +15,12 @@ async def test_le_squelette_ne_passe_pas():
 
 
 async def test_sans_pharos_client():
-    from outils.verifier import lab4
-    with servir(serveur_demo().http_app(path="/mcp", json_response=True)) as base:
-        rapport = await lab4.v.executer(url=f"{base}/mcp", sans_modele=True)
+    """Indépendant de l'état : pharos_client peut être réellement importable (etat/or1-fin et
+    suivants, via client/ sur le pythonpath de pytest) — on le masque explicitement ici."""
+    with sans_paquet("pharos_client"):
+        from outils.verifier import lab4
+        with servir(serveur_demo().http_app(path="/mcp", json_response=True)) as base:
+            rapport = await lab4.v.executer(url=f"{base}/mcp", sans_modele=True)
     assert any("make depart LAB=4" in r.detail for r in rapport.resultats)
 
 
