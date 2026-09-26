@@ -83,9 +83,10 @@ def test_heure_d_accostage_sans_reservation_ni_maree():
     assert (r["heure"], r["quai"], r["maree_requise"], r["reserve"]) == ("00:00", 1, False, False)
 
 
-@pytest.mark.parametrize("nom", ["le vent d’autan", "  VENT D’AUTAN ", "Le Vent d’Autan"])
+@pytest.mark.parametrize("nom", ["le vent d’autan", "  VENT D'AUTAN ", "Le Vent d'Autan"])
 def test_nom_de_navire_tolerant(nom):
     assert metier.creneaux_du_navire(nom, JEUDI)["navire"] == "Vent d'Autan"
+
 
 @pytest.mark.parametrize("appel, attendu", [
     (lambda: metier.creneaux_du_navire("Nautilus", JEUDI), "Navires connus : Albatros"),
