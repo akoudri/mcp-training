@@ -1,9 +1,11 @@
 services:
   pharos-docs-demo:
     image: pharos/python:1
+    # Même image que l'atelier : jamais tirée d'un registre, construite localement si absente.
+    build: {context: ., dockerfile: images/python/Dockerfile}
+    pull_policy: never
     working_dir: /app
     volumes: [".:/app"]
-    env_file: [{path: .env, required: false}]
     user: "${PHAROS_UID:-1000}:${PHAROS_GID:-1000}"
     networks: [pharos]
     environment:

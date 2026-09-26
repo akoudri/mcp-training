@@ -3,6 +3,8 @@ name: pharos
 x-python: &python
   image: pharos/python:1
   build: {context: ., dockerfile: images/python/Dockerfile}
+  # Image propre au kit : jamais tirée d'un registre (docker.io n'a pas de pharos/python), construite ici si absente.
+  pull_policy: never
   working_dir: /app
   volumes: [".:/app"]
   env_file: [{path: .env, required: false}]
@@ -21,10 +23,19 @@ services:
     image: mitmproxy/mitmproxy:${MITMPROXY_VERSION:-12.2.3}
     command: >
       mitmweb --web-host 0.0.0.0 --web-port 8081 --set web_open_browser=false
-      --set web_password=pharos
+      --set web_password=pharos --set connection_strategy=lazy
       --mode reverse:http://pharos-docs-demo:8000@8100
-    # Publié sur 127.0.0.1 seulement : en salle, un voisin ne doit ni lire ce trafic ni joindre ces services. Le LAB 14 exposera explicitement ce qu'il doit exposer.
-    ports: ["127.0.0.1:7001:8081", "127.0.0.1:8100:8100"]
+      --mode reverse:http://pharos-docs:8000@8101
+      --mode reverse:http://pharos-data:8000@8102
+      --mode reverse:http://pharos-ops:8000@8103
+      --mode reverse:http://pharos-legacy:8000@8104
+      --mode reverse:http://pharos-quai:8000@8105
+    # Ports 8101-8105 réservés aux serveurs des labs suivants : ils répondent 502 tant que le serveur n'existe pas.
+    # connection_strategy=lazy : le nom du serveur n'est résolu qu'à la requête (sinon mitmproxy coupe la connexion
+    # sans réponse HTTP, et la requête n'apparaît pas dans l'observateur).
+    # Publié sur 127.0.0.1 seulement : en salle, un voisin ne doit ni lire ce trafic ni joindre ces services.
+    # Le LAB 14 exposera explicitement ce qu'il doit exposer.
+    ports: ["127.0.0.1:7001:8081", "127.0.0.1:8100-8105:8100-8105"]
     networks: [pharos]
     restart: unless-stopped
 

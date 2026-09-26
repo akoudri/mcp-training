@@ -4,6 +4,8 @@ Tous les ports sont publiés sur 127.0.0.1 uniquement : un voisin de salle ne pe
 
 Tout serveur MCP écoute sur le port interne 8000 (`/mcp`) et n'est joint **qu'à travers l'observateur**.
 
+L'observateur déclare dès le LAB 0 les ports 8100 à 8105 : un port réservé répond **502** tant que son serveur n'est pas démarré (ou n'existe pas encore). Un 502 sur 8100 signifie donc « `make lab0-up` oublié », pas « observateur en panne ».
+
 | Port poste | Service | Depuis le réseau Compose |
 |---|---|---|
 | 7001 | Inspector — observateur de trafic (mot de passe `pharos`) | `observateur:8081` |

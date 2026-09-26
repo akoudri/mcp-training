@@ -21,6 +21,11 @@ attendre() { for _ in $(seq 30); do curl -s -o /dev/null -w '%{http_code}' -X PO
 
 make down >/dev/null 2>&1 || true
 make up && make lab0-up && attendre && lister
-echo "--- ordre inverse : serveur d'abord, observateur ensuite"
-make down && make lab0-up && make up && attendre && lister
+echo "--- ordre inverse : serveur d'abord, observateur ensuite (make lab0-up démarre les deux : on passe par compose)"
+make down && docker compose -f compose.yaml -f compose/lab0.yaml up -d pharos-docs-demo && make up && attendre && lister
+echo "--- ports réservés : 502 tant que leur serveur n'existe pas"
+for p in 8101 8102 8103 8104 8105; do
+  code=$(curl -s -o /dev/null -w '%{http_code}' -X POST "localhost:$p/mcp")
+  echo "port $p : $code"; [ "$code" = 502 ]
+done
 curl -s -o /dev/null -w "UI observateur : %{http_code}\n" localhost:7001
