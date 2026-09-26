@@ -1,5 +1,7 @@
 """Données de pharos-quai : quais, créneaux générés, fenêtres de marée."""
 
+import itertools
+
 import yaml
 
 from donnees import corpus
@@ -47,3 +49,9 @@ def test_seuil_de_maree_entre_les_tirants():
     vent = corpus.charger().escale("ESC-2026-0412")
     assert vent.tirant_eau_m > seuil                    # le Vent d'Autan attend la marée
     assert any(e.tirant_eau_m <= seuil for e in corpus.charger().escales)
+
+
+def test_deux_escales_ne_se_chevauchent_pas_au_meme_quai():
+    for a, b in itertools.combinations(corpus.charger().escales, 2):
+        if a.quai == b.quai:
+            assert a.fin <= b.debut or b.fin <= a.debut, (a.escale_id, b.escale_id)

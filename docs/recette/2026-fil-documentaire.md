@@ -98,8 +98,12 @@ inatteignable. Seuil §12 amendé : au moins deux questions ratées au départ. 
 binôme doit gagner les questions 4 et 5, les seules ratées.
 
 Mesures de référence (consignées dans `solutions/lab06/labs/lab6/`) : `avant.md` 3/5, `apres.md`
-5/5. Passages de la recette : recopier ici les tableaux de `sortie/lab6-fourni-1.md`,
-`sortie/lab6-fourni-2.md` (et `-3` s'il existe) et `sortie/lab6-reference.md`.
+5/5. Passages de la recette (2026-09-26) : ci-dessous, les tableaux de `sortie/lab6-fourni-1.md`,
+`sortie/lab6-fourni-2.md` et `sortie/lab6-reference.md`.
+
+Si un binôme plafonne à 4/5 avant réécriture (variance du modèle, cf. la décision I2 du 2026-09-26),
+le vérificateur le signale au lieu de conseiller de reprendre le diagnostic : au formateur de décider,
+sans remesurer `avant.md`.
 
 ```text
 ## Mesure LAB 6 — premier appel

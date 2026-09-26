@@ -53,9 +53,14 @@ def charger_questions(chemin) -> list[Question]:
             for i, q in enumerate(donnees, 1)]
 
 
+AUCUN = "aucun"     # attendu: aucun — réussi si et seulement si le modèle n'appelle aucun outil (LAB 6, extension B)
+
+
 def juger(q: Question, outil: str | None, arguments: dict, est_erreur: bool | None) -> bool | None:
     if q.constat:
         return None
+    if q.attendu == AUCUN:
+        return outil is None
     if outil != q.attendu or any(arguments.get(k) != v for k, v in q.arguments_attendus.items()):
         return False
     return not (q.resultat_attendu == "erreur_metier" and est_erreur is not True)
@@ -106,9 +111,14 @@ def question_reussie(reussites: int, total: int) -> bool:
     return reussites * 2 > total
 
 
+def _sans_sauts_de_ligne(valeur) -> str:
+    """Un argument multi-ligne casserait la ligne du tableau Markdown."""
+    return str(valeur).replace("\r\n", " ").replace("\n", " ").replace("\r", " ")
+
+
 def _cellule(e: Execution) -> str:
     appel = "aucun appel" if e.outil is None else \
-        f"{e.outil}({', '.join(f'{k}={v}' for k, v in e.arguments.items())})"
+        f"{e.outil}({', '.join(f'{k}={_sans_sauts_de_ligne(v)}' for k, v in e.arguments.items())})"
     marque = {True: "✅", False: "❌", None: "👁"}[e.ok]
     return f"{marque} {appel}"[:90].replace("|", "\\|")
 
