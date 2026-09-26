@@ -4,10 +4,14 @@ from datetime import date, time
 
 import pytest
 from fastmcp import Client, FastMCP
+from starlette.applications import Starlette
+from starlette.responses import PlainTextResponse
+from starlette.routing import Route
 
 from outils import mesure_quai
 from outils.mesure_quai import SchemasModifies, charger_empreinte, correspondance, empreinte_schemas, lire_mesure
 from pharos.openrouter import Appel, Reponse
+from tests.aides import servir
 
 NOUVEAUX = {"get_data": "escales_du_jour", "get_data_2": "escales_du_quai", "process": "heure_accostage",
             "info_quai": "caracteristiques_quai", "search": "creneaux_du_navire", "check": "creneau_libre"}
@@ -125,3 +129,26 @@ def test_serveur_absent(monkeypatch, capsys):
     monkeypatch.delenv("SANS_MODELE", raising=False)
     assert mesure_quai.main(["--url", "http://127.0.0.1:9/mcp"]) == 2
     assert "make lab6-quai" in capsys.readouterr().out
+
+
+def _observateur_sans_pharos_quai() -> Starlette:
+    """Un observateur qui tourne, mais dont pharos-quai est arrêté : relaie un 502 (comme mitmproxy le ferait)."""
+    async def repondre(request):
+        return PlainTextResponse("Bad Gateway", status_code=502)
+    return Starlette(routes=[Route("/mcp", repondre, methods=["POST"])])
+
+
+def test_pharos_quai_arrete_derriere_l_observateur(monkeypatch, capsys):
+    monkeypatch.delenv("SANS_MODELE", raising=False)
+    with servir(_observateur_sans_pharos_quai()) as base:
+        assert mesure_quai.main(["--url", f"{base}/mcp"]) == 2
+    sortie = capsys.readouterr().out
+    assert "make lab6-quai" in sortie
+    assert "docker compose logs pharos-quai" in sortie
+
+
+def test_taux_retouche_a_la_main_incoherent_refuse():
+    texte = ("Modèle : test\n\n"
+             "| 1 | Une question ? | attendu | ✅ a() | ❌ b() | ❌ c() | 2/3 |\n")
+    with pytest.raises(ValueError, match="taux incohérent à la question 1"):
+        lire_mesure(texte)

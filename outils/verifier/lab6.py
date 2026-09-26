@@ -71,12 +71,23 @@ def _origine() -> list[str]:
     return [q.attendu for q in banc.charger_questions(FICHIER_QUESTIONS)]
 
 
+def _avant_valide(ctx) -> Mesure:
+    """La mesure avant.md, si c'est bien une mesure initiale (sur le catalogue fourni, avant toute réécriture) ;
+    sinon échec sans reprendre le diagnostic (déjà fait par le premier critère, en détail)."""
+    avant = _mesure(ctx, "avant.md")
+    if _attendus(avant) != _origine():
+        raise Echec("avant.md n'est pas une mesure initiale valable : corriger d'abord le premier critère.")
+    return avant
+
+
 @v.critere("`avant.md` est consigné : cinq questions, trois exécutions chacune.")
 def _(ctx):
     avant = _mesure(ctx, "avant.md")
     if _attendus(avant) != _origine():
         raise Echec("avant.md n'a pas été mesuré sur le catalogue fourni (les outils attendus portent déjà d'autres "
-                    "noms) : la mesure initiale se fait avant toute réécriture.")
+                    "noms) : la mesure initiale se fait avant toute réécriture. Pour le refaire : mettre la "
+                    "réécriture de côté (« git stash »), relancer « make lab6-mesurer SORTIE=labs/lab6/avant.md », "
+                    "puis « git stash pop » — ou « git checkout -- labs/lab6/avant.md » s'il avait été commité.")
     return f"{len(avant.reussies)}/{QUESTIONS} questions réussies avant réécriture (modèle {avant.modele})."
 
 
@@ -86,7 +97,9 @@ def _(ctx):
         avant = _mesure(ctx, "avant.md")
     except Echec:
         avant = None
-    ratees = [l.numero for l in avant.lignes if l.numero not in avant.reussies] if avant else []
+    ratees: list[int] = []
+    if avant:
+        ratees = [l.numero for l in avant.lignes if l.numero not in avant.reussies]
     consigne = "Dans labs/lab6/diagnostic.md, une ligne par question ratée, avec l'un des six anti-patrons : " \
                + " ; ".join(ANTI_PATRONS) + "."
     return consigne + (f"\nQuestions ratées dans avant.md : {', '.join(map(str, ratees))}." if ratees else "")
@@ -115,7 +128,7 @@ async def _(ctx):
 
 @v.critere("Critère décisif — le taux progresse d'au moins deux questions sur cinq.")
 def _(ctx):
-    avant, apres = _mesure(ctx, "avant.md"), _mesure(ctx, "apres.md")
+    avant, apres = _avant_valide(ctx), _mesure(ctx, "apres.md")
     gagnees = sorted(apres.reussies - avant.reussies)
     perdues = sorted(avant.reussies - apres.reussies)
     ecart = len(apres.reussies) - len(avant.reussies)
@@ -123,6 +136,11 @@ def _(ctx):
               + (f" ; perdues : {', '.join(map(str, perdues))}" if perdues else ""))
     ctx.cache["gagnees"] = gagnees
     if ecart < 2:
+        ratees_avant = QUESTIONS - len(avant.reussies)
+        if len(apres.reussies) == QUESTIONS and ratees_avant <= 1:
+            raise Echec(detail + f". 5/5 atteint : la mesure initiale n'a raté que {ratees_avant} question(s), "
+                        "l'écart de deux est impossible sur ce passage (variance du modèle) — le signaler au "
+                        "formateur, qui décide ; ne pas remesurer avant.md après la réécriture.")
         raise Echec(detail + ". Reprendre le diagnostic des questions encore ratées : l'élément « quand l'appeler » "
                     "(bloc 10.2) est le plus souvent absent.")
     return detail

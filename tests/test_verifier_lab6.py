@@ -62,6 +62,21 @@ async def test_progression_insuffisante(tmp_path, monkeypatch):
     assert decisif.etat is Etat.ECHEC and "3/5 → 4/5" in decisif.detail
 
 
+async def test_plafond_a_cinq_sur_cinq_avec_un_seul_rate_au_depart(tmp_path, monkeypatch):
+    """avant.md ne ratait qu'une question (4/5) : l'écart de deux est impossible dès qu'apres.md atteint 5/5."""
+    avant = await _mesure(_origine(), ["get_data", "info_quai", "search", "get_data", "process"])
+    apres = await _mesure(serveur_quai(), RENOMMES)
+    rapport = await _verifier(tmp_path, monkeypatch, serveur_quai(), avant=avant, apres=apres)
+    decisif = _etat(rapport, "Critère décisif")
+    assert decisif.etat is Etat.ECHEC
+    assert "5/5 atteint" in decisif.detail
+    assert "n'a raté que 1 question" in decisif.detail
+    assert "variance du modèle" in decisif.detail
+    assert "le signaler au formateur" in decisif.detail
+    assert "ne pas remesurer avant.md" in decisif.detail
+    assert "Reprendre le diagnostic" not in decisif.detail
+
+
 async def test_schemas_modifies(tmp_path, monkeypatch):
     rapport = await _verifier(tmp_path, monkeypatch, serveur_quai(filtre_decrit=True))
     r = _etat(rapport, "La réécriture")
@@ -80,6 +95,12 @@ async def test_avant_mesure_apres_reecriture(tmp_path, monkeypatch):
     rapport = await _verifier(tmp_path, monkeypatch, serveur_quai(), avant=apres, apres=apres)
     r = _etat(rapport, "`avant.md`")
     assert r.etat is Etat.ECHEC and "catalogue fourni" in r.detail
+    assert "git stash" in r.detail and "git stash pop" in r.detail
+    assert "git checkout -- labs/lab6/avant.md" in r.detail
+    # Le critère décisif ne doit pas donner un conseil trompeur en repartant d'un avant.md invalide.
+    decisif = _etat(rapport, "Critère décisif")
+    assert decisif.etat is Etat.ECHEC
+    assert decisif.detail == "avant.md n'est pas une mesure initiale valable : corriger d'abord le premier critère."
 
 
 @pytest.mark.parametrize("texte", ["", "| 1 | a | b | c | d |\n"])
