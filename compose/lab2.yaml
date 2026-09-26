@@ -1,0 +1,21 @@
+# pharos-legacy (LAB 2, 3) : une instance seule (8104), ou deux derrière un répartiteur (8204).
+# AFFINITE_LEGACY : 0 au LAB 2 (make lab2-deux-instances), 1 au LAB 3 (make lab3-deux-instances).
+services:
+  pharos-legacy:
+    extends: {file: compose/commun/base.yaml, service: python-base}
+    command: python -m watchfiles --filter python "python -m serveurs.pharos_legacy.serveur" serveurs src
+  pharos-legacy-a:
+    extends: {file: compose/commun/base.yaml, service: python-base}
+    environment: {PHAROS_INSTANCE: a}
+    command: python -m watchfiles --filter python "python -m serveurs.pharos_legacy.serveur" serveurs src
+  pharos-legacy-b:
+    extends: {file: compose/commun/base.yaml, service: python-base}
+    environment: {PHAROS_INSTANCE: b}
+    command: python -m watchfiles --filter python "python -m serveurs.pharos_legacy.serveur" serveurs src
+  repartiteur-legacy:
+    extends: {file: compose/commun/base.yaml, service: python-base}
+    environment:
+      AMONT_A: http://pharos-legacy-a:8000
+      AMONT_B: http://pharos-legacy-b:8000
+      AFFINITE: "${AFFINITE_LEGACY:-0}"
+    command: python -m outils.repartiteur
