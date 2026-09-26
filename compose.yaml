@@ -23,11 +23,14 @@ services:
       mitmweb --web-host 0.0.0.0 --web-port 8081 --set web_open_browser=false
       --set web_password=pharos
       --mode reverse:http://pharos-docs-demo:8000@8100
-    ports: ["7001:8081", "8100:8100"]
+    # Publié sur 127.0.0.1 seulement : en salle, un voisin ne doit ni lire ce trafic ni joindre ces services. Le LAB 14 exposera explicitement ce qu'il doit exposer.
+    ports: ["127.0.0.1:7001:8081", "127.0.0.1:8100:8100"]
     networks: [pharos]
     restart: unless-stopped
 
   inspector:
+    # v2.8.0 n'a plus de port de proxy séparé (pas de 6277) ; DANGEROUSLY_BIND_ALL_INTERFACES est requis pour écouter dans le conteneur ;
+    # ALLOWED_ORIGINS est requis à cause du remappage 7002→6274 ; l'absence d'authentification n'est acceptable que parce que le port n'est publié que sur 127.0.0.1.
     image: node:22-slim
     profiles: [outils]
     command: npx -y @modelcontextprotocol/inspector@2.8.0
@@ -37,5 +40,5 @@ services:
       DANGEROUSLY_BIND_ALL_INTERFACES: "true"
       DANGEROUSLY_OMIT_AUTH: "true"
       ALLOWED_ORIGINS: "http://localhost:7002,http://127.0.0.1:7002"
-    ports: ["7002:6274"]
+    ports: ["127.0.0.1:7002:6274"]
     networks: [pharos]
