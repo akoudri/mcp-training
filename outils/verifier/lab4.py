@@ -7,14 +7,11 @@ vrai pharos-docs : déterministe et gratuit. Les questions 1 et 3 passent ensuit
 from __future__ import annotations
 
 import asyncio
-import contextlib
-import copy
 import importlib
-import json
-import os
 
 from outils.verifier.commun import Echec, Verification
-from pharos.openrouter import Appel, ErreurModele, Reponse
+from outils.verifier.modele_simule import ModeleSimule, appel
+from outils.verifier.modele_simule import remplacer as _simule
 
 URL = "http://observateur:8101/mcp"
 SECRET = "sk-or-secret-verification-123"
@@ -32,53 +29,9 @@ def _modules():
         raise Echec("pharos_client introuvable (client/pharos_client/) : lancer « make depart LAB=4 ».") from exc
 
 
-def appel(ident: str, nom: str, arguments: dict) -> tuple[str, str, dict]:
-    return ident, nom, arguments
-
-
 def _normaliser_nombre(texte: str) -> str:
     """Espaces insécables françaises des milliers (fine « \u202f », normale « \xa0 ») → espace normale."""
     return texte.replace("\u202f", " ").replace("\xa0", " ")
-
-
-class ModeleSimule:
-    """Répond selon un scénario ; le contexte estimé vaut 1000 tokens par message."""
-
-    def __init__(self, tours: list, panne: bool = False):
-        self.tours, self.panne, self.recus = tours, panne, []
-
-    def completer(self, messages, outils, modele=None, **_):
-        self.recus.append(copy.deepcopy(messages))
-        if self.panne:
-            raise ErreurModele("crédit épuisé sur cette clé : prévenir le formateur.")
-        tour = self.tours[min(len(self.recus) - 1, len(self.tours) - 1)]
-        usage = {"prompt_tokens": self.estimer(messages), "completion_tokens": 20}
-        if isinstance(tour, str):
-            return Reponse({"role": "assistant", "content": tour}, [], usage)
-        message = {"role": "assistant", "content": None, "tool_calls": [
-            {"id": i, "type": "function", "function": {"name": n, "arguments": json.dumps(a)}} for i, n, a in tour]}
-        return Reponse(message, [Appel(i, n, a) for i, n, a in tour], usage)
-
-    def estimer(self, messages, outils=()):
-        return 1000 * len(messages)
-
-
-@contextlib.contextmanager
-def _simule(modele, simule: ModeleSimule):
-    """Remplace modele.completer/estimer_tokens par le simulé ; coupe aussi la clé réelle : un import
-    direct de la fonction (au lieu de l'attribut du module) ne doit jamais pouvoir dépenser de crédit."""
-    anciens = modele.completer, modele.estimer_tokens
-    ancienne_cle = os.environ.get("OPENROUTER_API_KEY")
-    modele.completer, modele.estimer_tokens = simule.completer, simule.estimer
-    os.environ["OPENROUTER_API_KEY"] = ""
-    try:
-        yield
-    finally:
-        modele.completer, modele.estimer_tokens = anciens
-        if ancienne_cle is None:
-            os.environ.pop("OPENROUTER_API_KEY", None)
-        else:
-            os.environ["OPENROUTER_API_KEY"] = ancienne_cle
 
 
 async def _scenario(ctx, simule: ModeleSimule, **options):

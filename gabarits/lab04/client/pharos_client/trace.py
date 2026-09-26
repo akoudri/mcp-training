@@ -6,6 +6,8 @@ Un enregistrement par appel d'outil, portant les cinq champs du bloc 8.5 :
   3. outil, arguments nom et arguments normalisés — secrets masqués À L'ÉCRITURE
   4. duree_ms, octets durée de l'appel (ms) et taille du résultat (octets)
   5. tokens_cumules   contexte estimé AVANT l'appel au modèle de ce tour
+  6. resultat, serveur texte rendu par l'outil (borné : borner()) et serveur qui l'a rendu — ce qui
+                      permet de retrouver l'origine d'un chiffre (LAB 8, LAB 13)
 Collecter pendant la boucle, afficher à la fin : afficher(trace).
 """
 
@@ -24,6 +26,15 @@ class Enregistrement:
     octets: int
     tokens_cumules: int
     erreur: bool = False
+    resultat: str = ""
+    serveur: str = ""
+
+
+def borner(texte: str, limite: int = 4000) -> str:
+    """Le résultat tel quel s'il est court ; sinon son début, suivi de sa taille réelle."""
+    if len(texte) <= limite:
+        return texte
+    return f"{texte[:limite]}… [{len(texte.encode('utf-8'))} octets au total]"
 
 
 def afficher(trace: list[Enregistrement], sortie=print) -> str:
