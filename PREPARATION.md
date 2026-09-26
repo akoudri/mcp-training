@@ -16,7 +16,7 @@
 ## Linux, ou Ubuntu sous WSL
 - [ ] `outils/preparer-pc.sh` exécuté sans erreur (construit l'image via `make construire`, précharge l'image de l'observateur ; accès au dépôt privé : clé SSH de déploiement ou copie depuis la clé USB).
 - [ ] Session rouverte (groupe `docker` pris en compte) : `docker run --rm hello-world` fonctionne sans `sudo`.
-- [ ] Branche du binôme créée dans le dépôt cloné par le script : `cd ~/pharos-labs && git switch -c binome-N` (N = numéro du binôme). Les commits des labs restent locaux jusqu'au LAB 15.
+- [ ] Branche du binôme créée dans le dépôt cloné par le script : `cd ~/pharos-labs && git switch -c binome-N` (N = numéro du binôme). Les commits des labs restent locaux jusqu'au LAB 15. Les labs suivants créent chacun leur branche avec « make depart LAB=N ».
 - [ ] `.env` du binôme copié dans `~/pharos-labs/.env` (fichiers `sortie/binome-N.env` remis par le formateur).
 
 ## Client graphique (par binôme, 5 minutes)

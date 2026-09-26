@@ -1,6 +1,6 @@
 name: ci
 on:
-  push: {branches: [main, "etat/**"]}
+  push: {branches: [main, solutions, "etat/**"]}
   pull_request: {}
 
 jobs:
@@ -35,3 +35,19 @@ jobs:
       - run: make doctor SANS_MODELE=1
       - if: failure()
         run: docker compose -f compose.yaml -f compose/lab0.yaml logs --tail=200
+
+  solutions:
+    # Chaque état de lab, assemblé depuis la branche solutions, doit passer son propre vérificateur.
+    if: github.ref == 'refs/heads/solutions'
+    runs-on: ubuntu-24.04
+    needs: tests
+    strategy:
+      fail-fast: false
+      matrix: {lab: [1, 4, 5, 7]}    # les plans 2 et 3 ajoutent 2, 3 et 6
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - run: make construire
+      - run: python3 -m outils.essayer ${{ matrix.lab }}
+      - if: failure()
+        run: docker compose -f compose.yaml $(for f in compose/*.yaml; do printf -- '-f %s ' "$f"; done) logs --tail=200
