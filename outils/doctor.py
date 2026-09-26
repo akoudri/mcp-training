@@ -45,7 +45,8 @@ def verifier_modele(client: httpx.Client, cle: str | None, modele: str) -> Verif
             "name": "donner_l_heure", "description": "Donne l'heure courante.",
             "parameters": {"type": "object", "properties": {}}}}],
         "tool_choice": "required",
-        "max_tokens": 50,
+        # Marge pour les modèles qui raisonnent avant d'appeler l'outil (Gemini 3.x : ~50 à 100 tokens).
+        "max_tokens": 1000,
     }
     try:
         r = client.post(OPENROUTER, json=corps, headers={"Authorization": f"Bearer {cle}"}, timeout=30)
@@ -57,7 +58,10 @@ def verifier_modele(client: httpx.Client, cle: str | None, modele: str) -> Verif
                 400: f"requête refusée pour le modèle {modele} : vérifier qu'il accepte les outils."}
     if r.status_code != 200:
         return Verification("modèle", False, messages.get(r.status_code, f"réponse HTTP {r.status_code} d'OpenRouter."))
-    appels = (r.json().get("choices") or [{}])[0].get("message", {}).get("tool_calls")
+    choix = (r.json().get("choices") or [{}])[0]
+    appels = choix.get("message", {}).get("tool_calls")
+    if not appels and choix.get("finish_reason") == "length":
+        return Verification("modèle", False, f"réponse de {modele} tronquée avant l'appel d'outil (max_tokens atteint) : prévenir le formateur.")
     if not appels:
         return Verification("modèle", False, f"le modèle {modele} n'a pas appelé l'outil : choisir un modèle qui gère les outils.")
     return Verification("modèle", True, f"{modele} répond et appelle un outil")

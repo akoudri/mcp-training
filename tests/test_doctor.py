@@ -65,3 +65,16 @@ def test_modele_ok_et_requete_conforme():
 async def test_serveur_injoignable():
     v = await doctor.verifier_serveur("http://127.0.0.1:1/mcp")
     assert not v.ok and "make lab0-up" in v.detail
+
+
+def test_modele_marge_pour_le_raisonnement():
+    # Les modèles qui raisonnent (Gemini 3.x) consomment des tokens avant d'appeler l'outil.
+    vu = {}
+
+    def g(r):
+        import json
+        vu["corps"] = json.loads(r.content)
+        return httpx.Response(200, json={"choices": [{"finish_reason": "length", "message": {"content": ""}}]})
+    v = doctor.verifier_modele(client(g), "sk-or-x", "m")
+    assert vu["corps"]["max_tokens"] >= 1000
+    assert not v.ok and "tronquée" in v.detail
