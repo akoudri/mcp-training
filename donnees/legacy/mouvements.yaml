@@ -1,0 +1,1080 @@
+# Généré par « python -m donnees.legacy.mouvements » — ne pas modifier à la main.
+mouvements:
+  ESC-2026-0405:
+  - conteneur: CMAU6380851
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-05T08:15:00+02:00'
+    statut: prévu
+  - conteneur: CMAU5741084
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-05T09:10:00+02:00'
+    statut: prévu
+  - conteneur: MSKU1959312
+    type: '20'
+    sens: débarquement
+    heure: '2026-10-05T09:20:00+02:00'
+    statut: prévu
+  - conteneur: TGHU7979239
+    type: '20'
+    sens: débarquement
+    heure: '2026-10-05T10:00:00+02:00'
+    statut: bloqué douane
+  - conteneur: TGHU1928525
+    type: '20'
+    sens: débarquement
+    heure: '2026-10-05T10:05:00+02:00'
+    statut: prévu
+  - conteneur: TGHU3208116
+    type: '20'
+    sens: débarquement
+    heure: '2026-10-05T10:05:00+02:00'
+    statut: prévu
+  - conteneur: PHRU7489374
+    type: '40'
+    sens: débarquement
+    heure: '2026-10-05T10:25:00+02:00'
+    statut: effectué
+  - conteneur: TGHU4772288
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-05T10:30:00+02:00'
+    statut: effectué
+  - conteneur: CMAU8689915
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-05T10:40:00+02:00'
+    statut: prévu
+  - conteneur: CMAU7281040
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-05T10:45:00+02:00'
+    statut: effectué
+  - conteneur: PHRU1009044
+    type: '40'
+    sens: débarquement
+    heure: '2026-10-05T10:55:00+02:00'
+    statut: effectué
+  - conteneur: TGHU6903677
+    type: '40'
+    sens: embarquement
+    heure: '2026-10-05T11:10:00+02:00'
+    statut: bloqué douane
+  - conteneur: PHRU6371530
+    type: reefer
+    sens: débarquement
+    heure: '2026-10-05T11:15:00+02:00'
+    statut: prévu
+  - conteneur: CMAU9515543
+    type: '40'
+    sens: embarquement
+    heure: '2026-10-05T11:40:00+02:00'
+    statut: effectué
+  - conteneur: CMAU6188326
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-05T12:20:00+02:00'
+    statut: prévu
+  - conteneur: PHRU6419733
+    type: '40'
+    sens: débarquement
+    heure: '2026-10-05T12:35:00+02:00'
+    statut: effectué
+  - conteneur: CMAU6757527
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-05T12:35:00+02:00'
+    statut: prévu
+  - conteneur: TGHU1724157
+    type: '40'
+    sens: embarquement
+    heure: '2026-10-05T12:50:00+02:00'
+    statut: effectué
+  - conteneur: PHRU9649595
+    type: '40'
+    sens: débarquement
+    heure: '2026-10-05T12:50:00+02:00'
+    statut: prévu
+  - conteneur: TGHU3121632
+    type: '40'
+    sens: débarquement
+    heure: '2026-10-05T13:10:00+02:00'
+    statut: prévu
+  - conteneur: CMAU8386854
+    type: '40'
+    sens: embarquement
+    heure: '2026-10-05T13:35:00+02:00'
+    statut: prévu
+  - conteneur: PHRU8005435
+    type: '40'
+    sens: embarquement
+    heure: '2026-10-05T13:35:00+02:00'
+    statut: effectué
+  - conteneur: MSKU8489825
+    type: '40'
+    sens: embarquement
+    heure: '2026-10-05T13:40:00+02:00'
+    statut: prévu
+  - conteneur: MSKU3288136
+    type: '20'
+    sens: débarquement
+    heure: '2026-10-05T14:00:00+02:00'
+    statut: prévu
+  - conteneur: CMAU5908563
+    type: reefer
+    sens: embarquement
+    heure: '2026-10-05T14:15:00+02:00'
+    statut: prévu
+  - conteneur: CMAU2656137
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-05T14:25:00+02:00'
+    statut: effectué
+  - conteneur: PHRU4797846
+    type: reefer
+    sens: embarquement
+    heure: '2026-10-05T14:45:00+02:00'
+    statut: prévu
+  - conteneur: PHRU6030696
+    type: reefer
+    sens: embarquement
+    heure: '2026-10-05T15:00:00+02:00'
+    statut: effectué
+  - conteneur: CMAU9735427
+    type: '40'
+    sens: embarquement
+    heure: '2026-10-05T15:50:00+02:00'
+    statut: effectué
+  - conteneur: PHRU8017479
+    type: '40'
+    sens: embarquement
+    heure: '2026-10-05T16:25:00+02:00'
+    statut: prévu
+  - conteneur: CMAU8094800
+    type: reefer
+    sens: débarquement
+    heure: '2026-10-05T16:55:00+02:00'
+    statut: bloqué douane
+  - conteneur: CMAU3678384
+    type: '40'
+    sens: débarquement
+    heure: '2026-10-05T17:00:00+02:00'
+    statut: prévu
+  - conteneur: TGHU6457826
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-05T17:20:00+02:00'
+    statut: prévu
+  - conteneur: PHRU8860563
+    type: '40'
+    sens: débarquement
+    heure: '2026-10-05T17:35:00+02:00'
+    statut: effectué
+  - conteneur: TGHU5796374
+    type: '40'
+    sens: embarquement
+    heure: '2026-10-05T17:40:00+02:00'
+    statut: effectué
+  - conteneur: CMAU3845609
+    type: '40'
+    sens: embarquement
+    heure: '2026-10-05T17:55:00+02:00'
+    statut: effectué
+  - conteneur: PHRU1821729
+    type: reefer
+    sens: embarquement
+    heure: '2026-10-05T18:50:00+02:00'
+    statut: prévu
+  - conteneur: PHRU9157842
+    type: '40'
+    sens: embarquement
+    heure: '2026-10-05T18:50:00+02:00'
+    statut: prévu
+  ESC-2026-0406:
+  - conteneur: CMAU6581137
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-05T15:15:00+02:00'
+    statut: effectué
+  - conteneur: CMAU2405365
+    type: reefer
+    sens: embarquement
+    heure: '2026-10-05T16:55:00+02:00'
+    statut: prévu
+  - conteneur: TGHU2328279
+    type: '40'
+    sens: embarquement
+    heure: '2026-10-05T17:10:00+02:00'
+    statut: effectué
+  - conteneur: TGHU5779327
+    type: '20'
+    sens: débarquement
+    heure: '2026-10-05T19:30:00+02:00'
+    statut: prévu
+  - conteneur: PHRU2578928
+    type: '40'
+    sens: débarquement
+    heure: '2026-10-05T20:15:00+02:00'
+    statut: bloqué douane
+  - conteneur: CMAU5679378
+    type: '40'
+    sens: débarquement
+    heure: '2026-10-05T20:30:00+02:00'
+    statut: effectué
+  - conteneur: CMAU7128330
+    type: '40'
+    sens: embarquement
+    heure: '2026-10-05T20:35:00+02:00'
+    statut: bloqué douane
+  - conteneur: CMAU3147055
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-05T20:45:00+02:00'
+    statut: bloqué douane
+  - conteneur: MSKU8595729
+    type: '20'
+    sens: débarquement
+    heure: '2026-10-05T22:00:00+02:00'
+    statut: effectué
+  - conteneur: PHRU8847657
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-05T22:30:00+02:00'
+    statut: prévu
+  - conteneur: CMAU6571516
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-05T22:55:00+02:00'
+    statut: effectué
+  - conteneur: TGHU6402449
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-06T01:05:00+02:00'
+    statut: prévu
+  ESC-2026-0408:
+  - conteneur: CMAU6192196
+    type: '40'
+    sens: débarquement
+    heure: '2026-10-06T06:30:00+02:00'
+    statut: bloqué douane
+  - conteneur: CMAU7967129
+    type: '40'
+    sens: embarquement
+    heure: '2026-10-06T07:10:00+02:00'
+    statut: prévu
+  - conteneur: CMAU8985369
+    type: reefer
+    sens: embarquement
+    heure: '2026-10-06T07:20:00+02:00'
+    statut: effectué
+  - conteneur: MSKU7235148
+    type: '40'
+    sens: embarquement
+    heure: '2026-10-06T07:50:00+02:00'
+    statut: effectué
+  - conteneur: TGHU4021594
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-06T08:00:00+02:00'
+    statut: prévu
+  - conteneur: TGHU1456818
+    type: '40'
+    sens: embarquement
+    heure: '2026-10-06T08:45:00+02:00'
+    statut: prévu
+  - conteneur: CMAU6713191
+    type: reefer
+    sens: embarquement
+    heure: '2026-10-06T08:45:00+02:00'
+    statut: prévu
+  - conteneur: TGHU8720704
+    type: '40'
+    sens: débarquement
+    heure: '2026-10-06T08:55:00+02:00'
+    statut: bloqué douane
+  - conteneur: TGHU7253345
+    type: '40'
+    sens: débarquement
+    heure: '2026-10-06T09:00:00+02:00'
+    statut: effectué
+  - conteneur: PHRU7402219
+    type: '20'
+    sens: débarquement
+    heure: '2026-10-06T09:30:00+02:00'
+    statut: bloqué douane
+  - conteneur: CMAU4376231
+    type: reefer
+    sens: débarquement
+    heure: '2026-10-06T09:50:00+02:00'
+    statut: bloqué douane
+  - conteneur: TGHU6761939
+    type: '40'
+    sens: embarquement
+    heure: '2026-10-06T10:20:00+02:00'
+    statut: prévu
+  - conteneur: TGHU2429798
+    type: '40'
+    sens: débarquement
+    heure: '2026-10-06T10:55:00+02:00'
+    statut: prévu
+  - conteneur: TGHU5245451
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-06T11:05:00+02:00'
+    statut: effectué
+  - conteneur: PHRU9649279
+    type: '40'
+    sens: embarquement
+    heure: '2026-10-06T11:10:00+02:00'
+    statut: effectué
+  - conteneur: CMAU4856635
+    type: '20'
+    sens: débarquement
+    heure: '2026-10-06T11:40:00+02:00'
+    statut: prévu
+  - conteneur: PHRU9334904
+    type: reefer
+    sens: embarquement
+    heure: '2026-10-06T12:05:00+02:00'
+    statut: effectué
+  - conteneur: CMAU8707963
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-06T12:05:00+02:00'
+    statut: effectué
+  - conteneur: PHRU1471724
+    type: '40'
+    sens: embarquement
+    heure: '2026-10-06T12:10:00+02:00'
+    statut: prévu
+  - conteneur: TGHU1029574
+    type: reefer
+    sens: débarquement
+    heure: '2026-10-06T12:15:00+02:00'
+    statut: prévu
+  - conteneur: MSKU7411301
+    type: reefer
+    sens: débarquement
+    heure: '2026-10-06T12:30:00+02:00'
+    statut: prévu
+  - conteneur: PHRU9987014
+    type: '20'
+    sens: débarquement
+    heure: '2026-10-06T12:40:00+02:00'
+    statut: prévu
+  - conteneur: MSKU4194179
+    type: '20'
+    sens: débarquement
+    heure: '2026-10-06T12:50:00+02:00'
+    statut: effectué
+  - conteneur: MSKU7726716
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-06T13:00:00+02:00'
+    statut: prévu
+  - conteneur: TGHU3937157
+    type: '40'
+    sens: embarquement
+    heure: '2026-10-06T13:15:00+02:00'
+    statut: prévu
+  - conteneur: MSKU9558511
+    type: reefer
+    sens: débarquement
+    heure: '2026-10-06T13:30:00+02:00'
+    statut: prévu
+  - conteneur: TGHU6324147
+    type: reefer
+    sens: embarquement
+    heure: '2026-10-06T13:45:00+02:00'
+    statut: effectué
+  - conteneur: CMAU8752292
+    type: '20'
+    sens: débarquement
+    heure: '2026-10-06T13:55:00+02:00'
+    statut: prévu
+  - conteneur: TGHU2436397
+    type: '40'
+    sens: débarquement
+    heure: '2026-10-06T14:20:00+02:00'
+    statut: prévu
+  - conteneur: MSKU4999179
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-06T14:45:00+02:00'
+    statut: prévu
+  - conteneur: TGHU8087794
+    type: '40'
+    sens: embarquement
+    heure: '2026-10-06T14:45:00+02:00'
+    statut: prévu
+  - conteneur: MSKU5333425
+    type: '40'
+    sens: débarquement
+    heure: '2026-10-06T14:45:00+02:00'
+    statut: prévu
+  - conteneur: MSKU2631544
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-06T14:50:00+02:00'
+    statut: prévu
+  - conteneur: CMAU5867087
+    type: '20'
+    sens: débarquement
+    heure: '2026-10-06T14:55:00+02:00'
+    statut: prévu
+  - conteneur: CMAU2648666
+    type: '40'
+    sens: débarquement
+    heure: '2026-10-06T15:05:00+02:00'
+    statut: effectué
+  - conteneur: CMAU6836369
+    type: '40'
+    sens: embarquement
+    heure: '2026-10-06T15:05:00+02:00'
+    statut: bloqué douane
+  - conteneur: MSKU7732251
+    type: '40'
+    sens: débarquement
+    heure: '2026-10-06T15:05:00+02:00'
+    statut: prévu
+  - conteneur: CMAU1709774
+    type: '40'
+    sens: embarquement
+    heure: '2026-10-06T15:10:00+02:00'
+    statut: prévu
+  - conteneur: MSKU9072652
+    type: reefer
+    sens: débarquement
+    heure: '2026-10-06T15:10:00+02:00'
+    statut: effectué
+  - conteneur: PHRU1348450
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-06T16:05:00+02:00'
+    statut: effectué
+  - conteneur: MSKU6452004
+    type: '40'
+    sens: embarquement
+    heure: '2026-10-06T16:25:00+02:00'
+    statut: prévu
+  - conteneur: MSKU1449856
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-06T16:40:00+02:00'
+    statut: prévu
+  - conteneur: PHRU6433645
+    type: '20'
+    sens: débarquement
+    heure: '2026-10-06T16:55:00+02:00'
+    statut: effectué
+  - conteneur: TGHU1748830
+    type: '40'
+    sens: embarquement
+    heure: '2026-10-06T17:40:00+02:00'
+    statut: effectué
+  - conteneur: MSKU2443715
+    type: '40'
+    sens: embarquement
+    heure: '2026-10-06T17:50:00+02:00'
+    statut: prévu
+  ESC-2026-0409: []
+  ESC-2026-0410:
+  - conteneur: MSKU1608939
+    type: '40'
+    sens: embarquement
+    heure: '2026-10-07T06:05:00+02:00'
+    statut: prévu
+  - conteneur: CMAU9877694
+    type: '40'
+    sens: embarquement
+    heure: '2026-10-07T06:05:00+02:00'
+    statut: prévu
+  - conteneur: MSKU2369542
+    type: reefer
+    sens: débarquement
+    heure: '2026-10-07T06:05:00+02:00'
+    statut: bloqué douane
+  - conteneur: CMAU4070462
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-07T06:55:00+02:00'
+    statut: prévu
+  - conteneur: CMAU4204567
+    type: '20'
+    sens: débarquement
+    heure: '2026-10-07T07:10:00+02:00'
+    statut: prévu
+  - conteneur: TGHU6644486
+    type: '40'
+    sens: débarquement
+    heure: '2026-10-07T07:15:00+02:00'
+    statut: effectué
+  - conteneur: PHRU2615546
+    type: '40'
+    sens: embarquement
+    heure: '2026-10-07T07:45:00+02:00'
+    statut: prévu
+  - conteneur: CMAU4114596
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-07T08:00:00+02:00'
+    statut: prévu
+  - conteneur: PHRU1945247
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-07T08:05:00+02:00'
+    statut: prévu
+  - conteneur: TGHU2782163
+    type: '20'
+    sens: débarquement
+    heure: '2026-10-07T08:10:00+02:00'
+    statut: prévu
+  - conteneur: PHRU5742913
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-07T08:10:00+02:00'
+    statut: prévu
+  - conteneur: CMAU1223887
+    type: '40'
+    sens: débarquement
+    heure: '2026-10-07T08:30:00+02:00'
+    statut: effectué
+  - conteneur: MSKU8626507
+    type: '40'
+    sens: débarquement
+    heure: '2026-10-07T08:45:00+02:00'
+    statut: prévu
+  - conteneur: MSKU2677831
+    type: '40'
+    sens: débarquement
+    heure: '2026-10-07T09:30:00+02:00'
+    statut: prévu
+  - conteneur: TGHU1767928
+    type: '40'
+    sens: embarquement
+    heure: '2026-10-07T10:05:00+02:00'
+    statut: prévu
+  - conteneur: TGHU9866504
+    type: '20'
+    sens: débarquement
+    heure: '2026-10-07T10:35:00+02:00'
+    statut: prévu
+  - conteneur: MSKU8390271
+    type: '20'
+    sens: débarquement
+    heure: '2026-10-07T11:05:00+02:00'
+    statut: prévu
+  - conteneur: CMAU4555981
+    type: '20'
+    sens: débarquement
+    heure: '2026-10-07T11:10:00+02:00'
+    statut: prévu
+  - conteneur: MSKU4535169
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-07T11:20:00+02:00'
+    statut: prévu
+  - conteneur: MSKU5628590
+    type: '20'
+    sens: débarquement
+    heure: '2026-10-07T12:30:00+02:00'
+    statut: effectué
+  - conteneur: MSKU5168170
+    type: '40'
+    sens: embarquement
+    heure: '2026-10-07T12:40:00+02:00'
+    statut: prévu
+  - conteneur: MSKU6762896
+    type: '40'
+    sens: embarquement
+    heure: '2026-10-07T13:00:00+02:00'
+    statut: prévu
+  - conteneur: MSKU9488984
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-07T14:00:00+02:00'
+    statut: bloqué douane
+  - conteneur: TGHU4633941
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-07T14:40:00+02:00'
+    statut: prévu
+  ESC-2026-0411:
+  - conteneur: PHRU2103552
+    type: '40'
+    sens: débarquement
+    heure: '2026-10-07T13:30:00+02:00'
+    statut: prévu
+  - conteneur: MSKU3269797
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-07T13:40:00+02:00'
+    statut: effectué
+  - conteneur: MSKU8218889
+    type: '40'
+    sens: embarquement
+    heure: '2026-10-07T13:45:00+02:00'
+    statut: effectué
+  - conteneur: TGHU4709727
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-07T14:00:00+02:00'
+    statut: prévu
+  - conteneur: PHRU9751388
+    type: '40'
+    sens: embarquement
+    heure: '2026-10-07T14:20:00+02:00'
+    statut: prévu
+  - conteneur: TGHU9238589
+    type: reefer
+    sens: débarquement
+    heure: '2026-10-07T14:45:00+02:00'
+    statut: prévu
+  - conteneur: PHRU1254409
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-07T14:55:00+02:00'
+    statut: prévu
+  - conteneur: CMAU2068344
+    type: '40'
+    sens: embarquement
+    heure: '2026-10-07T15:30:00+02:00'
+    statut: prévu
+  - conteneur: TGHU4932305
+    type: reefer
+    sens: débarquement
+    heure: '2026-10-07T16:00:00+02:00'
+    statut: effectué
+  - conteneur: CMAU5888905
+    type: reefer
+    sens: embarquement
+    heure: '2026-10-07T16:55:00+02:00'
+    statut: prévu
+  - conteneur: TGHU4851074
+    type: '40'
+    sens: débarquement
+    heure: '2026-10-07T17:10:00+02:00'
+    statut: prévu
+  - conteneur: PHRU3704300
+    type: '40'
+    sens: embarquement
+    heure: '2026-10-07T17:30:00+02:00'
+    statut: prévu
+  - conteneur: CMAU5273763
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-07T18:45:00+02:00'
+    statut: effectué
+  - conteneur: CMAU1617928
+    type: '20'
+    sens: débarquement
+    heure: '2026-10-07T19:05:00+02:00'
+    statut: prévu
+  - conteneur: CMAU7291302
+    type: '20'
+    sens: débarquement
+    heure: '2026-10-07T19:05:00+02:00'
+    statut: prévu
+  - conteneur: MSKU5560213
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-07T19:15:00+02:00'
+    statut: prévu
+  - conteneur: MSKU9836454
+    type: '20'
+    sens: débarquement
+    heure: '2026-10-07T19:20:00+02:00'
+    statut: effectué
+  - conteneur: TGHU7796880
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-07T19:25:00+02:00'
+    statut: bloqué douane
+  - conteneur: MSKU4993529
+    type: '40'
+    sens: embarquement
+    heure: '2026-10-07T19:40:00+02:00'
+    statut: bloqué douane
+  - conteneur: MSKU6447932
+    type: '20'
+    sens: débarquement
+    heure: '2026-10-07T19:50:00+02:00'
+    statut: prévu
+  - conteneur: PHRU4702650
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-07T20:45:00+02:00'
+    statut: prévu
+  - conteneur: MSKU5008682
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-07T20:45:00+02:00'
+    statut: prévu
+  - conteneur: MSKU8033939
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-07T21:00:00+02:00'
+    statut: effectué
+  - conteneur: MSKU5459344
+    type: '40'
+    sens: débarquement
+    heure: '2026-10-07T21:25:00+02:00'
+    statut: effectué
+  - conteneur: CMAU8765522
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-07T21:30:00+02:00'
+    statut: prévu
+  - conteneur: CMAU9322571
+    type: '40'
+    sens: débarquement
+    heure: '2026-10-07T22:20:00+02:00'
+    statut: effectué
+  - conteneur: TGHU4982527
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-07T22:35:00+02:00'
+    statut: prévu
+  - conteneur: TGHU5932998
+    type: '20'
+    sens: débarquement
+    heure: '2026-10-07T22:55:00+02:00'
+    statut: effectué
+  - conteneur: MSKU6881241
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-07T23:00:00+02:00'
+    statut: prévu
+  - conteneur: TGHU1404862
+    type: '40'
+    sens: embarquement
+    heure: '2026-10-07T23:25:00+02:00'
+    statut: prévu
+  - conteneur: PHRU7760539
+    type: '20'
+    sens: débarquement
+    heure: '2026-10-07T23:25:00+02:00'
+    statut: prévu
+  ESC-2026-0412:
+  - conteneur: CMAU8650842
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-08T06:05:00+02:00'
+    statut: prévu
+  - conteneur: CMAU8513228
+    type: '40'
+    sens: débarquement
+    heure: '2026-10-08T06:20:00+02:00'
+    statut: bloqué douane
+  - conteneur: TGHU4916678
+    type: '20'
+    sens: débarquement
+    heure: '2026-10-08T06:50:00+02:00'
+    statut: prévu
+  - conteneur: MSKU8753424
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-08T06:55:00+02:00'
+    statut: prévu
+  - conteneur: PHRU2759795
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-08T07:30:00+02:00'
+    statut: effectué
+  - conteneur: MSKU8084530
+    type: '40'
+    sens: débarquement
+    heure: '2026-10-08T07:45:00+02:00'
+    statut: prévu
+  - conteneur: MSKU9985675
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-08T07:55:00+02:00'
+    statut: prévu
+  - conteneur: CMAU3498950
+    type: '40'
+    sens: embarquement
+    heure: '2026-10-08T08:15:00+02:00'
+    statut: effectué
+  - conteneur: CMAU6882623
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-08T08:30:00+02:00'
+    statut: effectué
+  - conteneur: TGHU1907571
+    type: '20'
+    sens: débarquement
+    heure: '2026-10-08T08:50:00+02:00'
+    statut: effectué
+  - conteneur: PHRU5626213
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-08T08:55:00+02:00'
+    statut: prévu
+  - conteneur: PHRU2213978
+    type: '40'
+    sens: débarquement
+    heure: '2026-10-08T09:05:00+02:00'
+    statut: prévu
+  - conteneur: TGHU4936068
+    type: '40'
+    sens: embarquement
+    heure: '2026-10-08T09:15:00+02:00'
+    statut: effectué
+  - conteneur: CMAU8997895
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-08T09:20:00+02:00'
+    statut: effectué
+  - conteneur: TGHU3637091
+    type: '20'
+    sens: débarquement
+    heure: '2026-10-08T09:55:00+02:00'
+    statut: effectué
+  - conteneur: CMAU7598303
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-08T10:20:00+02:00'
+    statut: effectué
+  - conteneur: TGHU6338196
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-08T10:25:00+02:00'
+    statut: bloqué douane
+  - conteneur: CMAU9625838
+    type: '40'
+    sens: débarquement
+    heure: '2026-10-08T10:45:00+02:00'
+    statut: prévu
+  - conteneur: CMAU8664642
+    type: reefer
+    sens: embarquement
+    heure: '2026-10-08T11:30:00+02:00'
+    statut: effectué
+  - conteneur: TGHU7295169
+    type: '20'
+    sens: débarquement
+    heure: '2026-10-08T12:00:00+02:00'
+    statut: prévu
+  - conteneur: TGHU7242731
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-08T12:10:00+02:00'
+    statut: prévu
+  - conteneur: CMAU3407689
+    type: '40'
+    sens: débarquement
+    heure: '2026-10-08T12:20:00+02:00'
+    statut: prévu
+  - conteneur: TGHU8008905
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-08T12:30:00+02:00'
+    statut: prévu
+  - conteneur: PHRU6858893
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-08T12:35:00+02:00'
+    statut: effectué
+  - conteneur: TGHU9578806
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-08T12:55:00+02:00'
+    statut: prévu
+  - conteneur: PHRU1569645
+    type: '20'
+    sens: débarquement
+    heure: '2026-10-08T13:15:00+02:00'
+    statut: prévu
+  - conteneur: MSKU7001267
+    type: '20'
+    sens: débarquement
+    heure: '2026-10-08T13:30:00+02:00'
+    statut: prévu
+  - conteneur: MSKU8034610
+    type: reefer
+    sens: embarquement
+    heure: '2026-10-08T13:55:00+02:00'
+    statut: effectué
+  - conteneur: PHRU9560898
+    type: '40'
+    sens: débarquement
+    heure: '2026-10-08T14:00:00+02:00'
+    statut: prévu
+  - conteneur: PHRU9748248
+    type: '40'
+    sens: embarquement
+    heure: '2026-10-08T14:00:00+02:00'
+    statut: effectué
+  - conteneur: PHRU5966376
+    type: reefer
+    sens: débarquement
+    heure: '2026-10-08T14:05:00+02:00'
+    statut: prévu
+  - conteneur: PHRU3329681
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-08T14:25:00+02:00'
+    statut: bloqué douane
+  - conteneur: CMAU3953968
+    type: '40'
+    sens: débarquement
+    heure: '2026-10-08T14:30:00+02:00'
+    statut: prévu
+  - conteneur: CMAU5186447
+    type: '40'
+    sens: embarquement
+    heure: '2026-10-08T14:35:00+02:00'
+    statut: effectué
+  - conteneur: CMAU7721480
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-08T14:40:00+02:00'
+    statut: effectué
+  - conteneur: PHRU9722972
+    type: '40'
+    sens: débarquement
+    heure: '2026-10-08T15:15:00+02:00'
+    statut: bloqué douane
+  - conteneur: TGHU3947115
+    type: '40'
+    sens: embarquement
+    heure: '2026-10-08T15:15:00+02:00'
+    statut: effectué
+  - conteneur: CMAU5671610
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-08T15:30:00+02:00'
+    statut: effectué
+  - conteneur: MSKU1568390
+    type: '20'
+    sens: débarquement
+    heure: '2026-10-08T15:35:00+02:00'
+    statut: effectué
+  - conteneur: TGHU1698339
+    type: '40'
+    sens: débarquement
+    heure: '2026-10-08T15:35:00+02:00'
+    statut: prévu
+  - conteneur: MSKU4301011
+    type: reefer
+    sens: débarquement
+    heure: '2026-10-08T15:45:00+02:00'
+    statut: prévu
+  - conteneur: TGHU2747787
+    type: '20'
+    sens: débarquement
+    heure: '2026-10-08T15:55:00+02:00'
+    statut: effectué
+  - conteneur: MSKU8986627
+    type: '20'
+    sens: débarquement
+    heure: '2026-10-08T16:00:00+02:00'
+    statut: prévu
+  - conteneur: TGHU2592871
+    type: '20'
+    sens: débarquement
+    heure: '2026-10-08T16:40:00+02:00'
+    statut: effectué
+  - conteneur: TGHU7872864
+    type: '20'
+    sens: débarquement
+    heure: '2026-10-08T16:55:00+02:00'
+    statut: prévu
+  - conteneur: PHRU4077475
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-08T17:00:00+02:00'
+    statut: prévu
+  - conteneur: MSKU6046079
+    type: '40'
+    sens: débarquement
+    heure: '2026-10-08T17:05:00+02:00'
+    statut: prévu
+  - conteneur: MSKU1287154
+    type: '40'
+    sens: débarquement
+    heure: '2026-10-08T17:05:00+02:00'
+    statut: effectué
+  - conteneur: TGHU6782767
+    type: '40'
+    sens: embarquement
+    heure: '2026-10-08T17:20:00+02:00'
+    statut: prévu
+  - conteneur: MSKU8711887
+    type: '20'
+    sens: débarquement
+    heure: '2026-10-08T17:35:00+02:00'
+    statut: prévu
+  - conteneur: MSKU2674357
+    type: '40'
+    sens: débarquement
+    heure: '2026-10-08T17:45:00+02:00'
+    statut: prévu
+  - conteneur: PHRU8096155
+    type: '20'
+    sens: débarquement
+    heure: '2026-10-08T18:05:00+02:00'
+    statut: prévu
+  - conteneur: PHRU5611520
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-08T18:30:00+02:00'
+    statut: prévu
+  - conteneur: MSKU7443286
+    type: '40'
+    sens: débarquement
+    heure: '2026-10-08T19:05:00+02:00'
+    statut: effectué
+  - conteneur: TGHU2956717
+    type: '40'
+    sens: débarquement
+    heure: '2026-10-08T19:20:00+02:00'
+    statut: prévu
+  - conteneur: CMAU9077898
+    type: reefer
+    sens: débarquement
+    heure: '2026-10-08T19:55:00+02:00'
+    statut: prévu
+  - conteneur: TGHU4091202
+    type: '40'
+    sens: débarquement
+    heure: '2026-10-08T19:55:00+02:00'
+    statut: prévu
+  ESC-2026-0414:
+  - conteneur: MSKU4276703
+    type: '40'
+    sens: débarquement
+    heure: '2026-10-09T10:10:00+02:00'
+    statut: effectué
+  - conteneur: TGHU5906097
+    type: '40'
+    sens: embarquement
+    heure: '2026-10-09T10:40:00+02:00'
+    statut: effectué
+  - conteneur: CMAU8626268
+    type: '40'
+    sens: débarquement
+    heure: '2026-10-09T11:40:00+02:00'
+    statut: effectué
+  - conteneur: TGHU8063425
+    type: '40'
+    sens: débarquement
+    heure: '2026-10-09T13:10:00+02:00'
+    statut: effectué
+  - conteneur: MSKU1140766
+    type: '40'
+    sens: débarquement
+    heure: '2026-10-09T17:30:00+02:00'
+    statut: prévu
+  - conteneur: MSKU1805768
+    type: '40'
+    sens: débarquement
+    heure: '2026-10-09T18:10:00+02:00'
+    statut: prévu
+  - conteneur: CMAU3077830
+    type: '20'
+    sens: embarquement
+    heure: '2026-10-09T19:25:00+02:00'
+    statut: prévu
