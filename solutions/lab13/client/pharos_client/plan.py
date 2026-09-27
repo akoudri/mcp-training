@@ -39,7 +39,12 @@ class Etape:
 
 @dataclass
 class Execution:
-    """Ce que rend la boucle du LAB 13 : le plan annoncé, la réponse, la trace."""
+    """Ce que rend la boucle du LAB 13 : le plan annoncé, la réponse, la trace.
+
+    Plan refusé (« non ») : aucun outil n'est appelé, et executer rend une Execution normale — le plan, une réponse
+    qui dit le refus (« Plan refusé par l'exploitant : rien n'a été exécuté. »), une trace vide. Ce n'est pas un
+    arrêt anormal (le vérificateur accepte aussi une ArretBoucle à trace vide, mais make lab13-question la garde
+    alors comme un arrêt)."""
     plan: list[Etape]
     reponse: str
     trace: list = field(default_factory=list)
@@ -89,7 +94,9 @@ def afficher_plan(etapes: list[Etape], sortie=print) -> str:
 
 
 def valider_plan(etapes: list[Etape]) -> str:
-    """Demande à l'exploitant : « ok » (tout exécuter), « non » (rien), ou une consigne libre. Défaut : « non »."""
+    """Demande à l'exploitant : « ok » (tout exécuter), « non » (rien), ou une consigne libre. Défaut : « non ».
+
+    Sur « non », executer n'appelle aucun outil et rend Execution(etapes, <le refus>, trace=[]) : voir Execution."""
     try:
         reponse = input("\n  Exécuter ce plan ? (ok / non / consigne) : ").strip()
     except EOFError:

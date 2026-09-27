@@ -78,6 +78,9 @@ async def test_le_gabarit_echoue(base_de_test, mocks_servis, monkeypatch, tmp_pa
         assert debut in rates, rapport.texte()
 
 
+REFUS = ('            if decision.casefold() in ("non", "n", "no"):\n'
+         '                return plan.Execution(etapes, "Plan refusé par l\'exploitant : rien n\'a été exécuté.", trace)\n')
+
 MUTATIONS = {
     "collision": ("serveurs/pharos_data/serveur.py", 'navires.enregistrer(mcp, emprunter, nom_outil="data_navire_par_nom")',
                   "navires.enregistrer(mcp, emprunter)", "Aucune collision", "navire_par_nom (pharos-data, pharos-ops)"),
@@ -90,6 +93,13 @@ MUTATIONS = {
     "consigne_en_dur": ("client/pharos_client/boucle.py",
                         'CONSIGNE = Path(__file__).with_name("consigne.md").read_text(encoding="utf-8").strip()',
                         'CONSIGNE = "Tu es un assistant."', "La consigne système", "n'est pas le contenu de consigne.md"),
+    "confirmation_par_la_boucle": ("client/pharos_client/boucle.py",
+                                   "reponses = {cle: entrees.demander_utilisateur(demande) for cle, demande in "
+                                   "resultat.demandes.items()}",
+                                   'reponses = {cle: {"action": "accept", "content": {"confirmer": True}} '
+                                   "for cle in resultat.demandes}",
+                                   "La confirmation", "0 demande(s) présentée(s)"),
+    "plan_ignore": ("client/pharos_client/boucle.py", REFUS, "", "Le plan est affiché", "et pourtant"),
 }
 
 
@@ -106,6 +116,20 @@ async def test_chaque_defaut_est_vu(etat, defaut, base_de_test, mocks_servis, mo
     rapport = await verifier(copie, monkeypatch, tmp_path, mocks_servis)
     rates = echecs(rapport)
     assert any(l.startswith(critere) and message in d for l, d in rates.items()), rapport.texte()
+
+
+@base_requise
+async def test_un_refus_leve_en_arret_a_trace_vide_est_accepte(etat, base_de_test, mocks_servis, monkeypatch, tmp_path):
+    copie = tmp_path / "etat"
+    shutil.copytree(etat, copie)
+    chemin = copie / "client" / "pharos_client" / "boucle.py"
+    texte = chemin.read_text(encoding="utf-8")
+    assert REFUS in texte
+    chemin.write_text(texte.replace(REFUS, '            if decision.casefold() in ("non", "n", "no"):\n'
+                                           '                raise ArretBoucle("plan refusé par l\'exploitant", trace)\n'),
+                      encoding="utf-8")
+    rapport = await verifier(copie, monkeypatch, tmp_path, mocks_servis)
+    assert not any(l.startswith("Le plan est affiché") for l in echecs(rapport)), rapport.texte()
 
 
 def test_mesures_consignees(etat):

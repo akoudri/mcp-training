@@ -136,3 +136,156 @@ async def test_le_banc_accepte_un_catalogue_compose():
     catalogue = lab13.outils_ecrases({"a": [outil("navire_par_nom")], "b": [outil("meteo_creneau")]})
     executions = await banc.executer_banc(None, questions, 2, completer=completer, outils=catalogue)
     assert [e.ok for e in executions] == [True, True] and vus[0] == ["navire_par_nom", "meteo_creneau"]
+
+
+# --- Revue finale : note vide (I2), refus par exception (I3), TypeError (I4), exécutions Q2/Q3 (5), jeton (6),
+#     échec du scénario mis en cache (10), garde du banc ---
+
+QUESTION_CIBLE = lab13.QUESTIONS["1"]
+
+
+def critere(libelle: str):
+    from outils.verifier import lab13 as verificateur
+    return next(c.fonction for c in verificateur.v._criteres if c.libelle.startswith(libelle))
+
+
+@pytest.mark.parametrize("reponse, trace", [
+    ("Plan refusé par l'exploitant : rien n'a été exécuté.", []),
+    ("L'escale est à risque.", [{"tour": 1, "outil": "a", "arguments": {}, "serveur": "s", "resultat": '{"x": 1}'}]),
+])
+def test_une_note_vide_ou_un_plan_refuse_ne_passe_pas(tmp_path, monkeypatch, capsys, reponse, trace):
+    from outils.verifier import lab13 as verificateur
+    from outils.verifier.commun import Echec
+    fichier = tmp_path / "execution.json"
+    fichier.write_text(json.dumps({"question": QUESTION_CIBLE, "plan": [], "reponse": reponse, "arret": None,
+                                   "trace": trace}), encoding="utf-8")
+    monkeypatch.setattr(lab13, "DERNIERE", fichier)
+    monkeypatch.setattr(verificateur, "DERNIERE", fichier)
+    assert lab13.verifier_derniere_note() == 1
+    assert "pas de note à vérifier" in capsys.readouterr().out
+    with pytest.raises(Echec, match="pas de note à vérifier"):
+        critere("Critère décisif (note)")(SimpleNamespace(cache={}))
+
+
+def paquet_jouet(dossier: Path, boucle: str) -> Path:
+    """Un pharos_client minimal : la boucle donnée, et les modules que le vérificateur et make lab13-question
+    remplacent ou lisent (modele, entrees, plan, trace)."""
+    paquet = dossier / "pharos_client"
+    paquet.mkdir(parents=True)
+    fichiers = {
+        "__init__.py": "",
+        "modele.py": "def completer(*a, **k):\n    raise AssertionError\n\ndef estimer_tokens(*a, **k):\n    return 0\n",
+        "entrees.py": "def demander_utilisateur(demande):\n    return None\n",
+        "plan.py": "def valider_plan(etapes):\n    return 'ok'\n",
+        "trace.py": "def afficher(trace):\n    print(f'{len(trace)} appel(s)')\n",
+        "boucle.py": boucle + ("" if "class ArretBoucle" in boucle else
+                               "\n\nclass ArretBoucle(Exception):\n    trace = []\n"),
+    }
+    for nom, texte in fichiers.items():
+        (paquet / nom).write_text(texte, encoding="utf-8")
+    return dossier
+
+
+REFUS_PAR_EXCEPTION = '''from pharos_client import plan
+
+class ArretBoucle(Exception):
+    def __init__(self, message, trace):
+        super().__init__(message)
+        self.trace = trace
+
+def executer(question, *, config=None):
+    if plan.valider_plan([]) == "non":
+        raise ArretBoucle("plan refusé par l'exploitant", [])
+    raise ArretBoucle("modèle indisponible", ["un appel"])
+'''
+
+SANS_CONFIG = "def executer(question):\n    return None\n"
+
+TYPEERROR_INTERNE = '''def executer(question, *, config=None):
+    plan = None
+    return plan[0]
+'''
+
+
+async def test_non_au_plan_sous_forme_d_arret_a_trace_vide_est_accepte(tmp_path):
+    from outils.verifier import lab13 as verificateur
+    from outils.verifier.commun import Echec
+    with importer_client(paquet_jouet(tmp_path, REFUS_PAR_EXCEPTION)):
+        joue = await verificateur._jouer(SimpleNamespace(cache={}), decision="non")
+        assert joue["evenements"] == [] and joue["execution"] is None
+        with pytest.raises(Echec, match="la boucle s'est arrêtée : modèle indisponible"):
+            await verificateur._jouer(SimpleNamespace(cache={}), decision="ok")
+
+
+async def test_une_boucle_sans_config_est_dite_et_un_typeerror_interne_est_rapporte_tel_quel(tmp_path):
+    from outils.verifier import lab13 as verificateur
+    from outils.verifier.commun import Echec
+    with importer_client(paquet_jouet(tmp_path / "a", SANS_CONFIG)):
+        with pytest.raises(Echec, match=r"ne prend pas encore config="):
+            await verificateur._jouer(SimpleNamespace(cache={}))
+    with importer_client(paquet_jouet(tmp_path / "b", TYPEERROR_INTERNE)):
+        with pytest.raises(Echec) as exc:
+            await verificateur._jouer(SimpleNamespace(cache={}))
+    assert "config=" not in str(exc.value)
+    assert "TypeError" in str(exc.value) and "not subscriptable" in str(exc.value) and "boucle.py:3" in str(exc.value)
+
+
+def test_make_lab13_question_distingue_config_absent_et_typeerror_interne(tmp_path, capsys):
+    with importer_client(paquet_jouet(tmp_path / "a", SANS_CONFIG)):
+        assert lab13.poser(QUESTION_CIBLE) == 1
+    assert "config=" in capsys.readouterr().out
+    with importer_client(paquet_jouet(tmp_path / "b", TYPEERROR_INTERNE)):
+        assert lab13.poser(QUESTION_CIBLE) == 1
+    sortie = capsys.readouterr().out
+    assert "config=" not in sortie and "TypeError" in sortie and "boucle.py:3" in sortie
+
+
+REPONSE_SIMPLE = '''from types import SimpleNamespace
+
+def executer(question, *, config=None):
+    return SimpleNamespace(plan=[], reponse="Réponse.", trace=[])
+'''
+
+
+@pytest.mark.parametrize("q, fichier", [("1", "execution.json"), ("2", "execution-q2.json"),
+                                        ("3", "execution-q3.json")])
+def test_seule_la_question_cible_ecrit_execution_json(tmp_path, monkeypatch, capsys, q, fichier):
+    monkeypatch.setattr(lab13, "DERNIERE", tmp_path / "labs" / "execution.json")
+    with importer_client(paquet_jouet(tmp_path / "client", REPONSE_SIMPLE)):
+        assert lab13.main(["question", "--q", q]) == 0
+    assert sorted(p.name for p in (tmp_path / "labs").iterdir()) == [fichier]
+    assert fichier in capsys.readouterr().out
+
+
+async def test_un_jeton_refuse_est_dit(monkeypatch):
+    from starlette.applications import Starlette
+    from starlette.responses import JSONResponse
+    from starlette.routing import Route
+    from tests.aides import servir
+
+    async def refuser(_):
+        return JSONResponse({"error": "invalid_token"}, status_code=401)
+    app = Starlette(routes=[Route("/mcp", refuser, methods=["GET", "POST", "DELETE"])])
+    monkeypatch.setenv("PHAROS_JETON", "jeton-faux")
+    with servir(app) as url:
+        with pytest.raises(SystemExit, match="jeton refusé"):
+            await lab13.lister([{"nom": "pharos-ops", "url": f"{url}/mcp"}])
+
+
+async def test_un_echec_du_scenario_est_mis_en_cache(tmp_path, monkeypatch):
+    from outils.verifier import lab13 as verificateur
+    from outils.verifier.commun import Echec
+    remises = []
+    monkeypatch.setattr(verificateur, "_raz", lambda: remises.append(1))
+    ctx = SimpleNamespace(cache={})
+    boucle = "def executer(question, *, config=None):\n    raise NotImplementedError('boucle : à écrire')\n"
+    with importer_client(paquet_jouet(tmp_path, boucle)):
+        for _ in range(2):
+            with pytest.raises(Echec, match="pas encore écrit"):
+                await verificateur._scenario_confirme(ctx)
+    assert remises == [1]
+
+
+async def test_le_banc_refuse_ni_cible_ni_catalogue():
+    with pytest.raises(ValueError, match="cible"):
+        await banc.executer_banc(None, [], 1, completer=lambda *a, **k: None)

@@ -6,8 +6,9 @@ python -m outils.lab13 note                       (make lab13-verifier-note)   l
 python -m outils.lab13 derive                     (make lab13-derive)          les trois signaux de la dernière exécution
 python -m outils.lab13 banc [--executions 3]      (make lab13-banc)            extension B : le premier appel, catalogue agrégé
 
-La configuration des serveurs est labs/lab13/serveurs.json. Chaque exécution de lab13-question est gardée dans
-labs/lab13/execution.json (question, plan, réponse, trace) : c'est elle que relisent note et derive.
+La configuration des serveurs est labs/lab13/serveurs.json. L'exécution de la question cible (Q=1) est gardée dans
+labs/lab13/execution.json (question, plan, réponse, trace) : c'est elle que relisent note, derive et le critère
+décisif. Les autres questions sont gardées à côté (execution-q2.json, execution-q3.json, execution-libre.json).
 """
 
 from __future__ import annotations
@@ -15,13 +16,16 @@ from __future__ import annotations
 import argparse
 import asyncio
 import importlib
+import inspect
 import json
 import os
 import sys
+import traceback
 from dataclasses import asdict, is_dataclass
 from pathlib import Path
 from types import SimpleNamespace
 
+import httpx
 from fastmcp import Client
 
 from outils import banc, tokens_catalogue
@@ -49,6 +53,16 @@ def _jeton(serveur: dict) -> str | None:
     return os.environ.get("PHAROS_JETON") or serveur.get("jeton")
 
 
+async def _statut_http(url: str, jeton: str | None) -> int | None:
+    """Le code HTTP d'un POST nu : le client MCP ne le rapporte pas (un 401 y devient une erreur -32603)."""
+    try:
+        async with httpx.AsyncClient(timeout=5) as http:
+            r = await http.post(url, json={}, headers={"Authorization": f"Bearer {jeton}"} if jeton else {})
+    except httpx.HTTPError:
+        return None
+    return r.status_code
+
+
 async def lister(serveurs: list[dict]) -> dict[str, list]:
     """Les outils de chaque serveur (objets fastmcp), dans l'ordre de la configuration. Un serveur injoignable
     est signalé, pas ignoré."""
@@ -60,6 +74,10 @@ async def lister(serveurs: list[dict]) -> dict[str, list]:
             async with (Client(url, auth=jeton) if jeton and isinstance(url, str) else Client(url)) as c:
                 catalogues[s["nom"]] = await c.list_tools()
         except Exception as exc:
+            statut = await _statut_http(url, jeton) if isinstance(url, str) else None
+            if statut in (401, 403):
+                raise SystemExit(f"{s['nom']} ({url}) : jeton refusé (HTTP {statut}) — vérifier PHAROS_JETON, ou le "
+                                 "jeton de ce serveur dans labs/lab13/serveurs.json.") from exc
             raise SystemExit(f"{s['nom']} ({url}) ne répond pas ({exc.__class__.__name__}) : lancer « make "
                              "lab13-tout ».") from exc
     return catalogues
@@ -95,12 +113,49 @@ def _en_dict(valeur):
     return asdict(valeur) if is_dataclass(valeur) else dict(vars(valeur))
 
 
+def chemin_execution(question: str) -> Path:
+    """labs/lab13/execution.json est réservé à la question cible (celle du critère décisif) ; les autres à côté."""
+    numero = next((n for n, q in QUESTIONS.items() if q == question), None)
+    if numero == "1":
+        return DERNIERE
+    return DERNIERE.with_name(f"execution-q{numero}.json" if numero else "execution-libre.json")
+
+
+def _affichable(chemin: Path) -> Path:
+    try:
+        return chemin.resolve().relative_to(RACINE)
+    except ValueError:
+        return chemin
+
+
 def enregistrer(question: str, plan: list, reponse: str, trace: list, arret: str | None = None) -> Path:
-    DERNIERE.parent.mkdir(parents=True, exist_ok=True)
-    DERNIERE.write_text(json.dumps({"question": question, "plan": [_en_dict(e) for e in plan], "reponse": reponse,
-                                    "arret": arret, "trace": [_en_dict(e) for e in trace]},
-                                   ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    return DERNIERE
+    chemin = chemin_execution(question)
+    chemin.parent.mkdir(parents=True, exist_ok=True)
+    chemin.write_text(json.dumps({"question": question, "plan": [_en_dict(e) for e in plan], "reponse": reponse,
+                                  "arret": arret, "trace": [_en_dict(e) for e in trace]},
+                                 ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return chemin
+
+
+def prend_config(executer) -> bool:
+    """executer(question, *, config=…) : l'étape 1 du LAB 13 est-elle faite ? (lu sur la signature, sans l'appeler)"""
+    try:
+        parametres = inspect.signature(executer).parameters
+    except (TypeError, ValueError):
+        return True
+    return "config" in parametres or any(p.kind is p.VAR_KEYWORD for p in parametres.values())
+
+
+SANS_CONFIG = ("la boucle ne prend pas encore config= : c'est l'étape 1 du LAB 13 — executer(question, *, config=…) "
+               "→ Execution(plan, reponse, trace).")
+
+
+def decrire_erreur(exc: BaseException) -> str:
+    """« TypeError : 'NoneType' object is not subscriptable (client/pharos_client/plan.py:57) » : type, message, et
+    fichier:ligne du dernier cadre de la pile."""
+    cadres = traceback.extract_tb(exc.__traceback__)
+    ou = f" ({_affichable(Path(cadres[-1].filename))}:{cadres[-1].lineno})" if cadres else ""
+    return f"{exc.__class__.__name__} : {exc}{ou}"
 
 
 def poser(question: str) -> int:
@@ -110,22 +165,30 @@ def poser(question: str) -> int:
     except ModuleNotFoundError as exc:
         print(f"pharos_client introuvable ({exc.name}) : ce lab part de etat/sr3-fin (make depart LAB=13).")
         return 1
+    if not prend_config(boucle.executer):
+        print(SANS_CONFIG[0].upper() + SANS_CONFIG[1:])
+        return 1
     print(f"Question : {question}\n")
     try:
         execution = boucle.executer(question, config=CONFIG)
     except boucle.ArretBoucle as arret:
         print(f"Arrêt : {arret}\n")
         trace_mod.afficher(arret.trace)
-        enregistrer(question, [], "", arret.trace, str(arret))
+        chemin = enregistrer(question, [], "", arret.trace, str(arret))
+        print(f"\nExécution gardée dans {_affichable(chemin)}.")
         return 1
     except TypeError as exc:
-        print(f"La boucle ne prend pas encore config= ({exc}) : c'est l'étape 1 du LAB 13 — executer(question, *, "
-              "config=…) → Execution(plan, reponse, trace).")
+        print(f"Erreur dans la boucle — {decrire_erreur(exc)}")
         return 1
     trace_mod.afficher(execution.trace)
     print(f"\nRéponse :\n{execution.reponse}")
     chemin = enregistrer(question, execution.plan, execution.reponse, execution.trace)
-    print(f"\nExécution gardée dans {chemin.relative_to(RACINE)} : make lab13-verifier-note, make lab13-derive.")
+    if chemin == DERNIERE:
+        print(f"\nExécution gardée dans {_affichable(chemin)} : make lab13-verifier-note, make lab13-derive.")
+    else:
+        print(f"\nExécution gardée dans {_affichable(chemin)} — ce n'est pas la question cible : "
+              f"{_affichable(DERNIERE)}, que relisent make lab13-verifier-note, make lab13-derive et le critère "
+              "décisif, n'a pas changé.")
     return 0
 
 
@@ -135,12 +198,29 @@ def derniere() -> dict:
     return note.lire_execution(DERNIERE)
 
 
+RIEN_A_VERIFIER = "poser la question cible (make lab13-question) et accepter le plan (« ok »)"
+
+
+def verifier_execution(execution: dict) -> tuple[list, str | None]:
+    """Les éléments de la note d'une exécution gardée, et pourquoi il n'y a rien à vérifier (sinon None) : une note
+    sans aucun appel d'outil derrière, ou sans un seul chiffre, date ou nom, ne prouve rien."""
+    if execution.get("arret"):
+        return [], f"la dernière exécution s'est arrêtée ({execution['arret']}) : pas de note à vérifier."
+    if not execution.get("trace"):
+        return [], f"aucun appel d'outil dans la trace (plan refusé ?) : pas de note à vérifier — {RIEN_A_VERIFIER}."
+    elements = note.verifier_note(execution["reponse"], execution["trace"], execution["question"])
+    if not elements:
+        return [], ("aucun chiffre, aucune date ni aucun nom connu dans la réponse : pas de note à vérifier — "
+                    f"{RIEN_A_VERIFIER}.")
+    return elements, None
+
+
 def verifier_derniere_note() -> int:
     execution = derniere()
-    if execution.get("arret"):
-        print(f"La dernière exécution s'est arrêtée ({execution['arret']}) : pas de note à vérifier.")
+    elements, rien = verifier_execution(execution)
+    if rien:
+        print(rien[0].upper() + rien[1:])
         return 1
-    elements = note.verifier_note(execution["reponse"], execution["trace"], execution["question"])
     print(f"Note de la dernière exécution — {len(execution['trace'])} appel(s) dans la trace\n")
     print(note.formater(elements))
     return 1 if note.sans_origine(elements) else 0

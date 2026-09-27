@@ -26,7 +26,7 @@ from outils import lab10, lab12, lab13
 from outils.client_test import ClientTest
 from outils.verifier.commun import Echec, Verification
 from outils.verifier.modele_simule import ModeleSimule, appel
-from outils.verifier.note import sans_origine, verifier_note
+from outils.verifier.note import sans_origine
 
 RACINE = Path(__file__).resolve().parents[2]
 CONFIG = RACINE / "labs" / "lab13" / "serveurs.json"
@@ -106,6 +106,8 @@ async def _jouer(ctx, *, decision: str = "ok", confirmer: bool = False, scenario
         props = (demande.get("schema") or {}).get("properties") or {}
         return {"action": "accept", "content": {k: confirmer for k, p in props.items() if p.get("type") == "boolean"}}
 
+    if not lab13.prend_config(boucle.executer):
+        raise Echec(lab13.SANS_CONFIG)
     tours = [_plan_json([n for n, _ in scenario])] + [[appel(f"a{i}", n, a)] for i, (n, a) in enumerate(scenario, 1)]
     anciens = entrees.demander_utilisateur, plan.valider_plan, os.environ.get("PHAROS_JETON")
     entrees.demander_utilisateur, plan.valider_plan = repondre, (lambda etapes: decision)
@@ -117,12 +119,13 @@ async def _jouer(ctx, *, decision: str = "ok", confirmer: bool = False, scenario
     except NotImplementedError as exc:
         raise Echec(f"pas encore écrit : {exc}") from exc
     except TypeError as exc:
-        raise Echec(f"la boucle ne prend pas encore config= ({exc}) : executer(question, *, config=…) → "
-                    "Execution(plan, reponse, trace).") from exc
+        raise Echec(f"la boucle a levé {lab13.decrire_erreur(exc)}") from exc
     except Exception as exc:
-        if hasattr(exc, "trace"):
+        if not hasattr(exc, "trace"):
+            raise
+        if decision.casefold() != "non" or list(exc.trace or []):
             raise Echec(f"la boucle s'est arrêtée : {exc}") from exc
-        raise
+        execution = None      # « non » : un arrêt (ArretBoucle) sans aucun appel est aussi une façon de refuser
     finally:
         entrees.demander_utilisateur, plan.valider_plan = anciens[0], anciens[1]
         if anciens[2] is None:
@@ -134,10 +137,18 @@ async def _jouer(ctx, *, decision: str = "ok", confirmer: bool = False, scenario
 
 
 async def _scenario_confirme(ctx) -> dict:
+    """Le scénario complet (« ok », puis « oui » à la confirmation), joué une fois pour les critères qui le lisent —
+    son échec aussi : une boucle qui casse n'est pas rejouée par chacun."""
     if "confirme" not in ctx.cache:
-        _raz()
-        ctx.cache["confirme"] = await _jouer(ctx, confirmer=True)
-        ctx.cache["confirme"]["parties"] = _compteur()
+        try:
+            _raz()
+            joue = await _jouer(ctx, confirmer=True)
+            joue["parties"] = _compteur()
+        except Echec as exc:
+            joue = exc
+        ctx.cache["confirme"] = joue
+    if isinstance(ctx.cache["confirme"], Echec):
+        raise ctx.cache["confirme"]
     return ctx.cache["confirme"]
 
 
@@ -207,8 +218,9 @@ async def _(ctx):
     attendue = CONSIGNE.read_text(encoding="utf-8").strip()
     systeme = [m.get("content") or "" for m in joue["recus"][0] if m.get("role") == "system"]
     if not systeme or systeme[0].strip() != attendue:
-        raise Echec("le premier message système envoyé au modèle n'est pas le contenu de consigne.md : lire la consigne "
-                    "dans ce fichier (le LAB 15 en calcule l'empreinte pour savoir quand relancer l'évaluation).")
+        raise Echec("le premier message système du premier appel au modèle — celui du plan (plan.demander_plan) — "
+                    "n'est pas le contenu de consigne.md : lire la consigne dans ce fichier, et la passer aussi à "
+                    "l'appel du plan (le LAB 15 en calcule l'empreinte pour savoir quand relancer l'évaluation).")
 
 
 @v.critere("Chaque appel de la trace porte le nom du serveur qui l'a servi.")
@@ -317,11 +329,11 @@ def _(ctx):
         raise Echec("aucune exécution réelle gardée : lancer « make lab13-question » (la question cible, vrai modèle), "
                     "puis relancer la vérification.")
     execution = json.loads(DERNIERE.read_text(encoding="utf-8"))
-    if execution.get("arret"):
-        raise Echec(f"la dernière exécution s'est arrêtée ({execution['arret']}) : pas de note.")
     if "Vent d'Autan" not in execution["question"]:
         raise Echec("la dernière exécution n'est pas la question cible : make lab13-question Q=1.")
-    elements = verifier_note(execution["reponse"], execution["trace"], execution["question"])
+    elements, rien = lab13.verifier_execution(execution)
+    if rien:
+        raise Echec(rien)
     manquants = sans_origine(elements)
     if manquants:
         raise Echec(f"{len(manquants)} donnée(s) sans origine : {', '.join(e.texte for e in manquants)} "
