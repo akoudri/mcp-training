@@ -77,6 +77,9 @@ def test_rechargement_idempotent_et_politique_reappliquee(base_de_test, tmp_path
         asyncio.run(charger(DSN_TEST, politique=politique))
         assert asyncio.run(_sous("pharos_agent", "SELECT count(*) FROM escales")) == 0
         assert asyncio.run(_sous("pharos_exploitation", "SELECT count(*) FROM escales")) == 0   # aucune politique pour lui
+        # … mais le moteur du LAB 11 (pharos_planification) voit toujours toutes les escales : le kit s'en charge.
+        assert asyncio.run(_sous(None, "SELECT count(*) FROM escales", login="pharos_planification")) \
+            == len(base_de_test.escales)
     finally:
         asyncio.run(charger(DSN_TEST, politique=tmp_path / "absente.sql"))
     assert asyncio.run(_sous("pharos_agent", "SELECT count(*) FROM escales")) == len(base_de_test.escales)
