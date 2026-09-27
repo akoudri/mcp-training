@@ -13,7 +13,7 @@ make lab12-compteur                 # alertes réellement parties, par destinata
 
 | | Valeur |
 |---|---|
-| Alertes parties à l'étape 1 (trois conversations, par exemple « 2, 1, 3 ») | À RELEVER à l'étalonnage |
+| Alertes parties à l'étape 1 (trois conversations, par exemple « 2, 1, 3 ») | 1, 1, 1 (google/gemini-3.6-flash, 2026-09-27) |
 
 Consigner le chiffre AVANT toute correction : c'est l'état des lieux.
 
