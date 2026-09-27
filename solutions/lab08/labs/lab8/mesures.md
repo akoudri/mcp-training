@@ -11,8 +11,8 @@ make lab8-verite                    # la réponse exacte, calculée contre la ba
 
 | | Valeur |
 |---|---|
-| Requête générée (outil et paramètres, relevés dans la trace) | requete_mouvements(date_debut=2026-09-28, date_fin=2026-10-04, quai=3, type_conteneur=refrigere) |
-| Réponse obtenue | 16 |
+| Requête générée (outil et paramètres, relevés dans la trace) | requete_mouvements(quai=3, date_debut=2026-09-28, date_fin=2026-10-04, type_conteneur=refrigere) — précédé d'un premier appel sans type_conteneur |
+| Réponse obtenue | 16 (étalonnage réel, google/gemini-3.6-flash, 2026-09-27 — voir `docs/recette/2026-donnees-externes.md`) |
 | Vérité (make lab8-verite) | 16 |
 
 Si l'écart existe : ce que la trace montrait, et ce qui a été corrigé (paramètres, dictionnaire, code).
