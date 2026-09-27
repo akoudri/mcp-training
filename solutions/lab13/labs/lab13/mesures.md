@@ -26,6 +26,6 @@ préfixage côté serveur : le module est branché sur pharos-data sous le nom d
 
 | Signal | Valeur |
 |---|---|
-| Appels hors plan | 4 |
-| Étapes annoncées jamais exécutées | 3 |
+| Appels hors plan | 1 |
+| Étapes annoncées jamais exécutées | 1 |
 | Retours en arrière | 0 |
