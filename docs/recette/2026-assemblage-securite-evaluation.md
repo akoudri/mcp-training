@@ -14,12 +14,22 @@ Complète `2026-donnees-externes.md`. Sous-projet 4, plans 1 à 3.
   (`make lab13-catalogue`) ; la boucle de référence refuse un catalogue ambigu (`CollisionDeNoms`). Correction
   attendue : `navires.enregistrer(mcp, emprunter, nom_outil="data_navire_par_nom")`. L'extension B mesure la
   collision avant de la corriger (`make lab13-banc` : un client naïf, où le dernier serveur écrase l'autre).
-- `make lab13-question` pose la question avec le vrai modèle et garde l'exécution dans `labs/lab13/execution.json`
-  (question, plan, réponse, trace — secrets masqués) : c'est ce fichier, commité, que relisent
-  `make lab13-verifier-note`, `make lab13-derive` et le critère décisif du vérificateur.
-- Le vérificateur de note accepte un nombre obtenu par une seule opération sur deux nombres d'un **même** appel
-  (la marge 13,5 − 12,9) ; il refuse une combinaison entre deux appels (une coïncidence probable) et ne vérifie
-  pas les noms hors de la liste du kit (navires, armateurs, agents).
+- `make lab13-question` pose la question avec le vrai modèle et garde l'exécution de la question cible (`Q=1`)
+  dans `labs/lab13/execution.json` (question, plan, réponse, trace — secrets masqués) : c'est ce fichier, commité,
+  que relisent `make lab13-verifier-note`, `make lab13-derive` et le critère décisif du vérificateur. `Q=2`, `Q=3`
+  et `QUESTION="…"` sont gardées à côté (`execution-q2.json`, `execution-q3.json`, `execution-libre.json`) et
+  n'écrasent pas l'exécution de la question cible.
+- Le vérificateur de note cherche chaque élément dans les **résultats** d'outils de la trace. Il accepte un nombre
+  calculé seulement comme somme ou différence de deux nombres **frères** — valeurs d'un même objet JSON d'un
+  résultat, de clés de même unité (`_m`, `_kt`, `_km`, `_min`, `_h`, `_s`) — et à condition que la note écrive
+  cette unité (la marge « 0,6 m » = 13,5 − 12,9) ; rien n'est calculé sur du texte libre, ni entre deux appels.
+  « 6 heures » en toutes lettres est une durée (un nombre, jamais cherché dans un horodatage) ; `08/10` (année
+  2026), `21:04:24` et `ALR-0003` sont reconnus. Une valeur tirée de la **description** d'un outil (les seuils
+  25 kt et 35 kt de `meteo_alerte`) n'est pas dans la trace : elle reste sans origine, par choix (spec §8.2).
+  Coïncidence résiduelle assumée : sur la trace de référence, « 13,1 m » passe comme 13,5 − 0,4 (`quai_max_m` et
+  `depassement_m`, frères du même détail). Les noms hors de la liste du kit (navires, armateurs, agents) ne sont
+  pas vérifiés. Une note sans appel d'outil derrière (plan refusé) ou sans aucun élément vérifiable n'est pas
+  une réussite : « pas de note à vérifier ».
 
 ## La vue du plan de quai (LAB 13, étape 4) 👁
 
@@ -33,6 +43,10 @@ Complète `2026-donnees-externes.md`. Sous-projet 4, plans 1 à 3.
 La vue reçoit le résultat de l'outil par `postMessage` (JSON-RPC, spécification MCP Apps 2026-01-26 :
 `ui/initialize`, puis `ui/notifications/tool-result`). Si elle ne s'affiche pas, le socle reste atteignable par la
 réponse texte (brief, étape 4) ; noter la version de VS Code dans cette recette.
+
+Thème sombre : la vue suit les variables de thème de l'hôte pour le fond et le texte, mais garde quelques
+couleurs en dur (`#666` pour le résumé, `#888` pour l'axe des heures, `#ddd` pour les séparations des quais) ;
+en thème sombre de VS Code, résumé et graduations peuvent être peu lisibles. À constater avec la vue, et à noter ici.
 
 ## Étalonnage du LAB 13 (2026-09-27)
 
@@ -127,6 +141,49 @@ exécutée), consigné tel quel plutôt que masqué.
 
 Les trois traces complètes des deux tours sont gardées hors dépôt (`sortie/` ignoré par git) :
 `sortie/etalonnage-lab13/` (premier tour) et `sortie/etalonnage-lab13-v2/` (second tour).
+
+**Troisième tour — ré-étalonnage après durcissement du vérificateur de note** (revue finale du plan 1, 2026-09-27).
+Le vérificateur de l'époque acceptait une opération (×, +, −) entre deux nombres quelconques d'un même appel
+(jusqu'à 200 nombres par appel, texte libre compris) : sur la trace retenue au second tour, 199 décimaux sur 199
+de 0,1 à 19,9 avaient une « origine ». Inventions ajoutées à la note, rejouées sur cette trace — avant → après :
+
+| Invention | Avant | Après |
+|---|---|---|
+| Houle 3,1 m | ✅ « calcul : 4,4 − 1,3 » | ❌ sans origine |
+| Vent 27 kt | ✅ « 2 × 13,5 » | ❌ |
+| Rafales 48 kt | ✅ « 3 + 45 » | ❌ |
+| Tirant d'eau 13,1 m | ✅ « 13,5 − 0,4 » | ✅ « 13,5 − 0,4 » (frères `_m` du détail tirant d'eau : coïncidence assumée) |
+| Visibilité 2,5 km | ✅ « 3 − 0,5 » | ❌ |
+| Franchise 8 heures | ✅ (heure 08:00 d'un horodatage météo) | ❌ (durée : le nombre 8 n'est pas dans la trace) |
+
+Avec le vérificateur durci, la note retenue au second tour n'est plus à 0 : **25** et **35** (les seuils de vent
+et de rafales, « dépassement du seuil de 25 kt / 35 kt ») sont sans origine — ils viennent de la description de
+`meteo_alerte`, qui n'a pas été appelé ; leur « origine » d'alors était une coïncidence (5 × 5, 1 + 34). Rejouées
+avec le nouveau vérificateur, les exécutions des deux premiers tours donnent : premier tour 25/35 sans origine
+pour 1 et 2, 0 pour 3 (qui avait appelé `meteo_alerte`) ; second tour 25/35 sans origine pour les trois. Le
+numéro de titre « #### 4. » de la note, lui, passait aussi par coïncidence : il est désormais exclu comme un
+numéro d'étape (faux positif corrigé, pas une donnée).
+
+Même protocole qu'au second tour (superposition de l'état LAB 13, `make up`, `make lab8-base`, `make
+lab10-mocks`, `make lab13-tout`, `make lab13-verifier SANS_MODELE=1` : 9 ✅, 1 ❌ (le critère décisif, sur
+l'exécution du second tour), 2 👁 ; puis trois exécutions de la question cible) ; traces sous
+`sortie/etalonnage-lab13-v3/` :
+
+| # | Plan annoncé | Appels (trace) | `rechercher_clause` | `publier_alerte` + confirmation | Superflus | Données sans origine | Signaux (hors plan / jamais exécutées / retours) |
+|---|---|---|---|---|---|---|---|
+| 1 | 5 étapes, 3 serveurs, tous réels : `escales_a_risque`, `navire_par_nom`, `meteo_creneau`, `rechercher_clause`, `publier_alerte` | `navire_par_nom`, `escales_a_risque`, `meteo_creneau`, `rechercher_clause`, `publier_alerte` — 5 appels | oui | oui — confirmée avant l'appel ; `ALR-0001` | 0 | 0 (47 éléments vérifiés) | 0 / 0 / 0 |
+| **2 (retenue)** | 5 étapes, 3 serveurs, tous réels ; l'étape 2 nomme `data_navire_par_nom` (pharos-data) | mêmes 5 appels (`navire_par_nom` de pharos-ops à la place de l'étape 2) | oui | oui — confirmée avant l'appel ; `ALR-0002` | 0 | 0 (37 éléments vérifiés) | 1 / 1 / 0 |
+| 3 | 5 étapes, 3 serveurs, tous réels, dans l'ordre des appels | mêmes 5 appels | oui | oui — confirmée avant l'appel ; `ALR-0003` | 0 | **2 — 25, 35** (seuils cités d'après la description de `meteo_alerte`) | 0 / 0 / 0 |
+
+Exécution retenue : **la 2**, dernière des trois à 0 donnée sans origine, au plus un appel superflu, et
+`publier_alerte` appelé avec sa confirmation — recopiée dans `solutions/lab13/labs/lab13/execution.json`. Ses
+mesures sont celles déjà consignées dans `mesures.md` (0 superflu, 0 sans origine, signaux 1 / 1 / 0) : le
+fichier ne change pas. Sur la trace retenue, les six inventions ci-dessus donnent le même verdict (cinq ❌, 13,1
+m accepté comme 13,5 − 0,4). Le modèle cite spontanément les seuils de `meteo_alerte` sans l'appeler dans 6 des 9
+exécutions des trois tours : le vérificateur le signale désormais, ce que la consigne (« chaque chiffre … doit
+venir d'un résultat d'outil ») demande ; c'est la limite la plus probable que rencontreront les binômes.
+
+Coût : trois exécutions de `make lab13-question` de plus, à relever sur le tableau de bord OpenRouter.
 
 Coût connu localement (bancs uniquement, affichés par `make lab13-banc`) : 0,0273 $ + 0,0308 $ = 0,0581 $. Le
 coût des six exécutions de `make lab13-question` (trois par tour) n'est pas affiché par cette cible : coût total

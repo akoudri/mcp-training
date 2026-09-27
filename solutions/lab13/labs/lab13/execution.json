@@ -5,112 +5,112 @@
       "numero": 1,
       "outil": "escales_a_risque",
       "serveur": "pharos-data",
-      "raison": "Vérifier la liste des escales présentant un risque pour identifier l'escale du Vent d'Autan prévue jeudi."
+      "raison": "Vérifier les escales identifiées comme étant à risque pour le navire Vent d'Autan."
     },
     {
       "numero": 2,
       "outil": "data_navire_par_nom",
       "serveur": "pharos-data",
-      "raison": "Récupérer les détails de l'escale, le créneau horaire et les caractéristiques du navire Vent d'Autan."
+      "raison": "Récupérer les détails complets de l'escale du navire Vent d'Autan (créneau, quai, opérations)."
     },
     {
       "numero": 3,
       "outil": "meteo_creneau",
       "serveur": "pharos-ops",
-      "raison": "Obtenir les prévisions météorologiques exactes pour le créneau d'escale du navire."
+      "raison": "Obtenir la météo prévisionnelle sur le créneau de l'escale."
     },
     {
       "numero": 4,
       "outil": "rechercher_clause",
       "serveur": "pharos-docs",
-      "raison": "Rechercher les pénalités de retard applicables dans le contrat de manutention."
+      "raison": "Rechercher les pénalités de retard prévues au contrat de manutention."
     },
     {
       "numero": 5,
       "outil": "publier_alerte",
       "serveur": "pharos-ops",
-      "raison": "Soumettre la note d'alerte complétée à l'exploitant pour confirmation."
+      "raison": "Soumettre la note d'alerte récapitulative à l'exploitant pour validation."
     }
   ],
-  "reponse": "L'escale du navire **Vent d'Autan** prévue ce **jeudi 8 octobre 2026** est effectivement **à risque**.\n\n---\n\n### Dépôt de l'alerte\nL'alerte a été transmise à l'exploitant via l'outil dédié (Réf. **ALR-0003**, niveau **Orange**, enregistrée le 06/10/2026 à 21:04:24).\n\n---\n\n### Contenu de la note d'alerte\n\n#### 1. Identification de l'escale\n* **Navire :** Vent d'Autan (IMO 9412884, NAV-0007)\n* **Escale ID :** ESC-2026-0412\n* **Quai :** Quai 3\n* **Créneau :** Jeudi 8 octobre 2026 de 06:00 à 20:00\n\n#### 2. Critères de risque (Exploitation 2.0)\n* **Tirant d'eau :** 12,9 m. Le quai 3 ayant une profondeur maximale de 13,5 m, la marge de sécurité réglementaire de 1,0 m fixe la limite d'accueil à 12,5 m, soit un **dépassement de 0,4 m**.\n* **Conflit de créneau :** **Chevauchement de 60 minutes** (de 19:00 à 20:00) au quai 3 avec l'escale `ESC-2026-0413` du navire *Cormoran* (prévue de 19:00 le 08/10 à 05:00 le 09/10).\n\n#### 3. Conditions météorologiques sur le créneau (06:00 - 20:00)\n* **Créneau critique (14:00 - 17:00) :**\n  * **Vent :** 34 kt (dépassement du seuil de 25 kt)\n  * **Rafales :** 42 kt (dépassement du seuil de 35 kt)\n  * **Houle :** 2,8 m (dépassement du seuil de 2,0 m)\n* **Visibilité :** Minimum de 4,4 km observé à 16:00 (donnée non mesurée / inconnue à 13:00).\n* **Reste de la journée :** Vent de 6,9 à 17,3 kt, rafales de 12,8 à 25,3 kt, houle de 0,4 à 1,6 m.\n\n#### 4. Dispositions contractuelles (Contrat CM-0412, Article 7 — Pénalités de retard, p. 7)\n* **Franchise :** 6 heures pour tout retard imputable à l'opérateur.\n* **Taux :** 1 850 € par heure entamée au-delà de la franchise.\n* **Plafond :** 44 400 € par escale.\n* **Exonérations :** Aucune pénalité n'est due en cas de force majeure, de fermeture du quai pour raisons météorologiques ou de manquement de l'armateur.",
+  "reponse": "**Oui, l'escale du *Vent d'Autan* prévue ce jeudi 8 octobre 2026 est à risque.**\n\nL'alerte de niveau **orange** a été préparée et transmise à l'exploitant (référence : **ALR-0002**).\n\n---\n\n### Synthèse de la note d'alerte (Escale `ESC-2026-0412`)\n\n* **Navire** : *Vent d'Autan* (OMI 9412884, longueur 225 m, tirant d'eau max 13,2 m)\n* **Créneau prévu** : Jeudi 8 octobre 2026 de 06:00 à 20:00 (heure de Paris)\n* **Emplacement** : Quai 3\n\n---\n\n### 1. Risques identifiés & critères chiffrés\n* **Tirant d'eau** :\n  * Tirant d'eau d'escale : **12,9 m**\n  * Profondeur maximale du Quai 3 : **13,5 m** (marge de sécurité réglementaire de **1,0 m**, soit un seuil maximal admissible de **12,5 m**)\n  * **Dépassement : +0,4 m**\n* **Conflit de créneau** :\n  * Chevauchement de **60 minutes** (de 19:00 à 20:00) avec l'escale `ESC-2026-0413` (*Cormoran*) au Quai 3.\n\n---\n\n### 2. Météo sur le créneau (Quai 3)\n* **Alerte coup de vent de 14:00 à 17:00** :\n  * Vent moyen : **34 kt**\n  * Rafales : jusqu'à **42 kt**\n  * Houle : **2,8 m**\n* **Reste du créneau (06:00–13:00 et 18:00–20:00)** :\n  * Vent moyen : 6,9 à 17,3 kt\n  * Rafales : 12,8 à 25,3 kt\n  * Houle : 0,4 à 1,6 m\n  * Visibilité : 4,4 à 14,1 km (*donnée non disponible à 13:00*)\n\n---\n\n### 3. Pénalités de retard contractuelles\n*(Contrat de manutention `CM-0412`, Article 7 — page 7)*\n* **Franchise** : 6 heures\n* **Pénalité** : **1 850 €** par heure de retard entamée au-delà de la franchise\n* **Plafond** : **44 400 €** par escale\n* **Exonération** : Force majeure, fermeture du quai pour raisons météorologiques ou manquement de l'armateur.",
   "arret": null,
   "trace": [
     {
-      "correlation": "aa3d352b769b",
+      "correlation": "1a7f27bdc10a",
       "tour": 1,
       "outil": "navire_par_nom",
       "arguments": {
         "nom": "Vent d'Autan"
       },
-      "duree_ms": 71.9,
+      "duree_ms": 68.3,
       "octets": 270,
-      "tokens_cumules": 2731,
+      "tokens_cumules": 2722,
       "erreur": false,
       "resultat": "{\"navires\":[{\"navire_id\":\"NAV-0007\",\"nom\":\"Vent d'Autan\",\"imo\":\"9412884\",\"longueur_m\":225.0,\"tirant_eau_max_m\":13.2,\"pavillon\":\"BS\",\"escales\":[{\"escale_id\":\"ESC-2026-0412\",\"quai\":3,\"debut\":\"2026-10-08T06:00+02:00\",\"fin\":\"2026-10-08T20:00+02:00\"}],\"champs_inconnus\":[]}]}",
       "serveur": "pharos-ops"
     },
     {
-      "correlation": "aa3d352b769b",
+      "correlation": "1a7f27bdc10a",
       "tour": 1,
       "outil": "escales_a_risque",
       "arguments": {
         "date": "2026-10-08"
       },
-      "duree_ms": 11.2,
+      "duree_ms": 10.8,
       "octets": 1445,
-      "tokens_cumules": 2731,
+      "tokens_cumules": 2722,
       "erreur": false,
       "resultat": "{\"date\":\"2026-10-08\",\"definition_version\":\"2.0\",\"criteres_evalues\":[\"tirant_eau\",\"conflit_creneau\"],\"criteres_non_evalues\":[\"meteo\",\"retard_cumule\"],\"escales\":[{\"escale_id\":\"ESC-2026-0412\",\"navire\":\"Vent d'Autan\",\"quai\":3,\"debut\":\"2026-10-08T06:00+02:00\",\"fin\":\"2026-10-08T20:00+02:00\",\"criteres\":[{\"critere\":\"tirant_eau\",\"detail\":{\"tirant_eau_m\":12.9,\"quai_max_m\":13.5,\"marge_m\":1.0,\"depassement_m\":0.4}},{\"critere\":\"conflit_creneau\",\"detail\":{\"escale_id\":\"ESC-2026-0413\",\"debut\":\"2026-10-08T19:00+02:00\",\"fin\":\"2026-10-08T20:00+02:00\",\"chevauchement_min\":60}}]},{\"escale_id\":\"ESC-2026-0413\",\"navire\":\"Cormoran\",\"quai\":3,\"debut\":\"2026-10-08T19:00+02:00\",\"fin\":\"2026-10-09T05:00+02:00\",\"criteres\":[{\"critere\":\"conflit_creneau\",\"detail\":{\"escale_id\":\"ESC-2026-0412\",\"debut\":\"2026-10-08T19:00+02:00\",\"fin\":\"2026-10-08T20:00+02:00\",\"chevauchement_min\":60}}]},{\"escale_id\":\"ESC-2026-1369\",\"navire\":\"Pointe du Raz\",\"quai\":5,\"debut\":\"2026-10-08T10:00+02:00\",\"fin\":\"2026-10-08T13:00+02:00\",\"criteres\":[{\"critere\":\"conflit_creneau\",\"detail\":{\"escale_id\":\"ESC-2026-1370\",\"debut\":\"2026-10-08T12:15+02:00\",\"fin\":\"2026-10-08T13:00+02:00\",\"chevauchement_min\":45}}]},{\"escale_id\":\"ESC-2026-1370\",\"navire\":\"Camaret\",\"quai\":5,\"debut\":\"2026-10-08T12:15+02:00\",\"fin\":\"2026-10-08T14:45+02:00\",\"criteres\":[{\"critere\":\"conflit_creneau\",\"detail\":{\"escale_id\":\"ESC-2026-1369\",\"debut\":\"2026-10-08T12:15+02:00\",\"fin\":\"2026-10-08T13:00+02:00\",\"chevauchement_min\":45}}]}]}",
       "serveur": "pharos-data"
     },
     {
-      "correlation": "aa3d352b769b",
+      "correlation": "1a7f27bdc10a",
       "tour": 2,
       "outil": "meteo_creneau",
       "arguments": {
-        "fin": "2026-10-08T20:00+02:00",
-        "debut": "2026-10-08T06:00+02:00",
         "quais": [
           3
-        ]
+        ],
+        "debut": "2026-10-08T06:00:00+02:00",
+        "fin": "2026-10-08T20:00:00+02:00"
       },
-      "duree_ms": 17.4,
+      "duree_ms": 14.7,
       "octets": 1670,
-      "tokens_cumules": 4249,
+      "tokens_cumules": 4536,
       "erreur": false,
       "resultat": "{\"debut\":\"2026-10-08T06:00+02:00\",\"fin\":\"2026-10-08T20:00+02:00\",\"resultats\":[{\"quai\":3,\"previsions\":[{\"heure\":\"2026-10-08T06:00+02:00\",\"vent_kt\":14.2,\"rafales_kt\":21.1,\"houle_m\":0.5,\"visibilite_km\":8.3},{\"heure\":\"2026-10-08T07:00+02:00\",\"vent_kt\":10.8,\"rafales_kt\":18.4,\"houle_m\":1.2,\"visibilite_km\":8.9},{\"heure\":\"2026-10-08T08:00+02:00\",\"vent_kt\":16.4,\"rafales_kt\":20.8,\"houle_m\":1.6,\"visibilite_km\":12.3},{\"heure\":\"2026-10-08T09:00+02:00\",\"vent_kt\":17.3,\"rafales_kt\":25.3,\"houle_m\":1.3,\"visibilite_km\":7.2},{\"heure\":\"2026-10-08T10:00+02:00\",\"vent_kt\":13.2,\"rafales_kt\":20.4,\"houle_m\":1.3,\"visibilite_km\":7.5},{\"heure\":\"2026-10-08T11:00+02:00\",\"vent_kt\":6.9,\"rafales_kt\":12.9,\"houle_m\":1.0,\"visibilite_km\":14.1},{\"heure\":\"2026-10-08T12:00+02:00\",\"vent_kt\":11.6,\"rafales_kt\":17.9,\"houle_m\":0.8,\"visibilite_km\":4.7},{\"heure\":\"2026-10-08T13:00+02:00\",\"vent_kt\":13.8,\"rafales_kt\":19.2,\"houle_m\":0.8,\"visibilite_km\":null},{\"heure\":\"2026-10-08T14:00+02:00\",\"vent_kt\":34.0,\"rafales_kt\":42.0,\"houle_m\":2.8,\"visibilite_km\":10.1},{\"heure\":\"2026-10-08T15:00+02:00\",\"vent_kt\":34.0,\"rafales_kt\":42.0,\"houle_m\":2.8,\"visibilite_km\":11.0},{\"heure\":\"2026-10-08T16:00+02:00\",\"vent_kt\":34.0,\"rafales_kt\":42.0,\"houle_m\":2.8,\"visibilite_km\":4.4},{\"heure\":\"2026-10-08T17:00+02:00\",\"vent_kt\":34.0,\"rafales_kt\":42.0,\"houle_m\":2.8,\"visibilite_km\":10.1},{\"heure\":\"2026-10-08T18:00+02:00\",\"vent_kt\":6.9,\"rafales_kt\":12.8,\"houle_m\":0.4,\"visibilite_km\":9.9},{\"heure\":\"2026-10-08T19:00+02:00\",\"vent_kt\":10.1,\"rafales_kt\":18.9,\"houle_m\":1.3,\"visibilite_km\":6.1},{\"heure\":\"2026-10-08T20:00+02:00\",\"vent_kt\":10.2,\"rafales_kt\":19.5,\"houle_m\":1.4,\"visibilite_km\":5.3}]}],\"incomplets\":[],\"complet\":true}",
       "serveur": "pharos-ops"
     },
     {
-      "correlation": "aa3d352b769b",
+      "correlation": "1a7f27bdc10a",
       "tour": 2,
       "outil": "rechercher_clause",
       "arguments": {
-        "escale_id": "ESC-2026-0412",
-        "sujet": "penalites"
+        "sujet": "penalites",
+        "escale_id": "ESC-2026-0412"
       },
-      "duree_ms": 10.8,
+      "duree_ms": 8.8,
       "octets": 596,
-      "tokens_cumules": 4249,
+      "tokens_cumules": 4536,
       "erreur": false,
       "resultat": "{\"document_id\":\"CM-0412\",\"article\":\"Article 7 — Pénalités de retard\",\"page\":7,\"texte\":\"Tout retard imputable à l'opérateur portuaire au-delà d'une franchise de 6 heures donne lieu au versement\\nà l'armateur d'une pénalité de 1 850 € par heure de retard entamée.\\nLe montant total des pénalités est plafonné à 44 400 € par escale. Il est déduit de la facture de l'escale\\nconcernée.\\nAucune pénalité n'est due lorsque le retard résulte d'un cas de force majeure, d'une fermeture de quai\\npour raisons météorologiques ou d'un manquement de l'armateur à ses obligations.\"}",
       "serveur": "pharos-docs"
     },
     {
-      "correlation": "aa3d352b769b",
+      "correlation": "1a7f27bdc10a",
       "tour": 3,
       "outil": "publier_alerte",
       "arguments": {
-        "escale_id": "ESC-2026-0412",
-        "note": "Note d'alerte pour l'escale ESC-2026-0412 (Vent d'Autan) :\n\n1. Risques identifiés (Exploitation 2.0) :\n- Tirant d'eau : 12,9 m (tirant d'eau max du quai 3 : 13,5 m, avec la marge de 1,0 m requise, la limite d'accueil est de 12,5 m, soit un dépassement de 0,4 m).\n- Conflit de créneau : Chevauchement de 60 minutes avec l'escale ESC-2026-0413 (Cormoran) sur le Quai 3 entre 19:00 et 20:00.\n\n2. Conditions météo sur le créneau (06:00 - 20:00) :\n- Alerte météo forte entre 14:00 et 17:00 : vent de 34 kt (seuil ≥ 25 kt), rafales à 42 kt (seuil ≥ 35 kt) et houle de 2,8 m (seuil ≥ 2,0 m).\n- Visibilité minimale enregistrée : 4,4 km à 16:00 (donnée non disponible à 13:00).\n- Le reste du créneau présente des conditions plus modérées (vent de 6,9 à 17,3 kt, rafales de 12,8 à 25,3 kt, houle de 0,4 à 1,6 m).\n\n3. Pénalités de retard (Contrat CM-0412, Article 7, page 7) :\n- Franchise : 6 heures.\n- Pénalité : 1 850 € par heure de retard entamée au-delà de la franchise.\n- Plafond : 44 400 € par escale.\n- Exonération : aucune pénalité due en cas de force majeure, fermeture du quai pour raisons météorologiques ou manquement de l'armateur.",
         "niveau": "orange",
-        "destinataire": "exploitation"
+        "escale_id": "ESC-2026-0412",
+        "destinataire": "exploitation",
+        "note": "Note d'alerte - Escale ESC-2026-0412 (Vent d'Autan) - Jeudi 8 octobre 2026 (06:00 - 20:00, Quai 3)\n\n1. Risques et critères chiffrés :\n- Tirant d'eau : Tirant d'eau de l'escale de 12,9 m dépasse le seuil maximal admis sur le quai 3 (12,5 m = quai à 13,5 m moins 1,0 m de marge de sécurité), soit un dépassement de +0,4 m.\n- Conflit de créneau : Chevauchement de 60 minutes de 19:00 à 20:00 avec l'escale ESC-2026-0413 (Cormoran) sur le Quai 3.\n\n2. Météo sur le créneau (Quai 3) :\n- Épisode très défavorable entre 14:00 et 17:00 : Vent moyen jusqu'à 34 kt, rafales jusqu'à 42 kt, houle de 2,8 m.\n- Reste de la journée : Vent de 6,9 à 17,3 kt, rafales de 12,8 à 25,3 kt, houle de 0,4 à 1,6 m, visibilité min de 4,4 km (valeur non disponible à 13:00).\n\n3. Pénalités contractuelles (Contrat CM-0412, Art. 7, p. 7) :\n- Franchise : 6 heures.\n- Pénalité : 1 850 € par heure entamée au-delà de la franchise.\n- Plafond : 44 400 € par escale.\n- Exonération : Force majeure, fermeture du quai pour météo ou faute de l'armateur."
       },
-      "duree_ms": 25.1,
+      "duree_ms": 19.9,
       "octets": 151,
-      "tokens_cumules": 6523,
+      "tokens_cumules": 7100,
       "erreur": false,
-      "resultat": "{\"publiee\":true,\"alerte_id\":\"ALR-0003\",\"recue\":\"2026-10-06T21:04:24+02:00\",\"escale_id\":\"ESC-2026-0412\",\"niveau\":\"orange\",\"destinataire\":\"exploitation\"}",
+      "resultat": "{\"publiee\":true,\"alerte_id\":\"ALR-0002\",\"recue\":\"2026-10-06T21:28:27+02:00\",\"escale_id\":\"ESC-2026-0412\",\"niveau\":\"orange\",\"destinataire\":\"exploitation\"}",
       "serveur": "pharos-ops"
     }
   ]
