@@ -24,9 +24,14 @@ import httpx
 import mcp_types
 from fastmcp import Client
 from fastmcp.client.transports import StreamableHttpTransport
+from mcp.shared.exceptions import MCPError
 
 REVISIONS = {"2025-11-25": "legacy", "2026-07-28": "2026-07-28"}
 PROFILS = ("complet", "sans_tasks", "sans_elicitation", "defaut")
+
+
+class ServeurInjoignable(Exception):
+    """Le serveur visé ne répond pas : 502 de l'observateur (serveur non démarré) ou connexion refusée."""
 
 
 class ClientSansExtension(Client):
@@ -109,10 +114,21 @@ class ClientTest:
         return self
 
     async def __aexit__(self, *exc) -> None:
-        await self._client.__aexit__(*exc)
+        try:
+            await self._client.__aexit__(*exc)
+        except Exception:
+            if exc[0] is None:              # sinon, l'erreur de fermeture masquerait celle qui remonte déjà
+                raise
 
     async def outils(self):
         return await self._client.list_tools()
+
+    async def joindre(self, lancer: str) -> None:
+        """Premier échange : lève ServeurInjoignable, qui dit quoi lancer, plutôt qu'une trace Python."""
+        try:
+            await self.outils()
+        except (MCPError, httpx.HTTPError) as exc:
+            raise ServeurInjoignable(f"{self.url} ne répond pas ({exc}) : lancer {lancer}.") from exc
 
     async def appeler(self, nom: str, arguments: dict | None = None):
         return await self._client.call_tool(nom, arguments or {}, raise_on_error=False)

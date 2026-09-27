@@ -22,7 +22,7 @@ BOUCLE_TACHES = BOUCLE_MINIMALE.replace("from pharos_client import modele", "fro
 
 
 def jouet(*, parametre=False, minuteur=False, faux_total=False, toujours_tache=False, sans_plan_b=False,
-          ignore_panne=False, deux_outils=False) -> FastMCP:
+          ignore_panne=False, deux_outils=False, plan_b_sans_quai=False) -> FastMCP:
     taches = charger_module(Path("gabarits/lab11/serveurs/pharos_ops/taches.py"), f"jouet11_{id(object())}")
 
     def decider(nom, arguments, client_declare):
@@ -30,6 +30,8 @@ def jouet(*, parametre=False, minuteur=False, faux_total=False, toujours_tache=F
             return taches.DIRECT
         if client_declare or sans_plan_b:
             return taches.TACHE if client_declare else taches.DIRECT
+        if plan_b_sans_quai:
+            raise ToolError("Journée impossible sans l'extension Tasks : relancer depuis un client qui suit les tâches.")
         raise ToolError("Journée impossible sans l'extension Tasks : recalculer quai par quai (quai=1 à 7).")
 
     taches.decider = decider
@@ -121,6 +123,7 @@ async def test_jouet_correct(mocks_servis, client, monkeypatch):
     ({"toujours_tache": True}, "Immédiat", "quai=3 rend une tâche"),
     ({"sans_plan_b": True}, "Plan B", "au lieu d'un refus"),
     ({"ignore_panne": True}, "Trois issues", "sans erreur"),
+    ({"plan_b_sans_quai": True}, "Plan B", "le vérificateur attend cette alternative-là"),
 ])
 async def test_defauts(mocks_servis, client, monkeypatch, defaut, critere, attendu):
     echecs = _echecs(await _rapport(jouet(**defaut), mocks_servis, client, monkeypatch))

@@ -19,6 +19,10 @@ Trois issues, toutes rendues en Resultat : terminé (le résultat de l'outil, é
 exception de l'outil termine la tâche avec un résultat en erreur), annulé (« tâche annulée »), échoué (faute de
 protocole). Le budget de tour (PHAROS_DELAI_S) borne la SOUMISSION, pas le travail : un appel ordinaire
 (session.appeler) sur un outil qui répond en tâche attend la fin en silence, et coupe au bout du budget.
+
+Issue inconnue, rendue elle aussi en Resultat en erreur, comme session.appeler : une soumission qui dépasse le
+budget de tour, ou une tâche que le serveur ne connaît plus (redémarré pendant le calcul) — « résultat inconnu,
+ne rien en conclure » : le travail a pu avoir lieu, ou non.
 """
 
 from __future__ import annotations
@@ -30,6 +34,7 @@ from dataclasses import dataclass
 import fastmcp_tasks  # noqa: F401 — enregistre l'extension Tasks côté client : voir la documentation du module
 from fastmcp_tasks import ToolTask
 from fastmcp_tasks.client_models import ClientCreateTaskResult
+from mcp.shared.exceptions import MCPError
 
 from pharos_client.transport import CLE_CORRELATION, Resultat, Session
 
@@ -47,6 +52,25 @@ class EtatTache:
 
 def _intervalle(poll_interval_ms: int | None) -> float:
     return max(poll_interval_ms / 1000, INTERVALLE_MIN_S) if poll_interval_ms is not None else INTERVALLE_DEFAUT_S
+
+
+def _inconnu(texte: str) -> Resultat:
+    return Resultat(texte, True, len(texte.encode("utf-8")))
+
+
+def _depasse(exc: Exception) -> bool:
+    return isinstance(exc, TimeoutError) or "timed out" in str(exc).casefold()
+
+
+def hors_budget(nom: str, delai_s: float) -> Resultat:
+    """Le texte de transport.Session.appeler pour un appel qui dépasse le budget de tour : issue inconnue."""
+    return _inconnu(f"L'outil {nom} n'a pas répondu dans le budget de tour ({delai_s:.0f} s) : "
+                    "résultat inconnu, ne rien en conclure.")
+
+
+def _perdue(nom: str, exc: Exception) -> Resultat:
+    cause = "sans réponse du serveur" if _depasse(exc) else "perdue côté serveur"
+    return _inconnu(f"Tâche {nom} {cause} ({exc}) : résultat inconnu, ne rien en conclure.")
 
 
 def _resultat(brut) -> Resultat:
@@ -74,7 +98,10 @@ class Tache:
         return EtatTache(e.status, e.status_message, self.intervalle_s)
 
     def resultat(self) -> Resultat:
-        return _resultat(self._session._executer(self._tache.result()))
+        try:
+            return _resultat(self._session._executer(self._tache.result()))
+        except (TimeoutError, MCPError) as exc:
+            return _perdue(self.nom, exc)
 
     def annuler(self) -> None:
         self._session._executer(self._tache.cancel())
@@ -83,8 +110,13 @@ class Tache:
 def soumettre(session: Session, nom: str, arguments: dict, correlation: str | None = None) -> Tache | Resultat:
     """Soumet l'appel : Tache si le serveur a décidé d'en faire une tâche, Resultat s'il a répondu directement."""
     meta = {CLE_CORRELATION: correlation} if correlation else None
-    brut = session._executer(session._client.session.call_tool(
-        name=nom, arguments=arguments, meta=meta, read_timeout_seconds=session.delai_s, allow_claimed=True))
+    try:
+        brut = session._executer(session._client.session.call_tool(
+            name=nom, arguments=arguments, meta=meta, read_timeout_seconds=session.delai_s, allow_claimed=True))
+    except (TimeoutError, MCPError) as exc:
+        if not _depasse(exc):
+            raise
+        return hors_budget(nom, session.delai_s)
     return Tache(session, nom, brut) if isinstance(brut, ClientCreateTaskResult) else _resultat(brut)
 
 
@@ -93,7 +125,10 @@ def suivre(tache: Tache, *, afficher=print, delai_max_s: float = 900.0) -> Resul
     afficher(f"    … {tache.nom} : tâche {tache.identifiant[:12]} acceptée par le serveur")
     dernier, fin = None, time.monotonic() + delai_max_s
     while True:
-        etat = tache.etat()
+        try:
+            etat = tache.etat()
+        except (TimeoutError, MCPError) as exc:
+            return _perdue(tache.nom, exc)
         if etat.message and etat.message != dernier:
             afficher(f"    … {tache.nom} : {etat.message}")
             dernier = etat.message

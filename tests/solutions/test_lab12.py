@@ -1,8 +1,11 @@
 import contextlib
 from pathlib import Path
 
+import httpx
+import mcp_types
 import pytest
 
+from outils.client_test import ClientTest
 from outils.repartiteur import creer_repartiteur
 from outils.servir import servir
 from outils.verifier.commun import Etat
@@ -51,3 +54,28 @@ def test_les_erreurs_inattendues_sont_masquees(etat, monkeypatch):
 def test_mesures_consignees(etat):
     texte = (etat / "labs" / "lab12" / "mesures.md").read_text(encoding="utf-8")
     assert "À RELEVER" not in texte and "CLE_ETAT" in texte
+
+
+@pytest.mark.parametrize("panne, attendu, contraire", [
+    (httpx.ReadTimeout("lent"), "issue inconnue", "n'est pas partie"),
+    (httpx.ConnectError("refusé"), "n'est pas partie", "issue inconnue"),
+])
+async def test_canal_sans_reponse_issue_inconnue(etat, mocks_servis, monkeypatch, panne, attendu, contraire):
+    """Un délai du canal après l'envoi ne prouve pas que rien n'est parti ; une connexion refusée, si."""
+    from pharos import canal
+
+    async def canal_en_panne(*args, **kwargs):
+        raise panne
+
+    monkeypatch.setenv("CLE_ETAT", CLE_ETAT)
+    monkeypatch.setattr(canal, "publier", canal_en_panne)
+    arguments = {"escale_id": "ESC-2026-0412", "niveau": "orange", "destinataire": "exploitation"}
+    with importer_paquet(etat, "serveurs"):
+        mcp = charger_module(etat / "serveurs" / "pharos_ops" / "serveur.py", f"solution_lab12_canal_{attendu}").mcp
+        with servir(mcp.http_app(path="/mcp", json_response=True)) as url:
+            async with ClientTest(f"{url}/mcp", jeton="jeton-exploitation") as c:
+                demande = await c.appeler_brut("publier_alerte", arguments)
+                oui = {"confirmation": mcp_types.ElicitResult(action="accept", content={"confirmer": True})}
+                r = await c.appeler_brut("publier_alerte", arguments, reponses=oui, etat=demande.request_state)
+    texte = r.content[0].text
+    assert r.is_error and attendu in texte and contraire not in texte, texte

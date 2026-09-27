@@ -17,7 +17,9 @@ réponse scriptée (entrees.demander_utilisateur = …) — l'appeler toujours p
 
 Le serveur peut aussi répondre par une tâche (LAB 11) : appeler_brut la suit alors comme taches.appeler_ou_suivre.
 Un requestState refusé par le SDK du serveur (altéré, expiré, ou rejoué avec d'autres arguments) revient en
-Resultat en erreur — « refus du protocole » — plutôt qu'en exception.
+Resultat en erreur — « refus du protocole » — plutôt qu'en exception. Un appel qui dépasse le budget de tour
+n'est PAS un refus : l'outil a pu s'exécuter (une alerte a pu partir) — il revient, comme avec session.appeler,
+en « résultat inconnu, ne rien en conclure ».
 """
 
 from __future__ import annotations
@@ -76,7 +78,9 @@ def appeler_brut(session: Session, nom: str, arguments: dict, *, reponses: dict 
         brut = session._executer(session._client.session.call_tool(
             name=nom, arguments=arguments, input_responses=entrees, request_state=etat, meta=meta,
             read_timeout_seconds=session.delai_s, allow_input_required=True, allow_claimed=True))
-    except MCPError as exc:
+    except (TimeoutError, MCPError) as exc:
+        if taches._depasse(exc):                    # le serveur a pu exécuter l'outil : issue inconnue
+            return taches.hors_budget(nom, session.delai_s)
         texte = f"Refus du protocole : {exc}. Rien n'a été exécuté."
         return Resultat(texte, True, len(texte.encode("utf-8")))
     if isinstance(brut, mcp_types.InputRequiredResult):

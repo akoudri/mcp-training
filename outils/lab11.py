@@ -18,7 +18,7 @@ import time
 from fastmcp_tasks import ToolTask
 from fastmcp_tasks.client_models import ClientCreateTaskResult
 
-from outils.client_test import ClientTest
+from outils.client_test import ClientTest, ServeurInjoignable
 
 URL = "http://observateur:8103/mcp"
 OUTIL = "recalculer_plan_quai"
@@ -35,6 +35,7 @@ def _texte(resultat) -> str:
 async def clients(url: str, jeton: str, sans_tasks: bool, arguments: dict) -> int:
     profil = "sans_tasks" if sans_tasks else "complet"
     async with ClientTest(url, jeton=jeton, profil=profil, nom=f"pharos-lab11-{profil}") as c:
+        await c.joindre("« make lab11-scaffold » (pharos-ops, 8103)")
         print(f"Client « {profil} » — déclare : {c.declare()}")
         print(f"Appel : {OUTIL}({', '.join(f'{k}={v}' for k, v in arguments.items())})\n")
         debut = time.monotonic()
@@ -72,7 +73,11 @@ def main(argv: list[str]) -> int:
     c.add_argument("--jeton", default=os.environ.get("PHAROS_JETON") or "jeton-exploitation")
     a = p.parse_args(argv)
     arguments = {"date": a.date, **({"quai": a.quai} if a.quai is not None else {})}
-    return asyncio.run(clients(a.url, a.jeton, a.sans_tasks, arguments))
+    try:
+        return asyncio.run(clients(a.url, a.jeton, a.sans_tasks, arguments))
+    except ServeurInjoignable as exc:
+        print(exc)
+        return 1
 
 
 if __name__ == "__main__":

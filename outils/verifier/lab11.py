@@ -34,7 +34,6 @@ from pharos_ops import planification
 
 URL = "http://observateur:8103/mcp"
 RACINE = Path(__file__).resolve().parents[2]
-OBSERVATIONS = RACINE / "labs" / "lab11" / "observations.md"
 OUTIL = "recalculer_plan_quai"
 JEUDI = "2026-10-08"
 TERMINAUX = ("completed", "failed", "cancelled")
@@ -254,8 +253,9 @@ async def _(ctx):
         raise Echec(f"le client sans l'extension reçoit un résultat au bout de {duree:.0f} s, au lieu d'un refus "
                     "immédiat : le calcul de la journée ne tient pas dans un appel (étape 3).")
     if not re.search(r"\bquai", texte, re.IGNORECASE) or len(texte) < 60:
-        raise Echec(f"refus trop sec : « {texte[:200]} » — dire ce qui n'est pas possible, et ce qui l'est (par "
-                    "exemple, le recalcul quai par quai).")
+        raise Echec(f"refus sans l'alternative attendue : « {texte[:200]} » — dire ce qui n'est pas possible, et ce "
+                    "qui l'est : le vérificateur attend cette alternative-là, le recalcul quai par quai (le mot "
+                    "« quai », dans un refus d'au moins 60 caractères).")
     return f"« {texte[:220]} »"
 
 

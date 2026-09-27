@@ -1,6 +1,7 @@
 """Kit du LAB 12 : demandes d'entrée côté client (entrees.py), canal d'alertes, outils, deux instances, démarrage.
 Serveurs jouets en mémoire ou servis dans le processus ; ni base, ni Docker, ni modèle."""
 
+import asyncio
 import builtins
 import json
 import re
@@ -55,6 +56,12 @@ def serveur(publiees: list) -> FastMCP:
         """La même chose, sous le nom et la signature du LAB 12."""
         return await confirmer_puis_publier(escale_id, ctx)
 
+    @mcp.tool
+    async def lente() -> dict:
+        """Répond après le budget de tour du test : son issue est inconnue du client."""
+        await asyncio.sleep(1.5)
+        return {"fini": True}
+
     @mcp.tool(task=TaskConfig(mode="required", poll_interval=timedelta(seconds=0.05)))
     async def longue(ctx: Context) -> dict:
         """Une tâche."""
@@ -90,10 +97,15 @@ def test_session_elicitation_demande_rejeu_et_refus_du_protocole(client):
             echange = entrees.appeler_brut(s, "publier", {"escale_id": "E2"}, reponses=oui, etat=demande.etat)
             lignes = []
             tache = entrees.appeler_brut(s, "longue", {}, afficher=lignes.append)
+        with entrees.SessionElicitation(serveur(publiees), delai_s=0.5) as s:
+            lent = entrees.appeler_brut(s, "lente", {})
     assert '"elicitation":false' in sans.texte.replace(" ", "")
     assert not fait.est_erreur and '"publiee"' in fait.texte and publiees == ["E1"]
     assert echange.est_erreur and echange.texte.startswith("Refus du protocole") and publiees == ["E1"]
     assert not tache.est_erreur and "fini" in tache.texte and any("acceptée" in l for l in lignes)
+    # Un délai dépassé n'est pas un refus : l'outil a pu s'exécuter — issue inconnue, comme transport.Session.appeler.
+    assert lent.est_erreur and "résultat inconnu, ne rien en conclure" in lent.texte
+    assert "Refus du protocole" not in lent.texte and "Rien n'a été exécuté" not in lent.texte
 
 
 def test_demander_utilisateur_au_terminal(client, monkeypatch):
@@ -137,6 +149,27 @@ async def test_clients_du_lab12(mocks_servis, capsys):
         defaut = capsys.readouterr().out
     assert "input_required" in complet and "requestState" in complet and "Compteur du canal : 0 → 0" in complet
     assert '"publiee":false' in defaut.replace(" ", "") and publiees == []
+
+
+def _repond_502():
+    from starlette.applications import Starlette
+    from starlette.responses import PlainTextResponse
+    from starlette.routing import Route
+
+    return Starlette(routes=[Route("/mcp", lambda r: PlainTextResponse("502", status_code=502), methods=["POST"])])
+
+
+def test_clients_du_lab12_visent_8103_et_disent_quoi_lancer(mocks_servis, capsys):
+    from outils import lab12
+
+    # Étapes 1 à 4 : une instance (8103, PORTS.md) ; étape 5 : URL=… vers le répartiteur (8203).
+    assert lab12.URL == "http://observateur:8103/mcp"
+    assert "$(if $(URL),--url $(URL))" in Path("mk/lab12.mk").read_text(encoding="utf-8")
+    with servir(_repond_502()) as url:
+        code = lab12.main(["clients", "--url", f"{url}/mcp"])
+    assert code == 1
+    sortie = capsys.readouterr().out
+    assert "ne répond pas" in sortie and "make lab10-up" in sortie and "make lab12-deux-instances" in sortie
 
 
 def test_depart_cibles_et_deux_instances_du_lab12():

@@ -21,9 +21,13 @@ from tests.aides import charger_module, importer_client
 TACHES_SERVEUR = charger_module(Path("gabarits/lab11/serveurs/pharos_ops/taches.py"), "gabarit_lab11_taches")
 
 
-def jouet(decider=None, total=4, pause=0.3, echouer=False) -> FastMCP:
-    """recalculer_plan_quai en tâche optionnelle, derrière l'extension du gabarit, avec un decider au choix."""
-    module = charger_module(Path("gabarits/lab11/serveurs/pharos_ops/taches.py"), f"jouet_taches_{id(decider)}")
+GABARIT_TACHES = Path("gabarits/lab11/serveurs/pharos_ops/taches.py")
+SOLUTION_TACHES = Path("solutions/lab11/serveurs/pharos_ops/taches.py")
+
+
+def jouet(decider=None, total=4, pause=0.3, echouer=False, chemin=GABARIT_TACHES) -> FastMCP:
+    """recalculer_plan_quai en tâche optionnelle, derrière l'extension fournie, avec un decider au choix."""
+    module = charger_module(chemin, f"jouet_taches_{id(decider)}_{chemin.parts[0]}")
     if decider is not None:
         module.decider = decider
     mcp = FastMCP("jouet")
@@ -73,6 +77,33 @@ async def test_gabarit_serveur_decider_a_ecrire_et_extension_transparente():
         assert (await c.call_tool("autre", {})).data == "ok"                     # hors de recalculer : inchangé
         r = await c.call_tool("recalculer_plan_quai", {"date": "2026-10-08"}, raise_on_error=False)
     assert r.is_error and "decider : à écrire" in r.content[0].text
+
+
+@pytest.mark.parametrize("chemin", [GABARIT_TACHES, SOLUTION_TACHES])
+async def test_decider_qui_rend_une_mauvaise_valeur_est_dit_au_client(chemin):
+    async with Client(jouet(lambda nom, arguments, declare: "TACHE", chemin=chemin)) as c:
+        r = await c.call_tool("recalculer_plan_quai", {"date": "2026-10-08"}, raise_on_error=False)
+    assert r.is_error and "decider doit rendre 'direct' ou 'tache'" in r.content[0].text and "'TACHE'" in r.content[0].text
+
+
+def test_hors_budget_et_tache_perdue_rendent_un_resultat_inconnu(client):
+    with importer_client(client):
+        from pharos_client import taches
+        from pharos_client.transport import Session
+
+        with Session(jouet(decider_reference, pause=2), delai_s=0.5) as s:
+            lent = taches.appeler_ou_suivre(s, "recalculer_plan_quai", {"date": "2026-10-08", "quai": 3},
+                                            afficher=lambda l: None)
+            cree = s._executer(s._client.session.call_tool(name="recalculer_plan_quai", arguments={"date": "2026-10-08"},
+                                                           allow_claimed=True))
+            s._executer(taches.ToolTask(s._client, "recalculer_plan_quai", cree).cancel())
+            fantome = taches.Tache(s, "recalculer_plan_quai", cree.model_copy(update={"task_id": "tache-inconnue"}))
+            perdue = taches.suivre(fantome, afficher=lambda l: None)
+            perdue_resultat = fantome.resultat()
+    assert lent.est_erreur and "n'a pas répondu dans le budget de tour" in lent.texte
+    assert "résultat inconnu, ne rien en conclure" in lent.texte
+    for r in (perdue, perdue_resultat):
+        assert r.est_erreur and "perdue côté serveur" in r.texte and "résultat inconnu, ne rien en conclure" in r.texte
 
 
 def test_suivi_cote_client_trois_cas(client):
@@ -153,6 +184,14 @@ async def test_profils_elicitation():
     assert recus == ["accept", "decline"] and refuse.structured_content == {"reponse": None}
     with pytest.raises(ValueError, match="profil inconnu"):
         ClientTest("http://x/mcp", profil="magique")
+
+
+def test_clients_du_lab11_disent_quoi_lancer_si_le_serveur_ne_repond_pas(capsys):
+    from outils import lab11
+
+    assert lab11.main(["clients", "--url", "http://127.0.0.1:1/mcp"]) == 1
+    sortie = capsys.readouterr().out
+    assert "ne répond pas" in sortie and "make lab11-scaffold" in sortie
 
 
 def test_depart_et_cibles_du_lab11():

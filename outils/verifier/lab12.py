@@ -92,6 +92,12 @@ async def _demande(c, arguments) -> mcp_types.InputRequiredResult:
     return brut
 
 
+def _alterer(etat: str) -> str:
+    """Le requestState altéré d'un seul caractère, au milieu de la chaîne."""
+    milieu = len(etat) // 2
+    return etat[:milieu] + ("A" if etat[milieu] != "A" else "B") + etat[milieu + 1:]
+
+
 async def _rejouer(c, arguments, reponses, etat):
     """Le rejeu ; un refus du SDK (MCPError) est rendu comme un résultat en erreur."""
     try:
@@ -154,10 +160,12 @@ async def _(ctx):
         raise Echec("la confirmation doit porter default: false — un client qui applique le défaut sans demander ne "
                     "doit rien publier (bloc 19.5, extension C).")
     message = " ".join(getattr(r.params, "message", "") for r in requetes)
-    manques = [v for v in arguments.values() if v not in message]
+    manques = [v for v in arguments.values() if v.casefold() not in message.casefold()]
     if manques:
-        raise Echec(f"le message de la demande ne cite pas {', '.join(manques)} : le contexte va DANS la question "
-                    f"(« {message[:160]} »).")
+        cherches = (f"escale {arguments['escale_id']}, niveau {arguments['niveau']}, "
+                    f"destinataire {arguments['destinataire']}")
+        raise Echec(f"le message de la demande ne cite pas {', '.join(manques)} (cherchés, casse indifférente : "
+                    f"{cherches}) : le contexte va DANS la question (« {message[:160]} »).")
     if not demande.request_state:
         raise Echec("aucun requestState : ce que le serveur doit retrouver au rejeu y voyage.")
     return f"« {message[:160]} »"
@@ -165,13 +173,15 @@ async def _(ctx):
 
 @contextlib.contextmanager
 def _espion():
-    """Enregistre chaque tools/call du client MCP (nom, arguments, inputResponses, requestState)."""
+    """Enregistre chaque tools/call du client MCP (nom, arguments, inputResponses, requestState, résultat)."""
     appels, original = [], ClientSession.call_tool
 
     async def enregistrer(self, name, arguments=None, *args, **kwargs):
-        appels.append({"nom": name, "arguments": dict(arguments or {}),
-                       "reponses": kwargs.get("input_responses"), "etat": kwargs.get("request_state")})
-        return await original(self, name, arguments, *args, **kwargs)
+        appel = {"nom": name, "arguments": dict(arguments or {}), "reponses": kwargs.get("input_responses"),
+                 "etat": kwargs.get("request_state"), "resultat": None}
+        appels.append(appel)
+        appel["resultat"] = await original(self, name, arguments, *args, **kwargs)
+        return appel["resultat"]
 
     ClientSession.call_tool = enregistrer
     try:
@@ -201,6 +211,10 @@ async def _jouer_boucle(ctx, arguments: dict, valeur: bool) -> list[dict]:
             await asyncio.to_thread(boucle.executer, "Question simulée du LAB 12.", url=ctx.url)
     except NotImplementedError as exc:
         raise Echec("la boucle du LAB 4 n'est pas écrite : ce lab part de etat/is3-fin (make depart LAB=12).") from exc
+    except Exception as exc:
+        if hasattr(exc, "trace"):                  # ArretBoucle (LAB 4) : un arrêt de la boucle, pas du vérificateur
+            raise Echec(f"la boucle s'est arrêtée : {exc}") from exc
+        raise
     finally:
         entrees.demander_utilisateur = ancien
         if ancien_jeton is None:
@@ -220,6 +234,10 @@ async def _(ctx):
     _raz()
     appels = await _jouer_boucle(ctx, arguments, True)
     if len(appels) < 2:
+        if appels and not isinstance(appels[0]["resultat"], mcp_types.InputRequiredResult):
+            raise Echec(f"le premier appel de la boucle a reçu « {_texte(appels[0]['resultat'])[:160]} » et non une "
+                        "demande (input_required) : la session de la boucle ne déclare pas l'élicitation — l'ouvrir "
+                        "par entrees.SessionElicitation(url) au lieu de transport.Session.")
         raise Echec("la boucle n'a pas reposé l'appel après la demande : reconnaître input_required (ni succès ni "
                     "erreur), présenter la demande (entrees.demander_utilisateur), puis rejouer.")
     premier, rejeu = appels[0], appels[1]
@@ -249,8 +267,9 @@ async def _(ctx):
     if not r.is_error:
         raise Echec(f"le client sans élicitation n'obtient pas un refus (isError) : « {texte[:200]} ».")
     if not re.search(r"note", texte, re.IGNORECASE) or not re.search(r"sans\s+(la\s+)?publi|prépar", texte, re.IGNORECASE):
-        raise Echec(f"refus sans alternative : « {texte[:200]} » — dire pourquoi, et proposer de préparer la note "
-                    "sans la publier.")
+        raise Echec(f"refus sans l'alternative attendue : « {texte[:200]} » — dire pourquoi, et proposer de préparer "
+                    "la note sans la publier : le vérificateur attend cette alternative-là (« note », et « préparer » "
+                    "ou « sans la publier »).")
     return f"« {texte[:200]} »"
 
 
@@ -261,14 +280,15 @@ def _nouvelles_lignes(avant: int) -> list[dict]:
 @v.critere("Deux instances : le rejeu passe sur l'autre instance ; un requestState altéré est refusé et journalisé.")
 async def _(ctx):
     arguments = await _arguments(ctx)
-    _raz()
     async with _client(ctx) as c:
         for _ in range(4):
+            _raz()                                 # chaque essai part d'un canal vide : seul le dernier rejeu compte
             demande = await _demande(c, arguments)
             instance_demande = c.instances()[-1]
             r = await _rejouer(c, arguments, _reponses(demande, True), demande.request_state)
             if c.instances()[-1] != instance_demande:
                 break
+            await c.outils()                       # une requête intercalée : décale l'alternance pour l'essai suivant
         else:
             raise Echec("le rejeu n'a jamais atterri sur l'autre instance : vérifier make lab12-deux-instances.")
     if getattr(r, "is_error", False) or _compteur() != 1:
@@ -279,10 +299,7 @@ async def _(ctx):
     lignes = len(journal.lire("pharos-ops"))
     async with _client(ctx) as c:
         demande = await _demande(c, arguments)
-        etat = demande.request_state
-        milieu = len(etat) // 2
-        altere = etat[:milieu] + ("A" if etat[milieu] != "A" else "B") + etat[milieu + 1:]
-        r = await _rejouer(c, arguments, _reponses(demande, True), altere)
+        r = await _rejouer(c, arguments, _reponses(demande, True), _alterer(demande.request_state))
     if not getattr(r, "is_error", False) or _compteur():
         raise Echec("un requestState altéré d'un caractère, au milieu de la chaîne, a été accepté.")
     refus = [l for l in _nouvelles_lignes(lignes) if l.get("issue") == "refus"]
@@ -314,11 +331,11 @@ async def _(ctx):
         await _rejouer(c, arguments, _reponses(demande, False), demande.request_state)
         constats.append(("« non »", _compteur()))
         demande = await _demande(c, arguments)
-        etat = demande.request_state
-        milieu = len(etat) // 2
-        await _rejouer(c, arguments, _reponses(demande, True), etat[:milieu] + ("A" if etat[milieu] != "A" else "B")
-                       + etat[milieu + 1:])
+        await _rejouer(c, arguments, _reponses(demande, True), _alterer(demande.request_state))
         constats.append(("état altéré", _compteur()))
+        demande = await _demande(c, arguments)
+        await _rejouer(c, arguments, _reponses(demande, True), None)
+        constats.append(("réponses sans requestState", _compteur()))
         demande = await _demande(c, arguments)
         await _rejouer(c, {**arguments, "escale_id": AUTRE_ESCALE}, _reponses(demande, True), demande.request_state)
         constats.append(("échange d'escale au rejeu", _compteur()))
@@ -332,4 +349,4 @@ async def _(ctx):
     if ecrits:
         raise Echec(f"fichiers écrits ou modifiés pendant les refus : {', '.join(f for f, _ in ecrits)}. Demander "
                     "d'abord, écrire ensuite : un refus ne laisse rien derrière lui.")
-    return "« non », état altéré, échange d'escale, repli : compteur à 0, aucun fichier écrit"
+    return "« non », état altéré, réponses sans état, échange d'escale, repli : compteur à 0, aucun fichier écrit"

@@ -2,7 +2,10 @@
 
 python -m outils.lab12 canal                                   (make lab12-canal : remet le canal à zéro)
 python -m outils.lab12 compteur                                (make lab12-compteur)
-python -m outils.lab12 clients [--sans-elicitation] [--defaut] (make lab12-clients)
+python -m outils.lab12 clients [--sans-elicitation] [--defaut] [--url …] (make lab12-clients [URL=…])
+
+Les clients visent pharos-ops sur 8103, une instance (étapes 1 à 4) ; à l'étape 5, URL=http://observateur:8203/mcp
+vise le répartiteur des deux instances.
 
 Le compteur du canal est la seule vérité du lab : une alerte comptée est partie.
 """
@@ -18,9 +21,11 @@ import sys
 import mcp_types
 
 from outils import lab10
-from outils.client_test import ClientTest
+from outils.client_test import ClientTest, ServeurInjoignable
 
-URL = "http://observateur:8203/mcp"
+URL = "http://observateur:8103/mcp"
+LANCER = ("« make lab10-up » (pharos-ops, 8103 : étapes 1 à 4) ou « make lab12-deux-instances » "
+          "(répartiteur, 8203 : étape 5)")
 OUTIL = "publier_alerte"
 ARGUMENTS = {"escale_id": "ESC-2026-0412", "niveau": "orange", "destinataire": "exploitation",
              "note": "Escale du Vent d'Autan à risque jeudi : tirant d'eau et coup de vent."}
@@ -64,6 +69,7 @@ def _texte(resultat) -> str:
 async def _clients(url: str, jeton: str, profil: str) -> int:
     avant = sum(alertes().values())
     async with ClientTest(url, jeton=jeton, profil=profil, nom=f"pharos-lab12-{profil}") as c:
+        await c.joindre(LANCER)
         print(f"Client « {profil} » — déclare : {c.declare()}")
         print(f"Appel : {OUTIL}({', '.join(f'{k}={v!r}' for k, v in ARGUMENTS.items())})\n")
         if profil == "defaut":                     # le client répond seul, sans rien demander (extension C)
@@ -102,7 +108,7 @@ def main(argv: list[str]) -> int:
     a = p.parse_args(argv)
     try:
         return {"canal": canal, "compteur": compteur, "clients": clients}[a.commande](a)
-    except lab10.MocksInjoignables as exc:
+    except (lab10.MocksInjoignables, ServeurInjoignable) as exc:
         print(exc)
         return 1
 

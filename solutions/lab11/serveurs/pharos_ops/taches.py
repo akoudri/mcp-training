@@ -13,9 +13,9 @@ Brancher dans serveurs/pharos_ops/serveur.py (étapes 1 et 2) :
     @mcp.tool(name="recalculer_plan_quai", description="…",
               task=TaskConfig(mode="optional", poll_interval=timedelta(seconds=…)))   # l'intervalle suggéré
     async def recalculer_plan_quai(date: date, ctx: Context, quai: int | None = None) -> dict:
-        # planification.recalculer(date, [quai] ou None, rappel_progression) ; la progression :
+        # plan = await planification.recalculer(date, [quai] ou None, rappel_progression) ; la progression :
         #     await ctx.report_progress(traitees, total, "N escales sur M")   → statusMessage de tasks/get
-        ...
+        # return plan.en_dict()                     recalculer est une coroutine : sans await, rien n'est calculé
 
 Le mode « optional » autorise la tâche sans l'imposer ; par défaut, fastmcp ne regarde jamais les arguments.
 ExtensionRecalcul intercepte chaque appel de recalculer_plan_quai et demande à decider ce qu'il faut faire.
@@ -63,4 +63,4 @@ class ExtensionRecalcul(TasksExtension):
         if decision == TACHE:
             outil = await context.fastmcp.get_tool(params.name)
             return await create_task(outil, params.arguments, context)
-        raise ValueError(f"decider doit rendre {DIRECT!r} ou {TACHE!r} (ou lever ToolError), pas {decision!r}.")
+        raise ToolError(f"decider doit rendre {DIRECT!r} ou {TACHE!r} (ou lever ToolError), pas {decision!r}.")

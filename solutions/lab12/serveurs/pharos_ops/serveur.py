@@ -398,6 +398,11 @@ async def publier_alerte(escale_id: str, niveau: str, ctx: Context, destinataire
                 "message": "Publication annulée par l'utilisateur : rien n'est parti. Ne pas la présenter comme faite."}
     try:
         accuse = await canal.publier(escale_id, niveau, destinataire, note)
+    except httpx.TimeoutException as exc:          # la demande a pu arriver : rien ne prouve que rien n'est parti
+        journal.consigner_erreur(Exception(f"{exc.__class__.__name__} (canal d'alertes)"))
+        raise ToolError("Le canal de publication n'a pas répondu à temps : issue inconnue, l'alerte a pu partir. "
+                        "Ne rien conclure : vérifier le compteur du canal (make lab12-compteur) avant de "
+                        "republier.") from None
     except httpx.HTTPError as exc:
         journal.consigner_erreur(Exception(f"{exc.__class__.__name__} (canal d'alertes)"))
         raise ToolError("Le canal de publication est indisponible : l'alerte n'est pas partie. Ne pas la présenter "
