@@ -42,6 +42,11 @@ ALTER ROLE pharos_agent NOLOGIN NOBYPASSRLS;
 GRANT pharos_exploitation, pharos_agent TO pharos_app;
 GRANT CREATE, USAGE ON SCHEMA public TO pharos_proprietaire;
 ALTER DATABASE pharos SET timezone TO 'UTC';
+-- set_config est ce par quoi pharos_app pose pharos.agent (perimetre.emprunter) : si tout rôle peut l'appeler,
+-- une requête libre exécutée sous un rôle applicatif peut se réattribuer une autre identité avant lecture.
+-- Seul pharos_app (qui l'appelle avant d'endosser le rôle de l'appelant) en garde le droit.
+REVOKE EXECUTE ON FUNCTION pg_catalog.set_config(text, text, boolean) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION pg_catalog.set_config(text, text, boolean) TO pharos_app;
 """
 
 DROITS_SQL = """

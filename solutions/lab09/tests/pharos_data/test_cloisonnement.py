@@ -35,3 +35,31 @@ async def test_contournement_refuse_sans_rien_reveler(client_en_tant_que):
     async with client_en_tant_que("jeton-rance") as c:
         r = await c.call_tool_mcp("requete_sql", {"sql": "SELECT e.tarif_negocie FROM escales e"})
     assert r.is_error and "tarif_negocie" not in r.content[0].text
+
+
+# Correctif Task 11 : fonctions non blanchies et détournement de la variable de session pharos.agent — au-delà
+# des trois contournements ci-dessus (labs/lab9/contournements.md), quatre sondes qui passaient les quatre
+# étages avant le correctif (liste blanche de fonctions à l'étage 2, transaction en lecture seule, set_config
+# réservé à pharos_app).
+CONTOURNEMENTS_AVANCES = {
+    "variable_de_session": "SELECT e.escale_id FROM (SELECT set_config('pharos.agent','AG-RANCE',true) AS s) AS z, "
+                          "escales e WHERE e.quai = 3 AND e.debut < '2026-10-09 00:00+02' AND e.fin > '2026-10-08 00:00+02'",
+    "fonction_xml_tarifs": "SELECT query_to_xml('select grille, montant from tarifs limit 2' || "
+                          "left(set_config('role','pharos_exploitation',true),0), true, true, '') AS x",
+    "fonction_xml_tarif_negocie": "SELECT query_to_xml('select escale_id, tarif_negocie from escales limit 2', "
+                                 "true, true, '') AS x",
+    "fonction_xml_catalogue": "SELECT query_to_xml('select string_agg(table_name, '','') t from "
+                             "information_schema.tables where table_schema = ''public''', true, true, '') AS x",
+    "to_regclass": "SELECT to_regclass('esc_hdr_legacy')::text AS x",
+    "ecriture_lo": "SELECT lo_from_bytea(0, 'x'::bytea) AS x",
+}
+INTERDITS_AVANCES = ("ESC-2026-0412", "montant", "tarif_negocie", "information_schema", "esc_hdr_legacy")
+
+
+async def test_requete_sql_contournements_avances(client_en_tant_que):
+    async with client_en_tant_que("jeton-iroise") as c:
+        for sql in CONTOURNEMENTS_AVANCES.values():
+            r = await c.call_tool_mcp("requete_sql", {"sql": sql})
+            texte = r.content[0].text
+            assert r.is_error, f"{sql!r} n'a pas été refusée : {texte}"
+            assert not any(motif in texte for motif in INTERDITS_AVANCES), f"{sql!r} a révélé : {texte}"

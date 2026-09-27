@@ -58,6 +58,15 @@ def test_droits_des_roles(base_de_test):
     assert asyncio.run(_sous(None, "SELECT count(*) FROM escales", login="pharos_planification")) > 0
 
 
+def test_set_config_reserve_a_pharos_app(base_de_test):
+    """Consigne du contrôleur (Task 11, correctif) : seul pharos_app peut poser pharos.agent — sinon, une
+    requête libre exécutée sous un rôle applicatif (pharos_agent, pharos_exploitation) pourrait se réattribuer
+    une autre identité avant de lire. pharos_app le pose AVANT de changer de rôle (perimetre.emprunter)."""
+    _refuse("pharos_agent", "SELECT set_config('pharos.agent', 'AG-RANCE', true)")
+    _refuse("pharos_exploitation", "SELECT set_config('pharos.agent', 'AG-RANCE', true)")
+    assert asyncio.run(_sous(None, "SELECT set_config('pharos.agent', 'AG-RANCE', true)")) == "AG-RANCE"
+
+
 def test_rechargement_idempotent_et_politique_reappliquee(base_de_test, tmp_path):
     from donnees.base.__main__ import charger
 

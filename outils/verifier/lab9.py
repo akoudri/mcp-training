@@ -227,8 +227,8 @@ async def _(ctx):
     connexion = await asyncpg.connect(base.dsn("pharos_app"))
     try:
         async with connexion.transaction():
-            await connexion.execute("SET LOCAL ROLE pharos_agent")
             await connexion.execute("SELECT set_config('pharos.agent', 'AG-IROISE', true)")
+            await connexion.execute("SET LOCAL ROLE pharos_agent")
             vues = {l["escale_id"] for l in await connexion.fetch("SELECT escale_id FROM escales")}
     finally:
         await connexion.close()

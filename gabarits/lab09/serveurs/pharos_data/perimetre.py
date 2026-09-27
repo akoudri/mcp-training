@@ -32,14 +32,16 @@ LISTE_BLANCHE: dict[str, set[str]] = {
 
 @asynccontextmanager
 async def emprunter(pool, appelant: Identite):
-    """Une connexion du pool, dans une transaction, sous le rôle de l'appelant et avec pharos.agent posé.
+    """Une connexion du pool, dans une transaction en lecture seule, sous le rôle de l'appelant. pharos.agent est
+    posé AVANT le changement de rôle : c'est pharos_app qui l'écrit (seul à en avoir le droit — GRANT EXECUTE
+    ciblé dans donnees/base/__main__.py) ; une fois le rôle applicatif endossé, il ne peut plus l'écraser.
 
     C'est la base qui cloisonne (politique RLS de labs/lab9/politique.sql) : l'outil n'ajoute aucun WHERE."""
     if pool is None:
         raise ToolError("Base indisponible : le pool n'est pas créé.")
-    async with pool.acquire() as connexion, connexion.transaction():
-        await connexion.execute(f"SET LOCAL ROLE {appelant.role}")
+    async with pool.acquire() as connexion, connexion.transaction(readonly=True):
         await connexion.execute("SELECT set_config('pharos.agent', $1, true)", appelant.agent_id or "")
+        await connexion.execute(f"SET LOCAL ROLE {appelant.role}")
         yield connexion
 
 
