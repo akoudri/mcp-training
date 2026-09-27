@@ -14,6 +14,7 @@ import re
 import subprocess
 import sys
 import time
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import asyncpg
@@ -23,7 +24,7 @@ from donnees.base import generer
 from outils.client_test import ClientTest
 from outils.lab9 import CONTOURNEMENTS
 from outils.verifier.commun import Echec, Verification
-from pharos import base, journal
+from pharos import base, horloge, journal
 
 URL = "http://observateur:8102/mcp"
 RACINE = Path(__file__).resolve().parents[2]
@@ -32,8 +33,12 @@ NOMS = ("escales_a_risque", "conflits_de_creneau", "requete_sql")
 PARAMETRES_D_IDENTITE = re.compile(r"^(agent|identite|role|utilisateur|appelant)", re.IGNORECASE)
 INTERDITS = ("esc_hdr_legacy", "tarifs", "tarif_negocie", "armateur", "SQLSTATE", "ERROR:", "does not exist",
              "permission denied")
-QUAI_3_JEUDI = ("SELECT count(*) AS n FROM escales WHERE quai = 3 "
+QUAI_3_JEUDI = ("SELECT escale_id FROM escales WHERE quai = 3 "
                 "AND debut < '2026-10-09 00:00+02' AND fin > '2026-10-08 00:00+02'")
+# Sous le plafond de requete_mouvements pour chacun (81 lignes pour l'exploitation) : un serveur conforme répond,
+# et la réponse porte des escale_id à examiner. ESC-2026-0412 (Rance) y est pour l'exploitation.
+MOUVEMENTS_QUAI_3_JEUDI = {"date_debut": "2026-10-08", "date_fin": "2026-10-08", "quai": 3}
+AGENTS = ("AG-IROISE", "AG-RANCE")
 SEUIL_S = 10.0
 
 v = Verification("LAB 9 — pharos-data v1", URL, "make lab8-base, make lab9-politique puis make lab8-up")
@@ -48,6 +53,16 @@ def _donnees(ctx) -> generer.Donnees:
 def _escales_de(d: generer.Donnees, agent_id: str) -> set[str]:
     navires = {n.navire_id for n in d.navires if n.agent_id == agent_id}
     return {e.escale_id for e in d.escales if e.navire_id in navires}
+
+
+def _quai_3_jeudi(d: generer.Donnees, agent_id: str | None) -> set[str]:
+    """La vérité de la question détournée : les escales au quai 3 le jeudi 8 octobre (Europe/Paris), vues par
+    l'agent (ou par l'exploitation si agent_id est None)."""
+    debut = datetime(2026, 10, 8, tzinfo=horloge.FUSEAU)
+    fin = debut + timedelta(days=1)
+    perimetre = _escales_de(d, agent_id) if agent_id else {e.escale_id for e in d.escales}
+    return {e.escale_id for e in d.escales
+            if e.quai == 3 and e.debut < fin and e.fin > debut and e.escale_id in perimetre}
 
 
 def _texte(r) -> str:
@@ -141,21 +156,23 @@ async def _(ctx):
     rance = _escales_de(d, "AG-RANCE")
     textes = []
     for outil, arguments in (("escales_a_risque", JEUDI), ("conflits_de_creneau", JEUDI),
-                             ("requete_mouvements", {"date_debut": "2026-10-05", "date_fin": "2026-10-09"}),
+                             ("requete_mouvements", MOUVEMENTS_QUAI_3_JEUDI),
                              ("requete_sql", {"sql": "SELECT escale_id FROM escales"})):
         r = await _appeler(ctx, "jeton-iroise", outil, arguments)
+        if outil == "requete_mouvements" and r.is_error:
+            raise Echec(f"requete_mouvements(quai=3, 2026-10-08) a échoué sous Iroise : {_texte(r)[:300]} — "
+                        "sous le plafond, l'agent doit recevoir les mouvements de ses escales.")
         textes.append((outil, _texte(r)))
     fuites = sorted({(o, e) for o, t in textes for e in re.findall(r"ESC-\d{4}-\d{4}", t) if e in rance})
     if fuites:
         raise Echec("vu par Iroise : " + ", ".join(f"{e} ({o})" for o, e in fuites[:6]))
-    comptes = {}
-    for jeton in ("jeton-rance", "jeton-iroise", "jeton-exploitation"):
+    vues, attendues = {}, {}
+    for jeton, agent_id in (("jeton-rance", "AG-RANCE"), ("jeton-iroise", "AG-IROISE"), ("jeton-exploitation", None)):
         r = await _appeler(ctx, jeton, "requete_sql", {"sql": QUAI_3_JEUDI})
-        nombres = re.findall(r'"n":\s*(\d+)', _texte(r))
-        comptes[jeton] = int(nombres[0]) if nombres else None
-    attendu = {"jeton-rance": 1, "jeton-iroise": 1, "jeton-exploitation": 2}
-    if comptes != attendu:
-        raise Echec(f"escales au quai 3 jeudi, toutes compagnies confondues : {comptes}, attendu {attendu} "
+        vues[jeton] = sorted(set(re.findall(r"ESC-\d{4}-\d{4}", _texte(r))))
+        attendues[jeton] = sorted(_quai_3_jeudi(d, agent_id))
+    if vues != attendues:
+        raise Echec(f"escales au quai 3 jeudi, toutes compagnies confondues : {vues}, attendu {attendues} "
                     "— chacun son seul périmètre, l'exploitation le total.")
 
 
@@ -176,6 +193,7 @@ def _partie_commune(messages: list[str]) -> int:
 @v.critere("Les trois contournements échouent, avec un message interprétable qui ne révèle rien du schéma.")
 async def _(ctx):
     avant = await _compter_mouvements()
+    deja_consignees = len(journal.lire("pharos-data"))
     messages, passes, fuites = [], [], []
     for n, requetes in CONTOURNEMENTS.items():
         for sql in requetes:
@@ -195,7 +213,8 @@ async def _(ctx):
     if _partie_commune(messages) < 20:
         problemes.append("les refus n'ont pas la même forme : une même phrase, par exemple la liste blanche, "
                          "sans rien de ce qui existe vraiment.")
-    refus = [l for l in journal.lire("pharos-data") if l.get("outil") == "requete_sql" and l.get("issue") == "refus"]
+    refus = [l for l in journal.lire("pharos-data")[deja_consignees:]      # les seules lignes de ce critère
+             if l.get("outil") == "requete_sql" and l.get("issue") == "refus"]
     if len(refus) < len(messages) and not problemes:
         problemes.append("les refus ne sont pas tous dans logs/pharos-data.jsonl : lever ToolError (le journal "
                          "est branché par le squelette), et consigner l'erreur brute par journal.consigner_erreur.")
@@ -221,21 +240,40 @@ def _(ctx):
     return f"{r.stdout.strip().splitlines()[-1]} ({duree:.1f} s)"
 
 
-@v.critere("Critère décisif — la protection vit dans la base : sans aucun filtre d'outil, l'agent ne voit que ses escales.")
-async def _(ctx):
-    iroise = _escales_de(_donnees(ctx), "AG-IROISE")
+async def _vu_par(agent_id: str) -> tuple[set[str], set[str]]:
+    """Sous le rôle pharos_agent et pharos.agent = agent_id, sans aucun outil : les escales, et les escales
+    dont on voit des mouvements."""
     connexion = await asyncpg.connect(base.dsn("pharos_app"))
     try:
         async with connexion.transaction():
-            await connexion.execute("SELECT set_config('pharos.agent', 'AG-IROISE', true)")
+            await connexion.execute("SELECT set_config('pharos.agent', $1, true)", agent_id)
             await connexion.execute("SET LOCAL ROLE pharos_agent")
-            vues = {l["escale_id"] for l in await connexion.fetch("SELECT escale_id FROM escales")}
+            escales = {l["escale_id"] for l in await connexion.fetch("SELECT escale_id FROM escales")}
+            mouvements = {l["escale_id"] for l in await connexion.fetch("SELECT DISTINCT escale_id FROM mouvements")}
     finally:
         await connexion.close()
-    if not vues:
-        raise Echec("sous le rôle pharos_agent (pharos.agent = AG-IROISE), la base ne rend aucune escale : écrire la "
-                    "politique de l'agent dans labs/lab9/politique.sql, puis « make lab9-politique ».")
-    if vues != iroise:
-        raise Echec(f"sous le rôle pharos_agent (pharos.agent = AG-IROISE), la base rend {len(vues)} escales, dont "
-                    f"{len(vues - iroise)} hors de son périmètre : la protection n'est pas dans la base.")
-    return f"{len(vues)} escales, toutes d'Iroise, sans qu'aucun outil n'ait filtré."
+    return escales, mouvements
+
+
+@v.critere("Critère décisif — la protection vit dans la base : sans aucun filtre d'outil, l'agent ne voit que ses escales.")
+async def _(ctx):
+    d = _donnees(ctx)
+    constats = []
+    for agent_id in AGENTS:
+        perimetre = _escales_de(d, agent_id)
+        avec_mouvements = {m.escale_id for m in d.mouvements if m.escale_id in perimetre}
+        escales, mouvements = await _vu_par(agent_id)
+        if not escales:
+            raise Echec(f"sous le rôle pharos_agent (pharos.agent = {agent_id}), la base ne rend aucune escale : "
+                        "écrire la politique de l'agent dans labs/lab9/politique.sql, puis « make lab9-politique ».")
+        if escales != perimetre:
+            raise Echec(f"sous le rôle pharos_agent (pharos.agent = {agent_id}), la base rend {len(escales)} escales, "
+                        f"dont {len(escales - perimetre)} hors de son périmètre (et {len(perimetre - escales)} des "
+                        "siennes manquent) : la politique doit lire current_setting('pharos.agent', true), "
+                        "jamais un agent écrit en dur.")
+        if mouvements != avec_mouvements:
+            raise Echec(f"sous le rôle pharos_agent (pharos.agent = {agent_id}), la table mouvements rend les "
+                        f"mouvements de {len(mouvements)} escales, dont {len(mouvements - perimetre)} hors de son "
+                        "périmètre : la politique agent_mouvements doit suivre celle des escales.")
+        constats.append(f"{agent_id} : {len(escales)} escales")
+    return " ; ".join(constats) + " — les siennes seulement, mouvements compris, sans qu'aucun outil n'ait filtré."

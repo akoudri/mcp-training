@@ -14,22 +14,39 @@ from tests.aides import DSN_TEST, base_requise, servir
 
 pytestmark = base_requise
 REFUS = "Requête refusée. Seules des lectures SELECT sur escales, mouvements, navires et quais sont possibles."
-POLITIQUE_AGENT = """
+POLITIQUE_ESCALES = """
 ALTER TABLE escales ENABLE ROW LEVEL SECURITY;
+ALTER TABLE mouvements ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS e ON escales;
 CREATE POLICY e ON escales FOR SELECT TO pharos_exploitation USING (true);
+DROP POLICY IF EXISTS em ON mouvements;
+CREATE POLICY em ON mouvements FOR SELECT TO pharos_exploitation USING (true);
 DROP POLICY IF EXISTS a ON escales;
 CREATE POLICY a ON escales FOR SELECT TO pharos_agent
-    USING (navire_id IN (SELECT navire_id FROM navires WHERE agent_id = current_setting('pharos.agent', true)));
+    USING (navire_id IN (SELECT navire_id FROM navires WHERE agent_id = {agent}));
 """
+DYNAMIQUE = "current_setting('pharos.agent', true)"
+MOUVEMENTS_FILTRES = """
+DROP POLICY IF EXISTS am ON mouvements;
+CREATE POLICY am ON mouvements FOR SELECT TO pharos_agent USING (escale_id IN (SELECT escale_id FROM escales));
+"""
+POLITIQUE_AGENT = POLITIQUE_ESCALES.format(agent=DYNAMIQUE) + MOUVEMENTS_FILTRES
+# Deux politiques fautives que seul le critère décisif peut voir : un agent écrit en dur, des mouvements non filtrés.
+POLITIQUE_EN_DUR = POLITIQUE_ESCALES.format(agent="'AG-IROISE'") + MOUVEMENTS_FILTRES
+POLITIQUE_MOUVEMENTS_OUVERTS = POLITIQUE_ESCALES.format(agent=DYNAMIQUE) + """
+DROP POLICY IF EXISTS am ON mouvements;
+CREATE POLICY am ON mouvements FOR SELECT TO pharos_agent USING (true);
+"""
+QUAI_3_JEUDI = {None: ["ESC-2026-0412", "ESC-2026-0413"], "AG-RANCE": ["ESC-2026-0412"], "AG-IROISE": ["ESC-2026-0413"]}
 
 
-def jouet(*, parametre_identite=False, sans_auth=False, fuite=False) -> FastMCP:
+def jouet(*, parametre_identite=False, sans_auth=False, fuite=False, fuite_rance=False,
+          sans_journal=False) -> FastMCP:
     d = generer.generer()
     [a, b, m] = d.conflits_jeudi[0]
     [c, e, n] = d.conflits_jeudi[1]
     mcp = FastMCP("jouet", auth=None if sans_auth else autorisation.verificateur(),
-                  middleware=[journal.Journal("pharos-data")])
+                  middleware=[] if sans_journal else [journal.Journal("pharos-data")])
 
     def agent():
         return autorisation.identite().agent_id
@@ -50,8 +67,12 @@ def jouet(*, parametre_identite=False, sans_auth=False, fuite=False) -> FastMCP:
         return {"conflits": [{"escales": [a, b], "chevauchement_min": m}, {"escales": [c, e], "chevauchement_min": n}]}
 
     @mcp.tool
-    def requete_mouvements(date_debut: str, date_fin: str) -> dict:
+    def requete_mouvements(date_debut: str, date_fin: str, quai: int | None = None) -> dict:
         """Mouvements."""
+        if quai is None:          # comme pharos-data : sans quai, une semaine dépasse le plafond de 200 lignes
+            raise ToolError("754 mouvements correspondent : au-delà du plafond de 200 lignes, rien n'est rendu.")
+        if fuite_rance:           # un filtre d'outil oublié : un mouvement de l'escale de Rance au quai 3, jeudi
+            return {"mouvements": [{"mouvement_id": "MVT-000001", "escale_id": "ESC-2026-0412"}]}
         return {"mouvements": []}
 
     if parametre_identite:
@@ -63,8 +84,10 @@ def jouet(*, parametre_identite=False, sans_auth=False, fuite=False) -> FastMCP:
     @mcp.tool
     def requete_sql(sql: str) -> dict:
         """SQL."""
-        if "count(*) AS n" in sql:
-            return {"lignes": [{"n": 2 if agent() is None else 1}]}
+        from outils.verifier import lab9
+
+        if sql == lab9.QUAI_3_JEUDI:
+            return {"lignes": [{"escale_id": e} for e in QUAI_3_JEUDI[agent()]]}
         if sql == "SELECT escale_id FROM escales":
             return {"lignes": [{"escale_id": "ESC-2026-0413"}]}
         if fuite and "armateur" in sql:
@@ -143,6 +166,37 @@ async def test_protection_absente_de_la_base(base_de_test, racine, tmp_path):
         assert "ne rend aucune escale" in detail
     finally:
         await asyncio.to_thread(_politique, tmp_path / "rien", None)
+
+
+async def test_fuite_d_une_escale_de_rance_vers_iroise(politique, racine):
+    echecs = _echecs(await _rapport(jouet(fuite_rance=True)))
+    [detail] = [d for l, d in echecs.items() if "ne voit aucune escale de Rance" in l]
+    assert "ESC-2026-0412 (requete_mouvements)" in detail
+
+
+@pytest.mark.parametrize(("sql", "attendu"), [(POLITIQUE_EN_DUR, "jamais un agent écrit en dur"),
+                                              (POLITIQUE_MOUVEMENTS_OUVERTS, "la table mouvements")],
+                         ids=["agent_en_dur", "mouvements_ouverts"])
+async def test_politique_fautive_vue_par_le_critere_decisif(base_de_test, racine, tmp_path, sql, attendu):
+    try:
+        await asyncio.to_thread(_politique, tmp_path, sql)
+        echecs = _echecs(await _rapport(jouet()))
+        [detail] = [d for l, d in echecs.items() if "décisif" in l]
+        assert attendu in detail
+    finally:
+        await asyncio.to_thread(_politique, tmp_path / "rien", None)
+
+
+async def test_refus_absents_du_journal_malgre_un_historique(politique, racine):
+    """Des refus d'une séance précédente dans logs/pharos-data.jsonl ne comptent pas pour ce serveur-ci."""
+    import json
+
+    (racine / "logs").mkdir()
+    ancien = json.dumps({"outil": "requete_sql", "issue": "refus"}) + "\n"
+    (racine / "logs" / "pharos-data.jsonl").write_text(ancien * 50, encoding="utf-8")
+    echecs = _echecs(await _rapport(jouet(sans_journal=True)))
+    [detail] = [d for l, d in echecs.items() if "contournements" in l]
+    assert "logs/pharos-data.jsonl" in detail
 
 
 async def test_suite_absente(politique, racine):
