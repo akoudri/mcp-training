@@ -534,3 +534,23 @@ async def test_mocks_absents(client, note, monkeypatch):
     with servir(mocks.app) as url, importer_client(client):
         rapport = await verificateur.v.executer(url=f"{url}/_sante", sans_modele=True)
     assert "make lab10-mocks" in rapport.texte()
+
+
+async def test_note_ecrite_par_la_cible_reponse_partielle_vide_longue(mocks_servis, client, note, monkeypatch):
+    """Reliquat du plan 2 : la note écrite par ecrire_note coupe le résultat à 160 caractères ; une réponse
+    partielle vide (sans isError) dont « complet » tombe au-delà est reconnue par « incomplets »."""
+    import json
+
+    from outils import lab10
+
+    corps = {"debut": "2026-10-08T06:00+02:00", "fin": "2026-10-08T20:00+02:00", "resultats": [],
+             "incomplets": [{"quai": 3, "raison": "service météo en panne, HTTP 503"}], "complet": False}
+    texte = json.dumps(corps, ensure_ascii=False)
+    assert len(texte) > 160 and texte.index('"complet"') > 160
+    with importer_client(client):
+        from pharos_client.trace import Enregistrement
+
+        trace = [Enregistrement("c", 1, "meteo_creneau", {"quais": [3]}, 1.0, len(texte), 100, False, texte)]
+    lab10.ecrire_note(note, "Q ?", "Escale ESC-2026-0412. Météo non évaluée : service indisponible.", trace)
+    echecs = _echecs(await _rapport(jouet(), mocks_servis, client, monkeypatch))
+    assert echecs == {}, echecs

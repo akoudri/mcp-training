@@ -450,8 +450,10 @@ def _(ctx):
     # partielle vide (tous les quais tombent : resultats vides, complet: false), suite logique de l'étape 4 sans
     # isError. « make lab10-note-panne » est la seule cible qui écrit ce fichier, toujours sous panne=meteo.
     lignes_meteo = [l for l in trace.splitlines() if l.strip().startswith("|") and re.search(r"meteo_(creneau|alerte)", l)]
+    # La cellule de résultat est coupée à 160 caractères (outils.lab10.ecrire_note) : « complet », souvent la
+    # dernière clé, peut tomber au-delà — « incomplets » non vide, qui vient avant, suffit aussi.
     en_panne = any(re.search(r"\|\s*oui\s*\|", l) or re.search(r'"?complet"?\s*:\s*false', l, re.IGNORECASE)
-                  for l in lignes_meteo)
+                   or re.search(r'"?incomplets"?\s*:\s*\[\s*\{', l) for l in lignes_meteo)
     if not en_panne:
         raise Echec("la trace de la note ne montre aucun appel météo en erreur (ni une réponse partielle avec "
                     "complet: false) : la note n'a pas été produite en mode panne. Relancer « make lab10-note-panne ».")
