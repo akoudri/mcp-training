@@ -1,5 +1,8 @@
 """Vérificateur de note du LAB 13 : formes normalisées, origines, calculs, exclusions."""
 
+import json
+from pathlib import Path
+
 import pytest
 
 from outils.verifier.note import formater, sans_origine, verifier_note
@@ -109,3 +112,75 @@ def test_la_trace_peut_venir_du_fichier_json():
 def test_le_rapport_dit_ce_qui_manque():
     texte = formater(verifier_note("Houle de 3,1 m.", TRACE))
     assert "SANS ORIGINE" in texte and "1 sans origine" in texte
+
+
+# --- Revue finale, Critical 1 : un calcul ne se fait qu'entre nombres frères d'un même objet JSON, de même unité ---
+
+PUBLIEE = ('{"publiee":true,"alerte_id":"ALR-0003","recue":"2026-10-06T21:04:24+02:00","escale_id":"ESC-2026-0412"}')
+TRACE_PUBLIEE = [*TRACE, _e(5, "publier_alerte", PUBLIEE, "pharos-ops")]
+
+
+def test_un_calcul_entre_freres_de_meme_unite_est_accepte():
+    origines = {e.texte: e.origine for e in verifier_note("Rafales supérieures au vent de 8 kt.", TRACE)}
+    assert origines["8"] == "calcul : 42 − 34 (t3 pharos-ops meteo_creneau)"
+
+
+@pytest.mark.parametrize("note, texte", [
+    ("Le vent tombe de 27,1 kt dans la soirée.", "27,1"),   # 34 − 6,9 : même appel, mais deux prévisions différentes
+    ("Soit 16,2 m au total.", "16,2"),                      # 13,2 (tirant_eau_max_m) + 3 (quai, sans unité)
+    ("Plafond atteint après 11 100 €.", "11 100"),          # 1 850 × 6 : deux nombres du texte libre de la clause
+    ("Franchise de 8 heures.", "8"),                        # 42 − 34 : frères en kt, pas en heures
+    ("Écart rafales-vent : 8.", "8"),                       # sans unité dans la note : pas de calcul
+])
+def test_un_calcul_hors_des_freres_de_meme_unite_n_est_pas_accepte(note, texte):
+    assert [e.texte for e in sans_origine(verifier_note(note, TRACE))] == [texte]
+
+
+def test_une_duree_en_toutes_lettres_ne_trouve_pas_son_origine_dans_un_horodatage():
+    # 14:00 figure dans la trace (heure d'une prévision) ; « 14 heures » est une durée : seul le nombre compte
+    assert [(e.texte, e.genre) for e in sans_origine(verifier_note("Retard de 14 heures.", TRACE))] == [("14", "nombre")]
+    assert sans_origine(verifier_note("Franchise de 6 heures.", TRACE)) == []
+
+
+def test_un_seuil_tire_d_une_description_d_outil_n_a_pas_d_origine():
+    # les seuils de meteo_alerte (25 kt, 35 kt) sont dans sa description, pas dans un résultat de la trace
+    assert [e.texte for e in sans_origine(verifier_note("Vent de 34 kt, au-delà du seuil de 25 kt.", TRACE))] == ["25"]
+
+
+@pytest.mark.parametrize("forme, genre", [("08/10", "date"), ("21:04:24", "heure"), ("ALR-0003", "identifiant"),
+                                          ("06/10/2026", "date")])
+def test_date_sans_annee_heure_avec_secondes_et_alerte_sont_reconnues(forme, genre):
+    elements = verifier_note(f"Alerte publiée : {forme}.", TRACE_PUBLIEE)
+    assert [(e.texte, e.genre) for e in elements] == [(forme, genre)] and elements[0].origine, elements
+
+
+@pytest.mark.parametrize("forme", ["12/10", "21:04:25", "ALR-0004"])
+def test_date_sans_annee_heure_avec_secondes_et_alerte_absentes_sont_signalees(forme):
+    assert [e.texte for e in sans_origine(verifier_note(f"Alerte publiée : {forme}.", TRACE_PUBLIEE))] == [forme]
+
+
+EXECUTION_GARDEE = Path(__file__).resolve().parents[1] / "solutions" / "lab13" / "labs" / "lab13" / "execution.json"
+
+
+@pytest.mark.skipif(not EXECUTION_GARDEE.exists(), reason="exécution gardée sur la branche solutions uniquement")
+@pytest.mark.parametrize("invention, texte", [
+    ("Houle 3,1 m.", "3,1"), ("Vent 27 kt.", "27"), ("Rafales 48 kt.", "48"), ("Visibilité 2,5 km.", "2,5"),
+    ("Franchise 8 heures.", "8"),
+])
+def test_les_inventions_de_la_revue_sont_signalees_sur_la_vraie_trace(invention, texte):
+    execution = json.loads(EXECUTION_GARDEE.read_text(encoding="utf-8"))
+    elements = verifier_note(invention, execution["trace"], execution["question"])
+    assert [e.texte for e in sans_origine(elements)] == [texte], formater(elements)
+
+
+@pytest.mark.skipif(not EXECUTION_GARDEE.exists(), reason="exécution gardée sur la branche solutions uniquement")
+def test_la_coincidence_residuelle_sur_la_vraie_trace_est_un_calcul_entre_freres():
+    # 13,1 = 13,5 − 0,4 : quai_max_m et depassement_m, frères du détail « tirant_eau » d'escales_a_risque — assumé
+    execution = json.loads(EXECUTION_GARDEE.read_text(encoding="utf-8"))
+    [element] = verifier_note("Tirant d'eau 13,1 m.", execution["trace"], execution["question"])
+    assert element.origine is None or element.origine.startswith("calcul : 13.5 − 0.4 ("), element
+
+
+def test_les_numeros_de_section_markdown_ne_sont_pas_verifies():
+    note = "#### 4. Dispositions contractuelles\n* 5) Publication\n12.9 m de tirant d'eau."
+    assert [(e.texte, e.origine is not None) for e in verifier_note(note, TRACE)] == [("12.9", True)]
