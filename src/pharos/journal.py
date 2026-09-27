@@ -64,6 +64,8 @@ def _meta(contexte) -> dict:
 
 
 def _identite() -> str | None:
+    # Import différé : évite un cycle si autorisation journalise un jour, et garde journal.lire() léger pour les
+    # vérificateurs, qui n'ont pas besoin de l'authentification du serveur.
     from pharos import autorisation
 
     try:

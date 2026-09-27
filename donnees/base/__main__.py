@@ -21,7 +21,6 @@ from pharos import base
 DOSSIER = Path(__file__).resolve().parent
 POLITIQUE = DOSSIER.parents[1] / "labs" / "lab9" / "politique.sql"
 TABLES = ("tarifs", "esc_hdr_legacy", "mouvements", "escales", "quais", "navires", "agents")
-METIER = ("agents", "navires", "quais", "escales", "mouvements")
 
 ROLES_SQL = """
 DO $$

@@ -9,7 +9,6 @@ from __future__ import annotations
 import asyncio
 import os
 
-ROLES = ("pharos_proprietaire", "pharos_app", "pharos_planification")
 ADMIN = "postgres"
 BASE = "pharos"
 

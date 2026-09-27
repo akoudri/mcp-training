@@ -146,10 +146,9 @@ def _tirant(alea: random.Random, navire: Navire, quai: Quai) -> float:
     return round(max(5.0, plafond - alea.uniform(0, 1.5)), 1)
 
 
-def _compatibles(navires: list[Navire], quai: Quai, flotte_seule: bool = True) -> list[Navire]:
-    """Navires qui tiennent au quai avec la marge (les navires du corpus gardent leurs propres escales)."""
-    return [n for n in navires[8 if flotte_seule else 0:]
-            if n.longueur_m <= quai.longueur_m and n.tirant_eau_max_m >= 5.0]
+def _compatibles(flotte: list[Navire], quai: Quai) -> list[Navire]:
+    """Navires de la flotte qui tiennent au quai avec la marge (ceux du corpus gardent leurs propres escales)."""
+    return [n for n in flotte if n.longueur_m <= quai.longueur_m and n.tirant_eau_max_m >= 5.0]
 
 
 def _chevauche(debut, fin, fenetres) -> bool:
@@ -159,6 +158,7 @@ def _chevauche(debut, fin, fenetres) -> bool:
 def generer() -> Donnees:
     source = corpus.charger()
     navires = _navires(source.escales)
+    flotte = navires[len({e.navire for e in source.escales}):]      # après les navires du corpus (_navires)
     par_nom = {n.nom: n for n in navires}
     les_quais = quais()
     par_quai = {q.quai: q for q in les_quais}
@@ -167,12 +167,12 @@ def generer() -> Donnees:
 
     for e in source.escales:
         fixes.append((e.escale_id, par_nom[e.navire], e.quai, e.debut, e.fin, e.tirant_eau_m))
-    iroise_q3 = next(n for n in _compatibles(navires, par_quai[3]) if n.agent_id == "AG-IROISE")
+    iroise_q3 = next(n for n in _compatibles(flotte, par_quai[3]) if n.agent_id == "AG-IROISE")
     # Conflit de créneau du Vent d'Autan (ESC-2026-0412, quai 3, jeudi 6 h – 20 h) : 60 minutes.
     fixes.append(("ESC-2026-0413", iroise_q3, 3, _h(JEUDI, 19), _h(JEUDI, 29), None))
     # Les deux escales du quai 3 qui portent les mouvements pièges de la semaine de référence.
-    piege_a = (None, navires[9], 3, _h(date(2026, 9, 27), 20), _h(date(2026, 9, 28), 9), None)
-    piege_b = (None, navires[11], 3, _h(date(2026, 10, 4), 22), _h(date(2026, 10, 5), 8), None)
+    piege_a = (None, flotte[1], 3, _h(date(2026, 9, 27), 20), _h(date(2026, 9, 28), 9), None)
+    piege_b = (None, flotte[3], 3, _h(date(2026, 10, 4), 22), _h(date(2026, 10, 5), 8), None)
     fixes += [piege_a, piege_b]
 
     # Jeudi 8 octobre : 22 escales courtes sur les quais 5, 6 et 7, dont un conflit de 45 min au quai 5.
@@ -180,7 +180,7 @@ def generer() -> Donnees:
              6: [(1, 3), (5, 3), (9, 2.5), (12.5, 3), (16, 2.5), (19, 2), (21.5, 3)],
              7: [(0, 4), (5, 3.5), (9.5, 3), (13.5, 3), (17, 3), (20.5, 2.5), (23.5, 4)]}
     for q, creneaux in jeudi.items():
-        candidats = _compatibles(navires, par_quai[q])
+        candidats = _compatibles(flotte, par_quai[q])
         for debut_h, duree_h in creneaux:
             fixes.append((None, alea.choice(candidats), q, _h(JEUDI, debut_h), _h(JEUDI, debut_h + duree_h), None))
 
@@ -195,7 +195,7 @@ def generer() -> Donnees:
         else:
             bloque.append((_h(JEUDI, 0) - timedelta(hours=2), _h(JEUDI, 30)))
         curseur = DEBUT + timedelta(hours=alea.uniform(0, 6))
-        candidats = _compatibles(navires, q)
+        candidats = _compatibles(flotte, q)
         while curseur < FIN:
             duree = timedelta(hours=alea.choice((6, 8, 10, 12, 14, 18, 20)))
             if not _chevauche(curseur, curseur + duree + timedelta(hours=1), bloque) and curseur + duree <= FIN:
