@@ -19,12 +19,19 @@ from pharos import base
 QUESTION = "Combien de conteneurs réfrigérés sont passés quai 3 la semaine dernière ?"
 PERIODE = ("semaine calendaire précédant le mardi 6 octobre 2026 : du lundi 28 septembre 00:00 "
            "au dimanche 4 octobre 23:59:59, heure de Paris (Europe/Paris)")
-SQL_REFERENCE = """SELECT count(*)
+
+
+def _bornes_paris(debut: int, fin_exclue: int) -> str:
+    """La période [$debut, $fin_exclue[ (numéros de paramètres date), bornes lues à minuit heure de Paris."""
+    return (f"m.horodatage >= (${debut}::date::timestamp AT TIME ZONE 'Europe/Paris')\n"
+            f"  AND m.horodatage <  (${fin_exclue}::date::timestamp AT TIME ZONE 'Europe/Paris')")
+
+
+SQL_REFERENCE = f"""SELECT count(*)
 FROM mouvements m JOIN escales e USING (escale_id)
 WHERE e.quai = $1
   AND m.type_conteneur = $2
-  AND m.horodatage >= ($3::date::timestamp AT TIME ZONE 'Europe/Paris')
-  AND m.horodatage <  ($4::date::timestamp AT TIME ZONE 'Europe/Paris')"""
+  AND {_bornes_paris(3, 4)}"""
 SQL_UTC = """SELECT count(*)
 FROM mouvements m JOIN escales e USING (escale_id)
 WHERE e.quai = $1 AND m.type_conteneur = $2 AND m.horodatage >= $3::date AND m.horodatage < $4::date"""
@@ -54,8 +61,7 @@ async def verite() -> Verite:
 async def compter_mouvements(date_debut: date, date_fin_exclue: date, quai: int | None = None) -> int:
     """Compte exact, bornes en heure de Paris (sert au contrôle du plafond)."""
     sql = ("SELECT count(*) FROM mouvements m JOIN escales e USING (escale_id) "
-           "WHERE m.horodatage >= ($1::date::timestamp AT TIME ZONE 'Europe/Paris') "
-           "AND m.horodatage < ($2::date::timestamp AT TIME ZONE 'Europe/Paris') AND ($3::int IS NULL OR e.quai = $3)")
+           f"WHERE {_bornes_paris(1, 2)} AND ($3::int IS NULL OR e.quai = $3)")
     return await _compter(sql, date_debut, date_fin_exclue, quai)
 
 

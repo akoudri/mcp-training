@@ -57,12 +57,17 @@ async def _appeler(ctx, arguments: dict):
         return await c.appeler(OUTIL, arguments)
 
 
+async def _depuis_la_base(calcul):
+    """Attend le calcul fait contre la base ; base arrêtée → un Echec qui dit quoi lancer."""
+    try:
+        return await calcul
+    except (OSError, asyncpg.PostgresError) as exc:
+        raise Echec(f"base injoignable ({exc.__class__.__name__}) : lancer « make lab8-base ».") from exc
+
+
 async def _verite(ctx) -> verite_lab8.Verite:
     if "verite" not in ctx.cache:
-        try:
-            ctx.cache["verite"] = await verite_lab8.verite()
-        except (OSError, asyncpg.PostgresError) as exc:
-            raise Echec(f"base injoignable ({exc.__class__.__name__}) : lancer « make lab8-base ».") from exc
+        ctx.cache["verite"] = await _depuis_la_base(verite_lab8.verite())
     return ctx.cache["verite"]
 
 
@@ -130,7 +135,7 @@ async def _(ctx):
         morceaux = [o.model_dump_json() for o in await c.outils()]
         ressources = await c.ressources()
         morceaux += [r.model_dump_json() for r in ressources]
-        morceaux += [t.model_dump_json() for t in await c._client.list_resource_templates()]
+        morceaux += [t.model_dump_json() for t in await c.gabarits_de_ressources()]
         morceaux += [p.model_dump_json() for p in await c.prompts()]
         for r in ressources:
             morceaux += [getattr(x, "text", "") or "" for x in await c.lire(str(r.uri))]
@@ -169,7 +174,7 @@ async def _(ctx):
 
 @v.critere("Au-delà du plafond, le refus porte le compte réel et le plafond.")
 async def _(ctx):
-    reel = await verite_lab8.compter_mouvements(date(2026, 9, 1), date(2026, 10, 1))
+    reel = await _depuis_la_base(verite_lab8.compter_mouvements(date(2026, 9, 1), date(2026, 10, 1)))
     r = await _appeler(ctx, SEPTEMBRE)
     texte = _texte(r)
     if not r.is_error:

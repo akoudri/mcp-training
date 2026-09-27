@@ -90,6 +90,9 @@ class ClientTest:
     async def ressources(self):
         return await self._client.list_resources()
 
+    async def gabarits_de_ressources(self):
+        return await self._client.list_resource_templates()
+
     async def lire(self, uri: str):
         return await self._client.read_resource(uri)
 
