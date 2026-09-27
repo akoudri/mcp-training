@@ -1,0 +1,1758 @@
+# Référentiel navires — contenu du mock (LAB 10). GÉNÉRÉ par « python -m donnees.referentiel » depuis
+# la base PHAROS : ne pas modifier à la main. Heures locales du port, sans fuseau (comme l'API réelle).
+navires:
+- navire_id: NAV-0001
+  nom: Mistral Bleu
+  imo: '9405117'
+  longueur_m: 250.0
+  tirant_eau_max_m: 10.3
+  pavillon: BS
+  escales:
+  - escale_id: ESC-2026-0405
+    quai: 1
+    debut: 2026-10-05T07:00
+    fin: 2026-10-05T19:00
+- navire_id: NAV-0002
+  nom: Cap Fréhel
+  imo: '9406228'
+  longueur_m: 155.0
+  tirant_eau_max_m: 12.0
+  pavillon: BS
+  escales:
+  - escale_id: ESC-2026-0406
+    quai: 2
+    debut: 2026-10-05T13:00
+    fin: 2026-10-06T02:00
+- navire_id: NAV-0003
+  nom: Île de Sein
+  imo: '9408440'
+  longueur_m: 240.0
+  tirant_eau_max_m: 13.0
+  pavillon: PA
+  escales:
+  - escale_id: ESC-2026-0408
+    quai: 3
+    debut: 2026-10-06T06:00
+    fin: 2026-10-06T18:00
+- navire_id: NAV-0004
+  nom: Port-Cros
+  imo: '9409551'
+  longueur_m: 160.0
+  tirant_eau_max_m: 13.7
+  pavillon: BS
+  escales:
+  - escale_id: ESC-2026-0409
+    quai: 4
+    debut: 2026-10-06T09:00
+    fin: 2026-10-07T09:00
+- navire_id: NAV-0005
+  nom: Belle-Île
+  imo: '9410662'
+  longueur_m: 240.0
+  tirant_eau_max_m: 10.6
+  pavillon: FR
+  escales:
+  - escale_id: ESC-2026-0410
+    quai: 1
+    debut: 2026-10-07T05:30
+    fin: 2026-10-07T16:00
+- navire_id: NAV-0006
+  nom: Albatros
+  imo: '9411773'
+  longueur_m: 275.0
+  tirant_eau_max_m: 12.3
+  pavillon: BS
+  escales:
+  - escale_id: ESC-2026-0411
+    quai: 2
+    debut: 2026-10-07T12:00
+    fin: 2026-10-07T23:30
+- navire_id: NAV-0007
+  nom: Vent d'Autan
+  imo: '9412884'
+  longueur_m: 225.0
+  tirant_eau_max_m: 13.2
+  pavillon: BS
+  escales:
+  - escale_id: ESC-2026-0412
+    quai: 3
+    debut: 2026-10-08T06:00
+    fin: 2026-10-08T20:00
+- navire_id: NAV-0008
+  nom: Ouessant
+  imo: '9414006'
+  longueur_m: 160.0
+  tirant_eau_max_m: 9.2
+  pavillon: FR
+  escales:
+  - escale_id: ESC-2026-0414
+    quai: 4
+    debut: 2026-10-09T08:00
+    fin: 2026-10-09T21:00
+- navire_id: NAV-0009
+  nom: Goéland
+  imo: '9317564'
+  longueur_m: 215.0
+  tirant_eau_max_m: 12.1
+  pavillon: PA
+  escales:
+  - escale_id: ESC-2026-1031
+    quai: 1
+    debut: 2026-09-03T23:06
+    fin: 2026-09-04T19:06
+  - escale_id: ESC-2026-1068
+    quai: 2
+    debut: 2026-09-07T12:21
+    fin: 2026-09-08T00:21
+  - escale_id: ESC-2026-1125
+    quai: 1
+    debut: 2026-09-13T01:06
+    fin: 2026-09-13T15:06
+  - escale_id: ESC-2026-1166
+    quai: 3
+    debut: 2026-09-17T01:45
+    fin: 2026-09-17T09:45
+  - escale_id: ESC-2026-1186
+    quai: 7
+    debut: 2026-09-19T01:02
+    fin: 2026-09-19T15:02
+  - escale_id: ESC-2026-1193
+    quai: 7
+    debut: 2026-09-19T16:02
+    fin: 2026-09-20T02:02
+  - escale_id: ESC-2026-1260
+    quai: 1
+    debut: 2026-09-25T23:06
+    fin: 2026-09-26T09:06
+  - escale_id: ESC-2026-1285
+    quai: 3
+    debut: 2026-09-28T13:45
+    fin: 2026-09-29T09:45
+  - escale_id: ESC-2026-1292
+    quai: 4
+    debut: 2026-09-29T09:11
+    fin: 2026-09-29T19:11
+- navire_id: NAV-0010
+  nom: Cormoran
+  imo: '9373100'
+  longueur_m: 130.0
+  tirant_eau_max_m: 12.1
+  pavillon: BS
+  escales:
+  - escale_id: ESC-2026-1014
+    quai: 4
+    debut: 2026-09-01T22:11
+    fin: 2026-09-02T12:11
+  - escale_id: ESC-2026-1027
+    quai: 1
+    debut: 2026-09-03T08:06
+    fin: 2026-09-03T22:06
+  - escale_id: ESC-2026-1038
+    quai: 4
+    debut: 2026-09-04T13:11
+    fin: 2026-09-05T03:11
+  - escale_id: ESC-2026-1053
+    quai: 5
+    debut: 2026-09-06T04:06
+    fin: 2026-09-07T00:06
+  - escale_id: ESC-2026-1135
+    quai: 4
+    debut: 2026-09-13T23:11
+    fin: 2026-09-14T19:11
+  - escale_id: ESC-2026-1162
+    quai: 4
+    debut: 2026-09-16T17:11
+    fin: 2026-09-17T03:11
+  - escale_id: ESC-2026-1170
+    quai: 1
+    debut: 2026-09-17T11:06
+    fin: 2026-09-18T05:06
+  - escale_id: ESC-2026-1197
+    quai: 6
+    debut: 2026-09-19T22:10
+    fin: 2026-09-20T04:10
+  - escale_id: ESC-2026-1278
+    quai: 3
+    debut: 2026-09-27T20:00
+    fin: 2026-09-28T09:00
+  - escale_id: ESC-2026-1283
+    quai: 5
+    debut: 2026-09-28T08:06
+    fin: 2026-09-28T16:06
+  - escale_id: ESC-2026-1287
+    quai: 5
+    debut: 2026-09-28T17:06
+    fin: 2026-09-28T23:06
+  - escale_id: ESC-2026-1299
+    quai: 1
+    debut: 2026-09-30T00:06
+    fin: 2026-09-30T10:06
+  - escale_id: ESC-2026-1341
+    quai: 5
+    debut: 2026-10-03T21:06
+    fin: 2026-10-04T15:06
+  - escale_id: ESC-2026-1347
+    quai: 6
+    debut: 2026-10-04T19:10
+    fin: 2026-10-05T05:10
+  - escale_id: ESC-2026-1352
+    quai: 7
+    debut: 2026-10-05T21:02
+    fin: 2026-10-06T07:02
+  - escale_id: ESC-2026-1366
+    quai: 5
+    debut: 2026-10-08T07:30
+    fin: 2026-10-08T10:00
+  - escale_id: ESC-2026-0413
+    quai: 3
+    debut: 2026-10-08T19:00
+    fin: 2026-10-09T05:00
+  - escale_id: ESC-2026-1377
+    quai: 6
+    debut: 2026-10-08T19:00
+    fin: 2026-10-08T21:00
+- navire_id: NAV-0011
+  nom: Fou de Bassan
+  imo: '9351388'
+  longueur_m: 255.0
+  tirant_eau_max_m: 7.3
+  pavillon: MT
+  escales:
+  - escale_id: ESC-2026-1006
+    quai: 3
+    debut: 2026-09-01T02:45
+    fin: 2026-09-01T10:45
+  - escale_id: ESC-2026-1017
+    quai: 3
+    debut: 2026-09-02T06:45
+    fin: 2026-09-03T00:45
+  - escale_id: ESC-2026-1020
+    quai: 7
+    debut: 2026-09-02T14:02
+    fin: 2026-09-03T04:02
+  - escale_id: ESC-2026-1076
+    quai: 4
+    debut: 2026-09-08T07:11
+    fin: 2026-09-08T13:11
+  - escale_id: ESC-2026-1110
+    quai: 2
+    debut: 2026-09-11T16:21
+    fin: 2026-09-11T22:21
+  - escale_id: ESC-2026-1120
+    quai: 7
+    debut: 2026-09-12T13:02
+    fin: 2026-09-13T07:02
+  - escale_id: ESC-2026-1201
+    quai: 7
+    debut: 2026-09-20T06:02
+    fin: 2026-09-21T02:02
+- navire_id: NAV-0012
+  nom: Macareux
+  imo: '9351122'
+  tirant_eau_max_m: 9.0
+  pavillon: FR
+  escales:
+  - escale_id: ESC-2026-1054
+    quai: 1
+    debut: 2026-09-06T07:06
+    fin: 2026-09-06T13:06
+  - escale_id: ESC-2026-1104
+    quai: 4
+    debut: 2026-09-10T21:11
+    fin: 2026-09-11T09:11
+  - escale_id: ESC-2026-1111
+    quai: 4
+    debut: 2026-09-11T17:11
+    fin: 2026-09-12T13:11
+  - escale_id: ESC-2026-1191
+    quai: 2
+    debut: 2026-09-19T11:21
+    fin: 2026-09-19T17:21
+  - escale_id: ESC-2026-1220
+    quai: 7
+    debut: 2026-09-22T03:02
+    fin: 2026-09-22T13:02
+  - escale_id: ESC-2026-1223
+    quai: 1
+    debut: 2026-09-22T15:06
+    fin: 2026-09-23T01:06
+  - escale_id: ESC-2026-1227
+    quai: 4
+    debut: 2026-09-22T21:11
+    fin: 2026-09-23T05:11
+  - escale_id: ESC-2026-1280
+    quai: 7
+    debut: 2026-09-28T04:02
+    fin: 2026-09-28T18:02
+  - escale_id: ESC-2026-1324
+    quai: 7
+    debut: 2026-10-02T05:02
+    fin: 2026-10-02T11:02
+  - escale_id: ESC-2026-1348
+    quai: 3
+    debut: 2026-10-04T22:00
+    fin: 2026-10-05T08:00
+  - escale_id: ESC-2026-1360
+    quai: 7
+    debut: 2026-10-08T00:00
+    fin: 2026-10-08T04:00
+- navire_id: NAV-0013
+  nom: Sterne
+  imo: '9362888'
+  longueur_m: 145.0
+  tirant_eau_max_m: 13.2
+  pavillon: FR
+  escales:
+  - escale_id: ESC-2026-1007
+    quai: 6
+    debut: 2026-09-01T04:10
+    fin: 2026-09-01T18:10
+  - escale_id: ESC-2026-1036
+    quai: 5
+    debut: 2026-09-04T09:06
+    fin: 2026-09-04T17:06
+  - escale_id: ESC-2026-1048
+    quai: 6
+    debut: 2026-09-05T16:10
+    fin: 2026-09-06T10:10
+  - escale_id: ESC-2026-1092
+    quai: 5
+    debut: 2026-09-09T22:06
+    fin: 2026-09-10T10:06
+  - escale_id: ESC-2026-1148
+    quai: 1
+    debut: 2026-09-15T09:06
+    fin: 2026-09-15T19:06
+  - escale_id: ESC-2026-1158
+    quai: 4
+    debut: 2026-09-16T09:11
+    fin: 2026-09-16T15:11
+  - escale_id: ESC-2026-1172
+    quai: 2
+    debut: 2026-09-17T16:21
+    fin: 2026-09-18T02:21
+  - escale_id: ESC-2026-1187
+    quai: 5
+    debut: 2026-09-19T01:06
+    fin: 2026-09-19T15:06
+  - escale_id: ESC-2026-1259
+    quai: 3
+    debut: 2026-09-25T22:45
+    fin: 2026-09-26T04:45
+  - escale_id: ESC-2026-1265
+    quai: 1
+    debut: 2026-09-26T15:06
+    fin: 2026-09-26T21:06
+  - escale_id: ESC-2026-1272
+    quai: 3
+    debut: 2026-09-27T03:45
+    fin: 2026-09-27T17:45
+  - escale_id: ESC-2026-1288
+    quai: 1
+    debut: 2026-09-28T19:06
+    fin: 2026-09-29T09:06
+  - escale_id: ESC-2026-1295
+    quai: 3
+    debut: 2026-09-29T17:45
+    fin: 2026-09-30T03:45
+  - escale_id: ESC-2026-1306
+    quai: 1
+    debut: 2026-09-30T13:06
+    fin: 2026-10-01T03:06
+  - escale_id: ESC-2026-1321
+    quai: 5
+    debut: 2026-10-02T01:06
+    fin: 2026-10-02T07:06
+  - escale_id: ESC-2026-1332
+    quai: 6
+    debut: 2026-10-03T02:10
+    fin: 2026-10-03T12:10
+  - escale_id: ESC-2026-1336
+    quai: 2
+    debut: 2026-10-03T12:21
+    fin: 2026-10-03T18:21
+  - escale_id: ESC-2026-1346
+    quai: 5
+    debut: 2026-10-04T16:06
+    fin: 2026-10-05T02:06
+  - escale_id: ESC-2026-1361
+    quai: 5
+    debut: 2026-10-08T00:30
+    fin: 2026-10-08T03:30
+  - escale_id: ESC-2026-1373
+    quai: 5
+    debut: 2026-10-08T15:30
+    fin: 2026-10-08T18:30
+  - escale_id: ESC-2026-1376
+    quai: 5
+    debut: 2026-10-08T19:00
+    fin: 2026-10-08T21:30
+- navire_id: NAV-0014
+  nom: Pétrel
+  imo: '9312034'
+  longueur_m: 120.0
+  tirant_eau_max_m: 13.5
+  pavillon: PA
+  escales:
+  - escale_id: ESC-2026-1001
+    quai: 5
+    debut: 2026-09-01T01:06
+    fin: 2026-09-01T09:06
+  - escale_id: ESC-2026-1002
+    quai: 1
+    debut: 2026-09-01T01:06
+    fin: 2026-09-01T09:06
+  - escale_id: ESC-2026-1043
+    quai: 4
+    debut: 2026-09-05T04:11
+    fin: 2026-09-05T14:11
+  - escale_id: ESC-2026-1049
+    quai: 1
+    debut: 2026-09-05T18:06
+    fin: 2026-09-06T04:06
+  - escale_id: ESC-2026-1071
+    quai: 5
+    debut: 2026-09-07T18:06
+    fin: 2026-09-08T04:06
+  - escale_id: ESC-2026-1078
+    quai: 3
+    debut: 2026-09-08T10:45
+    fin: 2026-09-09T04:45
+  - escale_id: ESC-2026-1085
+    quai: 1
+    debut: 2026-09-09T05:06
+    fin: 2026-09-09T19:06
+  - escale_id: ESC-2026-1151
+    quai: 6
+    debut: 2026-09-15T12:10
+    fin: 2026-09-16T08:10
+  - escale_id: ESC-2026-1175
+    quai: 5
+    debut: 2026-09-18T00:06
+    fin: 2026-09-18T06:06
+  - escale_id: ESC-2026-1178
+    quai: 5
+    debut: 2026-09-18T07:06
+    fin: 2026-09-18T19:06
+  - escale_id: ESC-2026-1182
+    quai: 6
+    debut: 2026-09-18T10:10
+    fin: 2026-09-19T04:10
+  - escale_id: ESC-2026-1192
+    quai: 3
+    debut: 2026-09-19T14:45
+    fin: 2026-09-20T02:45
+  - escale_id: ESC-2026-1200
+    quai: 2
+    debut: 2026-09-20T05:21
+    fin: 2026-09-20T13:21
+  - escale_id: ESC-2026-1224
+    quai: 6
+    debut: 2026-09-22T15:10
+    fin: 2026-09-23T11:10
+  - escale_id: ESC-2026-1243
+    quai: 6
+    debut: 2026-09-24T09:10
+    fin: 2026-09-25T05:10
+  - escale_id: ESC-2026-1300
+    quai: 5
+    debut: 2026-09-30T01:06
+    fin: 2026-09-30T21:06
+  - escale_id: ESC-2026-1358
+    quai: 5
+    debut: 2026-10-07T07:06
+    fin: 2026-10-07T13:06
+  - escale_id: ESC-2026-1374
+    quai: 6
+    debut: 2026-10-08T16:00
+    fin: 2026-10-08T18:30
+  - escale_id: ESC-2026-1382
+    quai: 7
+    debut: 2026-10-09T07:02
+    fin: 2026-10-09T17:02
+- navire_id: NAV-0015
+  nom: Fulmar
+  imo: '9318370'
+  longueur_m: 110.0
+  tirant_eau_max_m: 11.9
+  pavillon: PT
+  escales:
+  - escale_id: ESC-2026-1004
+    quai: 2
+    debut: 2026-09-01T01:21
+    fin: 2026-09-01T15:21
+  - escale_id: ESC-2026-1028
+    quai: 5
+    debut: 2026-09-03T11:06
+    fin: 2026-09-04T01:06
+  - escale_id: ESC-2026-1047
+    quai: 5
+    debut: 2026-09-05T12:06
+    fin: 2026-09-05T20:06
+  - escale_id: ESC-2026-1055
+    quai: 3
+    debut: 2026-09-06T10:45
+    fin: 2026-09-06T20:45
+  - escale_id: ESC-2026-1084
+    quai: 5
+    debut: 2026-09-09T02:06
+    fin: 2026-09-09T20:06
+  - escale_id: ESC-2026-1096
+    quai: 2
+    debut: 2026-09-10T08:21
+    fin: 2026-09-10T16:21
+  - escale_id: ESC-2026-1165
+    quai: 2
+    debut: 2026-09-17T00:21
+    fin: 2026-09-17T12:21
+  - escale_id: ESC-2026-1171
+    quai: 5
+    debut: 2026-09-17T12:06
+    fin: 2026-09-17T18:06
+  - escale_id: ESC-2026-1176
+    quai: 6
+    debut: 2026-09-18T01:10
+    fin: 2026-09-18T07:10
+  - escale_id: ESC-2026-1214
+    quai: 6
+    debut: 2026-09-21T18:10
+    fin: 2026-09-22T12:10
+  - escale_id: ESC-2026-1225
+    quai: 5
+    debut: 2026-09-22T18:06
+    fin: 2026-09-23T04:06
+  - escale_id: ESC-2026-1234
+    quai: 2
+    debut: 2026-09-23T12:21
+    fin: 2026-09-24T02:21
+  - escale_id: ESC-2026-1261
+    quai: 5
+    debut: 2026-09-26T04:06
+    fin: 2026-09-26T18:06
+  - escale_id: ESC-2026-1271
+    quai: 1
+    debut: 2026-09-27T01:06
+    fin: 2026-09-27T21:06
+  - escale_id: ESC-2026-1274
+    quai: 6
+    debut: 2026-09-27T12:10
+    fin: 2026-09-27T18:10
+  - escale_id: ESC-2026-1312
+    quai: 1
+    debut: 2026-10-01T06:06
+    fin: 2026-10-01T14:06
+- navire_id: NAV-0016
+  nom: Guillemot
+  imo: '9360620'
+  longueur_m: 200.0
+  tirant_eau_max_m: 6.9
+  pavillon: PA
+  escales:
+  - escale_id: ESC-2026-1005
+    quai: 7
+    debut: 2026-09-01T02:02
+    fin: 2026-09-01T16:02
+  - escale_id: ESC-2026-1015
+    quai: 2
+    debut: 2026-09-01T23:21
+    fin: 2026-09-02T19:21
+  - escale_id: ESC-2026-1016
+    quai: 1
+    debut: 2026-09-02T00:06
+    fin: 2026-09-02T12:06
+  - escale_id: ESC-2026-1022
+    quai: 1
+    debut: 2026-09-02T20:06
+    fin: 2026-09-03T02:06
+  - escale_id: ESC-2026-1057
+    quai: 6
+    debut: 2026-09-06T13:10
+    fin: 2026-09-06T21:10
+  - escale_id: ESC-2026-1061
+    quai: 3
+    debut: 2026-09-06T22:45
+    fin: 2026-09-07T04:45
+  - escale_id: ESC-2026-1062
+    quai: 6
+    debut: 2026-09-07T00:10
+    fin: 2026-09-07T10:10
+  - escale_id: ESC-2026-1081
+    quai: 2
+    debut: 2026-09-08T18:21
+    fin: 2026-09-09T12:21
+  - escale_id: ESC-2026-1106
+    quai: 7
+    debut: 2026-09-11T07:02
+    fin: 2026-09-11T21:02
+  - escale_id: ESC-2026-1113
+    quai: 6
+    debut: 2026-09-11T22:10
+    fin: 2026-09-12T08:10
+  - escale_id: ESC-2026-1137
+    quai: 6
+    debut: 2026-09-14T09:10
+    fin: 2026-09-14T19:10
+  - escale_id: ESC-2026-1189
+    quai: 2
+    debut: 2026-09-19T03:21
+    fin: 2026-09-19T09:21
+  - escale_id: ESC-2026-1235
+    quai: 1
+    debut: 2026-09-23T16:06
+    fin: 2026-09-24T04:06
+  - escale_id: ESC-2026-1241
+    quai: 7
+    debut: 2026-09-24T08:02
+    fin: 2026-09-25T02:02
+  - escale_id: ESC-2026-1252
+    quai: 4
+    debut: 2026-09-25T06:11
+    fin: 2026-09-25T12:11
+  - escale_id: ESC-2026-1253
+    quai: 6
+    debut: 2026-09-25T08:10
+    fin: 2026-09-25T14:10
+  - escale_id: ESC-2026-1266
+    quai: 6
+    debut: 2026-09-26T16:10
+    fin: 2026-09-27T04:10
+  - escale_id: ESC-2026-1275
+    quai: 7
+    debut: 2026-09-27T13:02
+    fin: 2026-09-28T03:02
+  - escale_id: ESC-2026-1303
+    quai: 3
+    debut: 2026-09-30T06:45
+    fin: 2026-09-30T14:45
+  - escale_id: ESC-2026-1333
+    quai: 3
+    debut: 2026-10-03T05:45
+    fin: 2026-10-03T17:45
+  - escale_id: ESC-2026-1350
+    quai: 7
+    debut: 2026-10-05T05:02
+    fin: 2026-10-05T19:02
+  - escale_id: ESC-2026-1362
+    quai: 6
+    debut: 2026-10-08T01:00
+    fin: 2026-10-08T04:00
+  - escale_id: ESC-2026-1364
+    quai: 6
+    debut: 2026-10-08T05:00
+    fin: 2026-10-08T08:00
+- navire_id: NAV-0017
+  nom: Mouette
+  imo: '9375146'
+  longueur_m: 250.0
+  tirant_eau_max_m: 10.1
+  pavillon: MT
+  escales:
+  - escale_id: ESC-2026-1032
+    quai: 2
+    debut: 2026-09-03T23:21
+    fin: 2026-09-04T09:21
+  - escale_id: ESC-2026-1065
+    quai: 2
+    debut: 2026-09-07T03:21
+    fin: 2026-09-07T09:21
+  - escale_id: ESC-2026-1179
+    quai: 4
+    debut: 2026-09-18T07:11
+    fin: 2026-09-18T13:11
+  - escale_id: ESC-2026-1245
+    quai: 2
+    debut: 2026-09-24T16:21
+    fin: 2026-09-24T22:21
+  - escale_id: ESC-2026-1255
+    quai: 7
+    debut: 2026-09-25T15:02
+    fin: 2026-09-26T09:02
+  - escale_id: ESC-2026-1298
+    quai: 4
+    debut: 2026-09-29T23:11
+    fin: 2026-09-30T09:11
+- navire_id: NAV-0018
+  nom: Puffin
+  imo: '9380363'
+  longueur_m: 150.0
+  tirant_eau_max_m: 6.6
+  pavillon: PT
+  escales:
+  - escale_id: ESC-2026-1064
+    quai: 5
+    debut: 2026-09-07T02:06
+    fin: 2026-09-07T14:06
+  - escale_id: ESC-2026-1066
+    quai: 4
+    debut: 2026-09-07T10:11
+    fin: 2026-09-08T06:11
+  - escale_id: ESC-2026-1090
+    quai: 2
+    debut: 2026-09-09T20:21
+    fin: 2026-09-10T06:21
+  - escale_id: ESC-2026-1091
+    quai: 1
+    debut: 2026-09-09T21:06
+    fin: 2026-09-10T03:06
+  - escale_id: ESC-2026-1101
+    quai: 1
+    debut: 2026-09-10T20:06
+    fin: 2026-09-11T02:06
+  - escale_id: ESC-2026-1117
+    quai: 5
+    debut: 2026-09-12T09:06
+    fin: 2026-09-13T03:06
+  - escale_id: ESC-2026-1119
+    quai: 6
+    debut: 2026-09-12T09:10
+    fin: 2026-09-12T23:10
+  - escale_id: ESC-2026-1128
+    quai: 2
+    debut: 2026-09-13T10:21
+    fin: 2026-09-13T16:21
+  - escale_id: ESC-2026-1129
+    quai: 7
+    debut: 2026-09-13T13:02
+    fin: 2026-09-13T23:02
+  - escale_id: ESC-2026-1190
+    quai: 6
+    debut: 2026-09-19T10:10
+    fin: 2026-09-19T16:10
+  - escale_id: ESC-2026-1199
+    quai: 6
+    debut: 2026-09-20T05:10
+    fin: 2026-09-20T19:10
+  - escale_id: ESC-2026-1204
+    quai: 4
+    debut: 2026-09-20T13:11
+    fin: 2026-09-21T09:11
+  - escale_id: ESC-2026-1207
+    quai: 5
+    debut: 2026-09-20T23:06
+    fin: 2026-09-21T07:06
+  - escale_id: ESC-2026-1267
+    quai: 5
+    debut: 2026-09-26T21:06
+    fin: 2026-09-27T09:06
+  - escale_id: ESC-2026-1279
+    quai: 6
+    debut: 2026-09-28T02:10
+    fin: 2026-09-28T14:10
+  - escale_id: ESC-2026-1314
+    quai: 6
+    debut: 2026-10-01T14:10
+    fin: 2026-10-01T22:10
+  - escale_id: ESC-2026-1320
+    quai: 4
+    debut: 2026-10-01T23:11
+    fin: 2026-10-02T19:11
+  - escale_id: ESC-2026-1326
+    quai: 1
+    debut: 2026-10-02T08:06
+    fin: 2026-10-02T18:06
+  - escale_id: ESC-2026-1334
+    quai: 5
+    debut: 2026-10-03T07:06
+    fin: 2026-10-03T13:06
+  - escale_id: ESC-2026-1363
+    quai: 5
+    debut: 2026-10-08T04:00
+    fin: 2026-10-08T07:00
+  - escale_id: ESC-2026-1380
+    quai: 5
+    debut: 2026-10-08T22:00
+    fin: 2026-10-09T01:30
+- navire_id: NAV-0019
+  nom: Aber Wrac'h
+  imo: '9371149'
+  longueur_m: 245.0
+  tirant_eau_max_m: 7.7
+  pavillon: PA
+  escales:
+  - escale_id: ESC-2026-1262
+    quai: 2
+    debut: 2026-09-26T05:21
+    fin: 2026-09-26T15:21
+  - escale_id: ESC-2026-1309
+    quai: 2
+    debut: 2026-09-30T23:21
+    fin: 2026-10-01T13:21
+  - escale_id: ESC-2026-1337
+    quai: 7
+    debut: 2026-10-03T13:02
+    fin: 2026-10-04T01:02
+  - escale_id: ESC-2026-1368
+    quai: 7
+    debut: 2026-10-08T09:30
+    fin: 2026-10-08T12:30
+  - escale_id: ESC-2026-1378
+    quai: 7
+    debut: 2026-10-08T20:30
+    fin: 2026-10-08T23:00
+- navire_id: NAV-0020
+  nom: Pointe du Raz
+  imo: '9356771'
+  longueur_m: 95.0
+  tirant_eau_max_m: 10.6
+  pavillon: LR
+  escales:
+  - escale_id: ESC-2026-1008
+    quai: 1
+    debut: 2026-09-01T11:06
+    fin: 2026-09-01T21:06
+  - escale_id: ESC-2026-1012
+    quai: 7
+    debut: 2026-09-01T19:02
+    fin: 2026-09-02T13:02
+  - escale_id: ESC-2026-1030
+    quai: 6
+    debut: 2026-09-03T21:10
+    fin: 2026-09-04T03:10
+  - escale_id: ESC-2026-1040
+    quai: 6
+    debut: 2026-09-04T18:10
+    fin: 2026-09-05T08:10
+  - escale_id: ESC-2026-1059
+    quai: 4
+    debut: 2026-09-06T14:11
+    fin: 2026-09-07T02:11
+  - escale_id: ESC-2026-1097
+    quai: 3
+    debut: 2026-09-10T08:45
+    fin: 2026-09-10T16:45
+  - escale_id: ESC-2026-1109
+    quai: 1
+    debut: 2026-09-11T10:06
+    fin: 2026-09-11T20:06
+  - escale_id: ESC-2026-1121
+    quai: 4
+    debut: 2026-09-12T16:11
+    fin: 2026-09-13T06:11
+  - escale_id: ESC-2026-1131
+    quai: 2
+    debut: 2026-09-13T18:21
+    fin: 2026-09-14T06:21
+  - escale_id: ESC-2026-1185
+    quai: 3
+    debut: 2026-09-18T19:45
+    fin: 2026-09-19T13:45
+  - escale_id: ESC-2026-1206
+    quai: 2
+    debut: 2026-09-20T17:21
+    fin: 2026-09-21T03:21
+  - escale_id: ESC-2026-1213
+    quai: 4
+    debut: 2026-09-21T15:11
+    fin: 2026-09-22T03:11
+  - escale_id: ESC-2026-1226
+    quai: 7
+    debut: 2026-09-22T19:02
+    fin: 2026-09-23T09:02
+  - escale_id: ESC-2026-1256
+    quai: 6
+    debut: 2026-09-25T18:10
+    fin: 2026-09-26T08:10
+  - escale_id: ESC-2026-1273
+    quai: 4
+    debut: 2026-09-27T09:11
+    fin: 2026-09-28T03:11
+  - escale_id: ESC-2026-1296
+    quai: 7
+    debut: 2026-09-29T20:02
+    fin: 2026-09-30T10:02
+  - escale_id: ESC-2026-1301
+    quai: 2
+    debut: 2026-09-30T05:21
+    fin: 2026-09-30T19:21
+  - escale_id: ESC-2026-1313
+    quai: 4
+    debut: 2026-10-01T09:11
+    fin: 2026-10-01T15:11
+  - escale_id: ESC-2026-1323
+    quai: 6
+    debut: 2026-10-02T04:10
+    fin: 2026-10-03T00:10
+  - escale_id: ESC-2026-1338
+    quai: 2
+    debut: 2026-10-03T19:21
+    fin: 2026-10-04T09:21
+  - escale_id: ESC-2026-1340
+    quai: 6
+    debut: 2026-10-03T20:10
+    fin: 2026-10-04T16:10
+  - escale_id: ESC-2026-1351
+    quai: 6
+    debut: 2026-10-05T09:10
+    fin: 2026-10-05T23:10
+  - escale_id: ESC-2026-1369
+    quai: 5
+    debut: 2026-10-08T10:00
+    fin: 2026-10-08T13:00
+- navire_id: NAV-0021
+  nom: Glénan
+  imo: '9338412'
+  longueur_m: null
+  tirant_eau_max_m: 8.7
+  pavillon: PA
+  escales:
+  - escale_id: ESC-2026-1019
+    quai: 4
+    debut: 2026-09-02T13:11
+    fin: 2026-09-03T07:11
+  - escale_id: ESC-2026-1044
+    quai: 7
+    debut: 2026-09-05T05:02
+    fin: 2026-09-05T23:02
+  - escale_id: ESC-2026-1069
+    quai: 6
+    debut: 2026-09-07T13:10
+    fin: 2026-09-08T09:10
+  - escale_id: ESC-2026-1087
+    quai: 6
+    debut: 2026-09-09T10:10
+    fin: 2026-09-09T20:10
+  - escale_id: ESC-2026-1103
+    quai: 3
+    debut: 2026-09-10T20:45
+    fin: 2026-09-11T06:45
+  - escale_id: ESC-2026-1108
+    quai: 5
+    debut: 2026-09-11T10:06
+    fin: 2026-09-12T06:06
+  - escale_id: ESC-2026-1116
+    quai: 2
+    debut: 2026-09-12T06:21
+    fin: 2026-09-12T14:21
+  - escale_id: ESC-2026-1145
+    quai: 2
+    debut: 2026-09-15T05:21
+    fin: 2026-09-15T23:21
+  - escale_id: ESC-2026-1146
+    quai: 7
+    debut: 2026-09-15T06:02
+    fin: 2026-09-16T00:02
+  - escale_id: ESC-2026-1180
+    quai: 1
+    debut: 2026-09-18T08:06
+    fin: 2026-09-18T22:06
+  - escale_id: ESC-2026-1198
+    quai: 1
+    debut: 2026-09-20T03:06
+    fin: 2026-09-20T09:06
+  - escale_id: ESC-2026-1211
+    quai: 5
+    debut: 2026-09-21T08:06
+    fin: 2026-09-21T16:06
+  - escale_id: ESC-2026-1237
+    quai: 3
+    debut: 2026-09-23T22:45
+    fin: 2026-09-24T16:45
+  - escale_id: ESC-2026-1239
+    quai: 5
+    debut: 2026-09-24T04:06
+    fin: 2026-09-24T16:06
+  - escale_id: ESC-2026-1250
+    quai: 7
+    debut: 2026-09-25T03:02
+    fin: 2026-09-25T09:02
+  - escale_id: ESC-2026-1251
+    quai: 5
+    debut: 2026-09-25T06:06
+    fin: 2026-09-26T02:06
+  - escale_id: ESC-2026-1254
+    quai: 1
+    debut: 2026-09-25T14:06
+    fin: 2026-09-25T22:06
+  - escale_id: ESC-2026-1264
+    quai: 7
+    debut: 2026-09-26T12:02
+    fin: 2026-09-26T18:02
+  - escale_id: ESC-2026-1302
+    quai: 6
+    debut: 2026-09-30T06:10
+    fin: 2026-10-01T00:10
+  - escale_id: ESC-2026-1344
+    quai: 7
+    debut: 2026-10-04T05:02
+    fin: 2026-10-04T11:02
+  - escale_id: ESC-2026-1356
+    quai: 5
+    debut: 2026-10-06T18:06
+    fin: 2026-10-07T04:06
+  - escale_id: ESC-2026-1371
+    quai: 6
+    debut: 2026-10-08T12:30
+    fin: 2026-10-08T15:30
+- navire_id: NAV-0022
+  nom: Molène
+  imo: '9317676'
+  longueur_m: 0
+  tirant_eau_max_m: 0
+  pavillon: PT
+  escales:
+  - escale_id: ESC-2026-1011
+    quai: 5
+    debut: 2026-09-01T15:06
+    fin: 2026-09-02T11:06
+  - escale_id: ESC-2026-1018
+    quai: 5
+    debut: 2026-09-02T13:06
+    fin: 2026-09-03T07:06
+  - escale_id: ESC-2026-1021
+    quai: 6
+    debut: 2026-09-02T15:10
+    fin: 2026-09-02T23:10
+  - escale_id: ESC-2026-1026
+    quai: 3
+    debut: 2026-09-03T06:45
+    fin: 2026-09-03T16:45
+  - escale_id: ESC-2026-1034
+    quai: 6
+    debut: 2026-09-04T06:10
+    fin: 2026-09-04T12:10
+  - escale_id: ESC-2026-1046
+    quai: 2
+    debut: 2026-09-05T09:21
+    fin: 2026-09-05T23:21
+  - escale_id: ESC-2026-1052
+    quai: 2
+    debut: 2026-09-06T01:21
+    fin: 2026-09-06T11:21
+  - escale_id: ESC-2026-1074
+    quai: 2
+    debut: 2026-09-08T03:21
+    fin: 2026-09-08T17:21
+  - escale_id: ESC-2026-1099
+    quai: 5
+    debut: 2026-09-10T12:06
+    fin: 2026-09-11T08:06
+  - escale_id: ESC-2026-1105
+    quai: 6
+    debut: 2026-09-11T02:10
+    fin: 2026-09-11T16:10
+  - escale_id: ESC-2026-1114
+    quai: 7
+    debut: 2026-09-12T00:02
+    fin: 2026-09-12T10:02
+  - escale_id: ESC-2026-1147
+    quai: 3
+    debut: 2026-09-15T08:45
+    fin: 2026-09-15T16:45
+  - escale_id: ESC-2026-1152
+    quai: 3
+    debut: 2026-09-15T20:45
+    fin: 2026-09-16T04:45
+  - escale_id: ESC-2026-1164
+    quai: 7
+    debut: 2026-09-17T00:02
+    fin: 2026-09-17T14:02
+  - escale_id: ESC-2026-1183
+    quai: 7
+    debut: 2026-09-18T11:02
+    fin: 2026-09-18T19:02
+  - escale_id: ESC-2026-1276
+    quai: 5
+    debut: 2026-09-27T17:06
+    fin: 2026-09-28T07:06
+- navire_id: NAV-0023
+  nom: Bréhat
+  imo: '9314132'
+  longueur_m: 235.0
+  tirant_eau_max_m: 10.4
+  pavillon: FR
+  escales:
+  - escale_id: ESC-2026-1070
+    quai: 7
+    debut: 2026-09-07T15:02
+    fin: 2026-09-07T23:02
+  - escale_id: ESC-2026-1139
+    quai: 3
+    debut: 2026-09-14T11:45
+    fin: 2026-09-15T07:45
+  - escale_id: ESC-2026-1155
+    quai: 4
+    debut: 2026-09-16T02:11
+    fin: 2026-09-16T08:11
+  - escale_id: ESC-2026-1174
+    quai: 3
+    debut: 2026-09-17T17:45
+    fin: 2026-09-18T05:45
+  - escale_id: ESC-2026-1184
+    quai: 4
+    debut: 2026-09-18T19:11
+    fin: 2026-09-19T13:11
+  - escale_id: ESC-2026-1209
+    quai: 7
+    debut: 2026-09-21T03:02
+    fin: 2026-09-21T15:02
+  - escale_id: ESC-2026-1222
+    quai: 3
+    debut: 2026-09-22T13:45
+    fin: 2026-09-23T09:45
+  - escale_id: ESC-2026-1233
+    quai: 3
+    debut: 2026-09-23T11:45
+    fin: 2026-09-23T21:45
+  - escale_id: ESC-2026-1258
+    quai: 2
+    debut: 2026-09-25T20:21
+    fin: 2026-09-26T02:21
+  - escale_id: ESC-2026-1284
+    quai: 4
+    debut: 2026-09-28T11:11
+    fin: 2026-09-29T05:11
+  - escale_id: ESC-2026-1289
+    quai: 7
+    debut: 2026-09-28T22:02
+    fin: 2026-09-29T12:02
+  - escale_id: ESC-2026-1304
+    quai: 4
+    debut: 2026-09-30T11:11
+    fin: 2026-10-01T07:11
+  - escale_id: ESC-2026-1381
+    quai: 7
+    debut: 2026-10-08T23:30
+    fin: 2026-10-09T03:30
+- navire_id: NAV-0024
+  nom: Groix
+  imo: '9312836'
+  longueur_m: 100.0
+  tirant_eau_max_m: 10.2
+  pavillon: MT
+  escales:
+  - escale_id: ESC-2026-1033
+    quai: 3
+    debut: 2026-09-04T00:45
+    fin: 2026-09-04T06:45
+  - escale_id: ESC-2026-1118
+    quai: 1
+    debut: 2026-09-12T09:06
+    fin: 2026-09-12T21:06
+  - escale_id: ESC-2026-1130
+    quai: 6
+    debut: 2026-09-13T13:10
+    fin: 2026-09-14T01:10
+  - escale_id: ESC-2026-1136
+    quai: 7
+    debut: 2026-09-14T01:02
+    fin: 2026-09-14T11:02
+  - escale_id: ESC-2026-1141
+    quai: 2
+    debut: 2026-09-14T12:21
+    fin: 2026-09-15T02:21
+  - escale_id: ESC-2026-1142
+    quai: 5
+    debut: 2026-09-14T13:06
+    fin: 2026-09-15T09:06
+  - escale_id: ESC-2026-1160
+    quai: 5
+    debut: 2026-09-16T12:06
+    fin: 2026-09-17T00:06
+  - escale_id: ESC-2026-1168
+    quai: 4
+    debut: 2026-09-17T05:11
+    fin: 2026-09-18T01:11
+  - escale_id: ESC-2026-1173
+    quai: 7
+    debut: 2026-09-17T17:02
+    fin: 2026-09-18T07:02
+  - escale_id: ESC-2026-1196
+    quai: 4
+    debut: 2026-09-19T21:11
+    fin: 2026-09-20T09:11
+  - escale_id: ESC-2026-1205
+    quai: 1
+    debut: 2026-09-20T17:06
+    fin: 2026-09-21T13:06
+  - escale_id: ESC-2026-1218
+    quai: 3
+    debut: 2026-09-22T00:45
+    fin: 2026-09-22T12:45
+  - escale_id: ESC-2026-1221
+    quai: 4
+    debut: 2026-09-22T06:11
+    fin: 2026-09-22T20:11
+  - escale_id: ESC-2026-1240
+    quai: 2
+    debut: 2026-09-24T06:21
+    fin: 2026-09-24T14:21
+  - escale_id: ESC-2026-1281
+    quai: 1
+    debut: 2026-09-28T05:06
+    fin: 2026-09-28T13:06
+  - escale_id: ESC-2026-1290
+    quai: 5
+    debut: 2026-09-29T03:06
+    fin: 2026-09-29T23:06
+  - escale_id: ESC-2026-1328
+    quai: 5
+    debut: 2026-10-02T13:06
+    fin: 2026-10-02T23:06
+  - escale_id: ESC-2026-1367
+    quai: 6
+    debut: 2026-10-08T09:00
+    fin: 2026-10-08T11:30
+  - escale_id: ESC-2026-1383
+    quai: 5
+    debut: 2026-10-09T07:06
+    fin: 2026-10-09T21:06
+- navire_id: NAV-0025
+  nom: Houat
+  imo: '9317890'
+  longueur_m: 240.0
+  tirant_eau_max_m: 13.1
+  pavillon: PT
+  escales:
+  - escale_id: ESC-2026-1010
+    quai: 3
+    debut: 2026-09-01T14:45
+    fin: 2026-09-02T00:45
+  - escale_id: ESC-2026-1024
+    quai: 2
+    debut: 2026-09-03T03:21
+    fin: 2026-09-03T17:21
+  - escale_id: ESC-2026-1089
+    quai: 4
+    debut: 2026-09-09T18:11
+    fin: 2026-09-10T06:11
+  - escale_id: ESC-2026-1123
+    quai: 2
+    debut: 2026-09-12T22:21
+    fin: 2026-09-13T08:21
+  - escale_id: ESC-2026-1154
+    quai: 2
+    debut: 2026-09-16T01:21
+    fin: 2026-09-16T09:21
+  - escale_id: ESC-2026-1157
+    quai: 3
+    debut: 2026-09-16T08:45
+    fin: 2026-09-16T22:45
+  - escale_id: ESC-2026-1177
+    quai: 2
+    debut: 2026-09-18T06:21
+    fin: 2026-09-19T00:21
+  - escale_id: ESC-2026-1219
+    quai: 2
+    debut: 2026-09-22T02:21
+    fin: 2026-09-22T20:21
+  - escale_id: ESC-2026-1231
+    quai: 4
+    debut: 2026-09-23T09:11
+    fin: 2026-09-23T23:11
+  - escale_id: ESC-2026-1269
+    quai: 4
+    debut: 2026-09-26T22:11
+    fin: 2026-09-27T06:11
+  - escale_id: ESC-2026-1305
+    quai: 7
+    debut: 2026-09-30T13:02
+    fin: 2026-09-30T19:02
+  - escale_id: ESC-2026-1329
+    quai: 4
+    debut: 2026-10-02T21:11
+    fin: 2026-10-03T15:11
+- navire_id: NAV-0026
+  nom: Hoëdic
+  imo: '9393885'
+  longueur_m: 210.0
+  tirant_eau_max_m: 12.7
+  pavillon: FR
+  escales:
+  - escale_id: ESC-2026-1025
+    quai: 7
+    debut: 2026-09-03T05:02
+    fin: 2026-09-03T23:02
+  - escale_id: ESC-2026-1060
+    quai: 1
+    debut: 2026-09-06T19:06
+    fin: 2026-09-07T13:06
+  - escale_id: ESC-2026-1073
+    quai: 7
+    debut: 2026-09-08T03:02
+    fin: 2026-09-08T09:02
+  - escale_id: ESC-2026-1075
+    quai: 1
+    debut: 2026-09-08T07:06
+    fin: 2026-09-09T01:06
+  - escale_id: ESC-2026-1112
+    quai: 1
+    debut: 2026-09-11T21:06
+    fin: 2026-09-12T05:06
+  - escale_id: ESC-2026-1138
+    quai: 1
+    debut: 2026-09-14T11:06
+    fin: 2026-09-15T05:06
+  - escale_id: ESC-2026-1181
+    quai: 3
+    debut: 2026-09-18T08:45
+    fin: 2026-09-18T16:45
+  - escale_id: ESC-2026-1188
+    quai: 1
+    debut: 2026-09-19T01:06
+    fin: 2026-09-19T21:06
+  - escale_id: ESC-2026-1216
+    quai: 1
+    debut: 2026-09-21T21:06
+    fin: 2026-09-22T11:06
+  - escale_id: ESC-2026-1228
+    quai: 2
+    debut: 2026-09-23T00:21
+    fin: 2026-09-23T06:21
+  - escale_id: ESC-2026-1277
+    quai: 2
+    debut: 2026-09-27T19:21
+    fin: 2026-09-28T03:21
+  - escale_id: ESC-2026-1282
+    quai: 2
+    debut: 2026-09-28T07:21
+    fin: 2026-09-28T21:21
+  - escale_id: ESC-2026-1319
+    quai: 3
+    debut: 2026-10-01T20:45
+    fin: 2026-10-02T04:45
+  - escale_id: ESC-2026-1339
+    quai: 3
+    debut: 2026-10-03T19:45
+    fin: 2026-10-04T15:45
+- navire_id: NAV-0027
+  nom: Iroise Trader
+  imo: '9367714'
+  longueur_m: 205.0
+  tirant_eau_max_m: 9.0
+  pavillon: LR
+  escales:
+  - escale_id: ESC-2026-1056
+    quai: 7
+    debut: 2026-09-06T11:02
+    fin: 2026-09-06T19:02
+  - escale_id: ESC-2026-1072
+    quai: 1
+    debut: 2026-09-07T19:06
+    fin: 2026-09-08T03:06
+  - escale_id: ESC-2026-1088
+    quai: 3
+    debut: 2026-09-09T12:45
+    fin: 2026-09-10T00:45
+  - escale_id: ESC-2026-1100
+    quai: 7
+    debut: 2026-09-10T15:02
+    fin: 2026-09-11T05:02
+  - escale_id: ESC-2026-1115
+    quai: 3
+    debut: 2026-09-12T04:45
+    fin: 2026-09-12T14:45
+  - escale_id: ESC-2026-1232
+    quai: 7
+    debut: 2026-09-23T11:02
+    fin: 2026-09-24T07:02
+  - escale_id: ESC-2026-1242
+    quai: 1
+    debut: 2026-09-24T08:06
+    fin: 2026-09-24T16:06
+  - escale_id: ESC-2026-1327
+    quai: 7
+    debut: 2026-10-02T13:02
+    fin: 2026-10-03T07:02
+  - escale_id: ESC-2026-1342
+    quai: 4
+    debut: 2026-10-03T23:11
+    fin: 2026-10-04T13:11
+  - escale_id: ESC-2026-1343
+    quai: 1
+    debut: 2026-10-04T02:06
+    fin: 2026-10-04T08:06
+- navire_id: NAV-0028
+  nom: Rance Carrier
+  imo: '9356072'
+  longueur_m: 180.0
+  tirant_eau_max_m: 13.0
+  pavillon: PT
+  escales:
+  - escale_id: ESC-2026-1067
+    quai: 3
+    debut: 2026-09-07T10:45
+    fin: 2026-09-08T04:45
+  - escale_id: ESC-2026-1079
+    quai: 7
+    debut: 2026-09-08T12:02
+    fin: 2026-09-08T20:02
+  - escale_id: ESC-2026-1086
+    quai: 4
+    debut: 2026-09-09T07:11
+    fin: 2026-09-09T17:11
+  - escale_id: ESC-2026-1149
+    quai: 5
+    debut: 2026-09-15T10:06
+    fin: 2026-09-16T06:06
+  - escale_id: ESC-2026-1194
+    quai: 5
+    debut: 2026-09-19T17:06
+    fin: 2026-09-20T03:06
+  - escale_id: ESC-2026-1208
+    quai: 6
+    debut: 2026-09-20T23:10
+    fin: 2026-09-21T17:10
+  - escale_id: ESC-2026-1212
+    quai: 3
+    debut: 2026-09-21T10:45
+    fin: 2026-09-21T18:45
+  - escale_id: ESC-2026-1230
+    quai: 5
+    debut: 2026-09-23T07:06
+    fin: 2026-09-24T01:06
+  - escale_id: ESC-2026-1236
+    quai: 6
+    debut: 2026-09-23T17:10
+    fin: 2026-09-24T07:10
+  - escale_id: ESC-2026-1248
+    quai: 3
+    debut: 2026-09-24T22:45
+    fin: 2026-09-25T18:45
+  - escale_id: ESC-2026-1257
+    quai: 4
+    debut: 2026-09-25T18:11
+    fin: 2026-09-26T14:11
+  - escale_id: ESC-2026-1286
+    quai: 6
+    debut: 2026-09-28T16:10
+    fin: 2026-09-29T10:10
+  - escale_id: ESC-2026-1297
+    quai: 6
+    debut: 2026-09-29T20:10
+    fin: 2026-09-30T04:10
+  - escale_id: ESC-2026-1310
+    quai: 6
+    debut: 2026-10-01T01:10
+    fin: 2026-10-01T13:10
+  - escale_id: ESC-2026-1331
+    quai: 2
+    debut: 2026-10-02T22:21
+    fin: 2026-10-03T04:21
+  - escale_id: ESC-2026-1349
+    quai: 5
+    debut: 2026-10-05T04:06
+    fin: 2026-10-05T22:06
+  - escale_id: ESC-2026-1354
+    quai: 6
+    debut: 2026-10-06T02:10
+    fin: 2026-10-06T20:10
+  - escale_id: ESC-2026-1375
+    quai: 7
+    debut: 2026-10-08T17:00
+    fin: 2026-10-08T20:00
+- navire_id: NAV-0029
+  nom: Crozon
+  imo: '9385135'
+  longueur_m: 170.0
+  tirant_eau_max_m: 10.5
+  pavillon: PT
+  escales:
+  - escale_id: ESC-2026-1003
+    quai: 4
+    debut: 2026-09-01T01:11
+    fin: 2026-09-01T09:11
+  - escale_id: ESC-2026-1093
+    quai: 6
+    debut: 2026-09-10T00:10
+    fin: 2026-09-10T18:10
+  - escale_id: ESC-2026-1094
+    quai: 7
+    debut: 2026-09-10T02:02
+    fin: 2026-09-10T14:02
+  - escale_id: ESC-2026-1124
+    quai: 6
+    debut: 2026-09-13T00:10
+    fin: 2026-09-13T10:10
+  - escale_id: ESC-2026-1126
+    quai: 5
+    debut: 2026-09-13T05:06
+    fin: 2026-09-13T13:06
+  - escale_id: ESC-2026-1132
+    quai: 3
+    debut: 2026-09-13T18:45
+    fin: 2026-09-14T08:45
+  - escale_id: ESC-2026-1134
+    quai: 5
+    debut: 2026-09-13T21:06
+    fin: 2026-09-14T07:06
+  - escale_id: ESC-2026-1153
+    quai: 1
+    debut: 2026-09-15T23:06
+    fin: 2026-09-16T19:06
+  - escale_id: ESC-2026-1156
+    quai: 7
+    debut: 2026-09-16T08:02
+    fin: 2026-09-16T16:02
+  - escale_id: ESC-2026-1159
+    quai: 6
+    debut: 2026-09-16T11:10
+    fin: 2026-09-17T07:10
+  - escale_id: ESC-2026-1163
+    quai: 1
+    debut: 2026-09-16T20:06
+    fin: 2026-09-17T08:06
+  - escale_id: ESC-2026-1169
+    quai: 6
+    debut: 2026-09-17T10:10
+    fin: 2026-09-17T22:10
+  - escale_id: ESC-2026-1210
+    quai: 2
+    debut: 2026-09-21T06:21
+    fin: 2026-09-22T00:21
+  - escale_id: ESC-2026-1268
+    quai: 2
+    debut: 2026-09-26T21:21
+    fin: 2026-09-27T17:21
+  - escale_id: ESC-2026-1293
+    quai: 6
+    debut: 2026-09-29T12:10
+    fin: 2026-09-29T18:10
+  - escale_id: ESC-2026-1311
+    quai: 5
+    debut: 2026-10-01T03:06
+    fin: 2026-10-01T11:06
+  - escale_id: ESC-2026-1316
+    quai: 5
+    debut: 2026-10-01T17:06
+    fin: 2026-10-01T23:06
+  - escale_id: ESC-2026-1330
+    quai: 1
+    debut: 2026-10-02T22:06
+    fin: 2026-10-03T08:06
+  - escale_id: ESC-2026-1335
+    quai: 1
+    debut: 2026-10-03T12:06
+    fin: 2026-10-03T20:06
+  - escale_id: ESC-2026-1372
+    quai: 7
+    debut: 2026-10-08T13:30
+    fin: 2026-10-08T16:30
+  - escale_id: ESC-2026-1384
+    quai: 6
+    debut: 2026-10-09T08:10
+    fin: 2026-10-09T16:10
+- navire_id: NAV-0030
+  nom: Camaret
+  imo: '9386727'
+  longueur_m: 170.0
+  tirant_eau_max_m: 9.5
+  pavillon: PT
+  escales:
+  - escale_id: ESC-2026-1041
+    quai: 1
+    debut: 2026-09-04T20:06
+    fin: 2026-09-05T14:06
+  - escale_id: ESC-2026-1050
+    quai: 4
+    debut: 2026-09-05T20:11
+    fin: 2026-09-06T06:11
+  - escale_id: ESC-2026-1051
+    quai: 7
+    debut: 2026-09-06T01:02
+    fin: 2026-09-06T09:02
+  - escale_id: ESC-2026-1058
+    quai: 2
+    debut: 2026-09-06T13:21
+    fin: 2026-09-06T21:21
+  - escale_id: ESC-2026-1133
+    quai: 1
+    debut: 2026-09-13T19:06
+    fin: 2026-09-14T05:06
+  - escale_id: ESC-2026-1140
+    quai: 7
+    debut: 2026-09-14T12:02
+    fin: 2026-09-15T02:02
+  - escale_id: ESC-2026-1143
+    quai: 6
+    debut: 2026-09-14T20:10
+    fin: 2026-09-15T04:10
+  - escale_id: ESC-2026-1167
+    quai: 5
+    debut: 2026-09-17T03:06
+    fin: 2026-09-17T11:06
+  - escale_id: ESC-2026-1202
+    quai: 5
+    debut: 2026-09-20T06:06
+    fin: 2026-09-20T20:06
+  - escale_id: ESC-2026-1244
+    quai: 4
+    debut: 2026-09-24T10:11
+    fin: 2026-09-25T00:11
+  - escale_id: ESC-2026-1249
+    quai: 2
+    debut: 2026-09-25T00:21
+    fin: 2026-09-25T12:21
+  - escale_id: ESC-2026-1263
+    quai: 3
+    debut: 2026-09-26T07:45
+    fin: 2026-09-26T19:45
+  - escale_id: ESC-2026-1291
+    quai: 2
+    debut: 2026-09-29T03:21
+    fin: 2026-09-29T23:21
+  - escale_id: ESC-2026-1294
+    quai: 1
+    debut: 2026-09-29T15:06
+    fin: 2026-09-29T21:06
+  - escale_id: ESC-2026-1318
+    quai: 7
+    debut: 2026-10-01T19:02
+    fin: 2026-10-02T01:02
+  - escale_id: ESC-2026-1322
+    quai: 2
+    debut: 2026-10-02T01:21
+    fin: 2026-10-02T19:21
+  - escale_id: ESC-2026-1353
+    quai: 5
+    debut: 2026-10-06T02:06
+    fin: 2026-10-06T16:06
+  - escale_id: ESC-2026-1365
+    quai: 7
+    debut: 2026-10-08T05:00
+    fin: 2026-10-08T08:30
+  - escale_id: ESC-2026-1370
+    quai: 5
+    debut: 2026-10-08T12:15
+    fin: 2026-10-08T14:45
+- navire_id: NAV-0031
+  nom: Douarnenez
+  imo: '9332419'
+  longueur_m: 135.0
+  tirant_eau_max_m: 7.2
+  pavillon: PA
+  escales:
+  - escale_id: ESC-2026-1013
+    quai: 6
+    debut: 2026-09-01T19:10
+    fin: 2026-09-02T13:10
+  - escale_id: ESC-2026-1023
+    quai: 6
+    debut: 2026-09-03T01:10
+    fin: 2026-09-03T13:10
+  - escale_id: ESC-2026-1037
+    quai: 3
+    debut: 2026-09-04T12:45
+    fin: 2026-09-05T00:45
+  - escale_id: ESC-2026-1063
+    quai: 7
+    debut: 2026-09-07T01:02
+    fin: 2026-09-07T11:02
+  - escale_id: ESC-2026-1077
+    quai: 5
+    debut: 2026-09-08T08:06
+    fin: 2026-09-08T22:06
+  - escale_id: ESC-2026-1080
+    quai: 6
+    debut: 2026-09-08T13:10
+    fin: 2026-09-09T09:10
+  - escale_id: ESC-2026-1095
+    quai: 4
+    debut: 2026-09-10T08:11
+    fin: 2026-09-10T20:11
+  - escale_id: ESC-2026-1098
+    quai: 1
+    debut: 2026-09-10T11:06
+    fin: 2026-09-10T17:06
+  - escale_id: ESC-2026-1107
+    quai: 3
+    debut: 2026-09-11T07:45
+    fin: 2026-09-12T01:45
+  - escale_id: ESC-2026-1150
+    quai: 4
+    debut: 2026-09-15T11:11
+    fin: 2026-09-15T23:11
+  - escale_id: ESC-2026-1195
+    quai: 2
+    debut: 2026-09-19T18:21
+    fin: 2026-09-20T04:21
+  - escale_id: ESC-2026-1203
+    quai: 3
+    debut: 2026-09-20T08:45
+    fin: 2026-09-21T04:45
+  - escale_id: ESC-2026-1215
+    quai: 7
+    debut: 2026-09-21T19:02
+    fin: 2026-09-22T01:02
+  - escale_id: ESC-2026-1229
+    quai: 1
+    debut: 2026-09-23T02:06
+    fin: 2026-09-23T12:06
+  - escale_id: ESC-2026-1238
+    quai: 4
+    debut: 2026-09-24T02:11
+    fin: 2026-09-24T08:11
+  - escale_id: ESC-2026-1246
+    quai: 5
+    debut: 2026-09-24T17:06
+    fin: 2026-09-25T03:06
+  - escale_id: ESC-2026-1325
+    quai: 3
+    debut: 2026-10-02T07:45
+    fin: 2026-10-03T01:45
+  - escale_id: ESC-2026-1345
+    quai: 7
+    debut: 2026-10-04T14:02
+    fin: 2026-10-05T04:02
+  - escale_id: ESC-2026-1357
+    quai: 6
+    debut: 2026-10-06T21:10
+    fin: 2026-10-07T17:10
+  - escale_id: ESC-2026-1379
+    quai: 6
+    debut: 2026-10-08T21:30
+    fin: 2026-10-09T00:30
+- navire_id: NAV-0032
+  nom: Audierne
+  imo: '9310445'
+  longueur_m: 215.0
+  tirant_eau_max_m: 8.1
+  pavillon: MT
+  escales:
+  - escale_id: ESC-2026-1029
+    quai: 4
+    debut: 2026-09-03T13:11
+    fin: 2026-09-04T07:11
+  - escale_id: ESC-2026-1035
+    quai: 7
+    debut: 2026-09-04T07:02
+    fin: 2026-09-05T03:02
+  - escale_id: ESC-2026-1045
+    quai: 3
+    debut: 2026-09-05T06:45
+    fin: 2026-09-06T02:45
+  - escale_id: ESC-2026-1102
+    quai: 2
+    debut: 2026-09-10T20:21
+    fin: 2026-09-11T10:21
+  - escale_id: ESC-2026-1127
+    quai: 4
+    debut: 2026-09-13T08:11
+    fin: 2026-09-13T20:11
+  - escale_id: ESC-2026-1247
+    quai: 1
+    debut: 2026-09-24T18:06
+    fin: 2026-09-25T06:06
+  - escale_id: ESC-2026-1307
+    quai: 3
+    debut: 2026-09-30T16:45
+    fin: 2026-10-01T12:45
+  - escale_id: ESC-2026-1308
+    quai: 7
+    debut: 2026-09-30T22:02
+    fin: 2026-10-01T18:02
+  - escale_id: ESC-2026-1315
+    quai: 2
+    debut: 2026-10-01T15:21
+    fin: 2026-10-01T21:21
+  - escale_id: ESC-2026-1317
+    quai: 1
+    debut: 2026-10-01T17:06
+    fin: 2026-10-02T07:06
+  - escale_id: ESC-2026-1355
+    quai: 7
+    debut: 2026-10-06T13:02
+    fin: 2026-10-07T09:02
+  - escale_id: ESC-2026-1359
+    quai: 7
+    debut: 2026-10-07T10:02
+    fin: 2026-10-07T16:02
