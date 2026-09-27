@@ -8,7 +8,8 @@ Un enregistrement par appel d'outil, portant les cinq champs du bloc 8.5 :
   5. tokens_cumules   contexte estimé AVANT l'appel au modèle de ce tour
   6. resultat, serveur texte rendu par l'outil (borné : borner()) et serveur qui l'a rendu — ce qui
                       permet de retrouver l'origine d'un chiffre (LAB 8, LAB 13)
-Collecter pendant la boucle, afficher à la fin : afficher(trace).
+Collecter pendant la boucle, afficher à la fin : afficher(trace). Dès que la trace compte plus d'un serveur
+(LAB 13), chaque appel est précédé du serveur qui l'a servi : lequel a ralenti, lequel a produit la donnée.
 """
 
 from __future__ import annotations
@@ -46,6 +47,7 @@ def afficher(trace: list[Enregistrement], sortie=print) -> str:
         for correlation in dict.fromkeys(e.correlation for e in trace):
             execution = [e for e in trace if e.correlation == correlation]
             tours = list(dict.fromkeys(e.tour for e in execution))
+            plusieurs = len({e.serveur for e in execution}) > 1
             lignes.append(f"exécution {correlation} — {len(execution)} appel(s), {len(tours)} tour(s)")
             for i, tour in enumerate(tours):
                 appels = [e for e in execution if e.tour == tour]
@@ -54,7 +56,8 @@ def afficher(trace: list[Enregistrement], sortie=print) -> str:
                 marge = "   " if dernier else "│  "
                 for j, e in enumerate(appels):
                     arguments = ", ".join(f"{k}={w}" for k, w in e.arguments.items())
-                    lignes.append(f"{marge}{'└─' if j == len(appels) - 1 else '├─'} {e.outil}({arguments})"
+                    origine = f"{e.serveur or '?'}  " if plusieurs else ""
+                    lignes.append(f"{marge}{'└─' if j == len(appels) - 1 else '├─'} {origine}{e.outil}({arguments})"
                                   f" · {e.duree_ms:.0f} ms · {e.octets} o{' · isError' if e.erreur else ''}")
         texte = "\n".join(lignes)
     sortie(texte)
