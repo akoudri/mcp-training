@@ -52,14 +52,17 @@ contournement inventé par le binôme) et pour le LAB 14. Détail et messages de
 | `lo_from_bytea(0, 'x'::bytea)` — écrit un large object malgré une requête syntaxiquement SELECT seul | Même liste blanche de fonctions (`lo_from_bytea` est `exp.Anonymous`, refusé), **et** la transaction en lecture seule : une écriture qui passerait l'étage 2 échouerait à l'étage 4 |
 | `SELECT nom::text FROM escales nom WHERE navire_id IN (SELECT navire_id FROM navires)` — un alias de table nommé comme une colonne autorisée d'une autre table : pour PostgreSQL, la **ligne entière** de l'escale, `tarif_negocie` compris | Résolution des colonnes à l'étage 2 (`colonnes_resolues()`) : chaque colonne doit se rattacher à une colonne de la liste blanche d'une table de sa portée (optimiseur de sqlglot) ; sinon, refus |
 | `HAVING max(tarif_negocie) > …`, `escales AS e(a, …, h)`, alias de sortie repris dans `OVER (ORDER BY …)` — une colonne cachée lue sans être nommée comme telle | Même étage : colonne restée sans table refusée, colonnes d'une table non renommables, alias de sortie admis seulement nu dans l'ORDER BY de la requête |
+| `navires n NATURAL JOIN (SELECT 'AG-RANCE' AS agent_id) v`, `escales e NATURAL [LEFT\|FULL] JOIN (SELECT 56000.00 AS tarif_negocie) v` — la jointure naturelle filtre sur une colonne cachée sans jamais la nommer dans une condition | `NATURAL JOIN` refusé en bloc : les colonnes communes seraient calculées par PostgreSQL sur la vraie table, alors que la résolution ne connaît que la liste blanche |
 
 Ces vecteurs sont joués par `solutions/lab09/tests/pharos_data/test_cloisonnement.py::test_requete_sql_contournements_avances`
-(seize requêtes, sous `jeton-iroise`) : chacune refusée, sans qu'aucune réponse ne révèle un montant, un tarif
+(vingt-deux requêtes, sous `jeton-iroise`) : chacune refusée, sans qu'aucune réponse ne révèle un montant, un tarif
 négocié, une table du catalogue, un rôle ou une escale d'un autre agent. Les contrepreuves
 `test_requete_sql_conversions_de_type_autorisees` et `test_requete_sql_requetes_legitimes` (jointure `USING`,
 `ORDER BY` sur un alias, `EXISTS`, sous-requête, `date_trunc`) vérifient que les requêtes ordinaires passent.
 
-La liste blanche reste une défense de l'outil, pas de la base : le rôle `pharos_agent` peut toujours lire la
+La résolution rapproche chaque nom de la liste blanche, jamais du schéma réel : ce que PostgreSQL déduit
+lui-même des colonnes réelles (jointure naturelle) échappe à l'analyse, d'où le refus de `NATURAL JOIN`. La
+liste blanche reste une défense de l'outil, pas de la base : le rôle `pharos_agent` peut toujours lire la
 colonne `tarif_negocie` de ses escales. La masquer dans la base (privilèges de colonne) est l'extension B du
 LAB 9 — à rappeler en mise en commun.
 

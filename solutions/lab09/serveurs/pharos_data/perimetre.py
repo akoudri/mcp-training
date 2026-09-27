@@ -119,6 +119,11 @@ def colonnes_resolues(arbre: exp.Expression) -> bool:
     if any(isinstance(t.args.get("alias"), exp.TableAlias) and t.args["alias"].columns
            for t in arbre.find_all(exp.Table)):
         return False
+    # NATURAL JOIN : PostgreSQL joint sur les colonnes communes de la VRAIE table, colonnes cachées comprises
+    # (« escales NATURAL JOIN (SELECT 56000.00 AS tarif_negocie) v » filtre sur tarif_negocie), là où sqlglot ne
+    # connaît que la liste blanche. Écrire la jointure : JOIN … USING (colonne) ou JOIN … ON.
+    if any((j.args.get("method") or "").upper() == "NATURAL" for j in arbre.find_all(exp.Join)):
+        return False
     try:
         qualify(arbre, schema=_SCHEMA, dialect="postgres", infer_schema=False, validate_qualify_columns=True)
     except sqlglot.errors.SqlglotError:

@@ -57,15 +57,21 @@ passent un tel filtre ; la solution de référence les arrête toutes.
 | 9 | `CAST(36907 AS regclass)::text`, `'escales'::regclass::oid::int` — énumération du catalogue par OID, ou obtention de l'OID d'une table connue comme point de départ | Même liste de types : `regclass` et `oid` sont refusés comme cibles de conversion, que la valeur de départ soit un littéral, un OID numérique ou le résultat d'un autre CAST |
 | 10 | `SELECT nom::text FROM escales nom WHERE navire_id IN (SELECT navire_id FROM navires)` — `nom` est une colonne autorisée (de `navires`), mais aucune table de la requête externe n'en a : pour PostgreSQL, c'est alors l'alias de table `nom`, c'est-à-dire **la ligne entière** de l'escale, `tarif_negocie` compris | Résolution des colonnes à l'étage 2 (`colonnes_resolues()`) : l'optimiseur de sqlglot rattache chaque colonne à une table de sa portée, sur un schéma qui ne connaît que la liste blanche ; un nom qui ne se résout pas en colonne autorisée est refusé |
 | 11 | La même colonne cachée lue autrement : `HAVING max(tarif_negocie) > 50000` (que sqlglot ne rattache à aucune table), `escales AS e(a, b, …, h)` (colonnes renommées par position), `SELECT quai AS tarif_negocie … OVER (ORDER BY tarif_negocie)` (un alias de sortie que PostgreSQL lit comme la colonne d'entrée du même nom) | Même étage : une colonne restée sans table après résolution est refusée, les colonnes d'une table ne se renomment pas, et un alias de sortie n'est admis que nu, dans l'ORDER BY de la requête |
+| 12 | `SELECT n.nom FROM navires n NATURAL JOIN (SELECT 'AG-RANCE' AS agent_id) v` — les navires d'une autre compagnie ; `escales e NATURAL JOIN (SELECT 56000.00 AS tarif_negocie) v` — un oracle sur le tarif négocié (aussi en `LEFT`, `FULL`, ou avec une CTE) | `NATURAL JOIN` est refusé quelle que soit sa forme : PostgreSQL joint sur les colonnes communes de la **vraie** table, colonnes cachées comprises, alors que la résolution ne connaît que la liste blanche — elle ne peut pas voir la condition de jointure. Écrire `JOIN … USING (colonne)` ou `JOIN … ON` |
 
 Ce qui reste permis : une conversion vers un type ordinaire (`CAST(quai AS text)`, `debut::date`), une
 jointure `USING`, `ORDER BY n` sur un alias de la liste SELECT, `EXISTS (…)`, les sous-requêtes et les CTE
-dont les colonnes sont elles-mêmes autorisées. La restriction porte sur ce que désigne chaque nom, jamais sur
-la forme de la requête.
+dont les colonnes sont elles-mêmes autorisées.
+
+Ce que garantit la résolution, et sa limite : chaque nom est rapproché de la **liste blanche**, pas du schéma
+réel — l'outil ne connaît pas les colonnes cachées, et c'est voulu (il n'a pas à les citer). Tout ce que
+PostgreSQL déduit lui-même du schéma réel échappe donc à l'analyse : c'est pourquoi `NATURAL JOIN` est refusé
+en bloc, et pourquoi certaines requêtes inoffensives le sont aussi (un alias de sortie repris en `GROUP BY` :
+écrire `GROUP BY 1`).
 
 Tous ces contournements sont joués par `tests/pharos_data/test_cloisonnement.py::test_requete_sql_contournements_avances`
-(seize requêtes, sous `jeton-iroise`) : chacune est refusée, sans qu'aucune réponse ne révèle un montant, un
-tarif négocié, une table du catalogue, un rôle ou une escale d'un autre agent, et chaque refus cite les
+(vingt-deux requêtes, sous `jeton-iroise`) : chacune est refusée, sans qu'aucune réponse ne révèle un montant, un
+tarif négocié, une table du catalogue, un rôle ou une escale, et chaque refus cite les
 fonctions et conversions possibles. Les contrepreuves `test_requete_sql_conversions_de_type_autorisees` et
 `test_requete_sql_requetes_legitimes` vérifient que les requêtes ordinaires passent toujours.
 

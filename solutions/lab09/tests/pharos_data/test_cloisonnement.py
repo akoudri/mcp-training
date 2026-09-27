@@ -3,6 +3,8 @@
 Sans modèle, en transport mémoire, contre pharos-db ; sous les rôles applicatifs, comme le serveur en salle.
 """
 
+import re
+
 QUESTION = {"date": "2026-10-08"}          # « quai 3 jeudi, toutes compagnies confondues »
 
 
@@ -69,6 +71,16 @@ CONTOURNEMENTS_AVANCES = {
     # Un alias de sortie repris hors de l'ORDER BY final : PostgreSQL y lit la colonne d'entrée du même nom.
     "alias_masquant_une_colonne": "SELECT quai AS tarif_negocie, count(*) OVER (ORDER BY tarif_negocie) AS n "
                                   "FROM escales",
+    # NATURAL JOIN : PostgreSQL joint sur les colonnes communes de la vraie table, colonnes cachées comprises —
+    # un filtre sur agent_id ou un oracle sur tarif_negocie, sans jamais nommer la colonne dans une condition.
+    "naturelle_agent": "SELECT n.nom FROM navires n NATURAL JOIN (SELECT 'AG-RANCE' AS agent_id) v",
+    "naturelle_oracle": "SELECT e.escale_id FROM escales e NATURAL JOIN (SELECT 56000.00 AS tarif_negocie) v",
+    "naturelle_oracle_cte": "WITH v AS (SELECT 56000.00 AS tarif_negocie) SELECT e.escale_id FROM escales e "
+                            "NATURAL JOIN v",
+    "naturelle_gauche": "SELECT e.escale_id, v.k FROM escales e NATURAL LEFT JOIN "
+                        "(SELECT 56000.00 AS tarif_negocie, 1 AS k) v",
+    "naturelle_complete": "SELECT e.escale_id FROM escales e NATURAL FULL JOIN (SELECT 56000.00 AS tarif_negocie) v",
+    "naturelle_valeur": "SELECT escale_id, tarif_negocie FROM escales NATURAL JOIN (SELECT 56000.00 AS tarif_negocie) v",
 }
 INTERDITS_AVANCES = ("ESC-2026-0412", "montant", "tarif_negocie", "information_schema", "esc_hdr_legacy",
                      "tarifs", "pharos_app")
@@ -81,6 +93,7 @@ async def test_requete_sql_contournements_avances(client_en_tant_que):
             texte = r.content[0].text
             assert r.is_error, f"{sql!r} n'a pas été refusée : {texte}"
             assert not any(motif in texte for motif in INTERDITS_AVANCES), f"{sql!r} a révélé : {texte}"
+            assert not re.search(r"ESC-\d{4}-\d{4}", texte), f"{sql!r} a rendu une escale : {texte}"
             # Le refus dit aussi ce qui est possible : le modèle peut se corriger.
             assert "Fonctions possibles" in texte and "Conversions possibles" in texte, texte
 
