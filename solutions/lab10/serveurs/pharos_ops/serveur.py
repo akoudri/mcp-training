@@ -6,8 +6,9 @@
   inconnue vaut null, jamais 0 — un zéro du référentiel est une absence déguisée.
 - La clé météo ne sort jamais : les erreurs de httpx (dont le message porte l'URL, clé comprise) sont
   remplacées par un message propre, et le journal ne reçoit qu'un résumé sans URL.
-- Trois familles d'échec, trois conduites (bloc 17.3) : récupérable (timeout, 503) — un seul réessai sur
-  503, borné dans le temps ; non récupérable (400, 403, 404) — aucun ; quota (429) — aucun, et on le dit.
+- Trois familles d'échec, trois conduites (bloc 17.3) : récupérable (timeout, 5xx, coupure de connexion) — un
+  seul réessai, borné dans le temps (pas seulement sur 503 : toute panne récupérable) ; non récupérable
+  (400, 403, 404) — aucun ; quota (429) — aucun, et on le dit.
 - Un plafond par outil et par appelant (bloc 17.2), et un refus qui dit comment consommer moins.
 - meteo_creneau interroge les quais en parallèle et rend une réponse partielle explicite (complet: false).
 """
@@ -147,7 +148,13 @@ def _lue_a_paris(instant: datetime) -> datetime:
 
 
 def _connue(valeur) -> float | None:
-    """Règle unique des absences : absent, null ou 0 (une mesure physique à zéro est une absence déguisée) → None."""
+    """Règle unique des absences : absent, null ou 0 → None.
+
+    Le zéro-vaut-absence ne vaut vraiment que pour les grandeurs qui ne peuvent pas être physiquement nulles ici
+    (longueur, tirant d'eau, visibilité) : un vent nul n'aurait rien d'anormal en soi. On l'applique quand même
+    aux colonnes météo (vent, rafales, houle) parce que le mock est étalonné pour ne jamais produire 0 sur ces
+    colonnes (une absence y est toujours rendue par null) — la règle reste donc sûre ici, mais ne doit pas être
+    recopiée telle quelle pour une grandeur qui, elle, peut légitimement valoir zéro."""
     return float(valeur) if isinstance(valeur, (int, float)) and not isinstance(valeur, bool) and valeur > 0 else None
 
 

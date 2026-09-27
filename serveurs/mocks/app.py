@@ -174,6 +174,8 @@ async def alertes(requete: Request):
         corps = await requete.json()
     except ValueError:
         return _erreur(400, "corps JSON attendu")
+    if not isinstance(corps, dict):
+        return _erreur(400, "corps JSON attendu : un objet")
     manquants = [c for c in ("escale_id", "niveau", "destinataire") if not corps.get(c)]
     if manquants:
         return _erreur(400, f"champs obligatoires manquants : {', '.join(manquants)}")
@@ -188,12 +190,20 @@ async def alertes(requete: Request):
 
 async def config(requete: Request):
     if requete.method == "POST":
-        corps = await requete.json()
+        try:
+            corps = await requete.json()
+        except ValueError:
+            return _erreur(400, "corps JSON attendu")
+        if not isinstance(corps, dict):
+            return _erreur(400, "corps JSON attendu : un objet")
         inconnus = set(corps) - set(DEFAUTS)
         if inconnus:
             return _erreur(400, f"réglages inconnus : {', '.join(sorted(inconnus))}")
         if corps.get("panne") not in (None, "meteo", "referentiel"):
             return _erreur(400, "panne : meteo, referentiel ou null")
+        quota = corps.get("quota")
+        if quota is not None and (not isinstance(quota, (int, float)) or isinstance(quota, bool) or quota <= 0):
+            return _erreur(400, "quota : un entier positif, ou null")
         etat.config = {**DEFAUTS, **{k: v for k, v in corps.items() if v is not None}}
         etat.config["lenteur_s"] = float(etat.config["lenteur_s"])
         etat.config["lenteur_quais"] = [int(q) for q in etat.config["lenteur_quais"]]
@@ -202,7 +212,13 @@ async def config(requete: Request):
 
 
 async def cles(requete: Request):
-    cle = (await requete.json()).get("cle")
+    try:
+        corps = await requete.json()
+    except ValueError:
+        return _erreur(400, "corps JSON attendu")
+    if not isinstance(corps, dict):
+        return _erreur(400, "corps JSON attendu : un objet")
+    cle = corps.get("cle")
     if not cle:
         return _erreur(400, "cle attendue")
     etat.cles.add(cle)

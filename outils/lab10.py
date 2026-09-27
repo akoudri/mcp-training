@@ -121,7 +121,7 @@ def mocks(a) -> int:
 
 def appels(a) -> int:
     c = compteur()
-    print("Appels réellement reçus par les mocks, depuis leur démarrage (ou le dernier « make lab12-canal ») :\n")
+    print("Appels réellement reçus par les mocks, depuis leur démarrage :\n")
     for route, n in sorted(c["routes"].items()) or [("(aucun)", 0)]:
         print(f"  {route:<32} {n:>5}")
     if c["alertes"]:
@@ -167,6 +167,13 @@ def note_panne(a) -> int:
         print(f"Arrêt avant tout appel d'outil : {arret}\n{NOTE.relative_to(RACINE)} n'est pas modifié.")
         return 1
     ecrire_note(NOTE, QUESTION, note, trace, arret)
+    if arret:
+        # M6 : la boucle s'est arrêtée après au moins un appel — la trace reste informative, donc la note est
+        # écrite quand même, mais le code de retour et le message doivent dire qu'elle est incomplète : sans
+        # cela, le binôme croit que le modèle a conclu (aucune note) alors que la boucle a été coupée.
+        print(f"Arrêt avant conclusion : {arret}\n{NOTE.relative_to(RACINE)} écrit, mais la note est incomplète "
+              "(la boucle s'est arrêtée avant de conclure) ; la relire, puis make lab10-verifier.")
+        return 1
     print(note or f"Arrêt : {arret}")
     print(f"\n→ {NOTE.relative_to(RACINE)} écrit ; le relire, puis make lab10-verifier.")
     return 0

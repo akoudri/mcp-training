@@ -48,6 +48,15 @@ def client(tmp_path_factory):
     return client_minimal(tmp_path_factory.mktemp("client"))
 
 
+def test_appels_ne_cite_pas_une_cible_qui_nexiste_pas_encore(mocks_servis, capsys):
+    """M5 : lab12-canal n'existe pas encore (plan 3) — dire « depuis leur démarrage »."""
+    from outils import lab10
+
+    assert lab10.appels(None) == 0
+    sortie = capsys.readouterr().out
+    assert "depuis leur démarrage" in sortie and "lab12-canal" not in sortie
+
+
 def test_outils_lab10_decrire_et_durees():
     from outils import lab10
 
@@ -90,4 +99,35 @@ def test_note_panne_n_ecrase_rien_si_la_boucle_s_arrete_avant_tout_appel(mocks_s
         monkeypatch.setattr(boucle, "executer", arret)
         assert lab10.main(["note-panne"]) == 1
     assert not lab10.NOTE.exists() and "n'est pas modifié" in capsys.readouterr().out
+
+
+def test_note_panne_ecrit_quand_meme_si_la_boucle_s_arrete_apres_un_appel(mocks_servis, client, tmp_path, monkeypatch,
+                                                                           capsys):
+    """M6 : la boucle s'arrête (ArretBoucle) après au moins un appel — la trace est informative, donc la note est
+    écrite quand même, mais le code de retour dit 1 et le message dit que la note est incomplète."""
+    from outils import lab10
+
+    monkeypatch.setattr(lab10, "NOTE", tmp_path / "labs" / "lab10" / "note-panne.md")
+    monkeypatch.setattr(lab10, "RACINE", tmp_path)
+    with importer_client(client):
+        from pharos_client import boucle
+        from pharos_client.trace import Enregistrement
+
+        class ArretBoucle(Exception):
+            def __init__(self, message, trace):
+                super().__init__(message)
+                self.trace = trace
+
+        trace = [Enregistrement("c", 1, "meteo_creneau", {"quais": [3]}, 1.0, 10, 100, True,
+                                "Le service météo marine est indisponible")]
+
+        def arret(question, **_):
+            raise ArretBoucle("budget de tours épuisé (8)", trace)
+
+        monkeypatch.setattr(boucle, "ArretBoucle", ArretBoucle, raising=False)   # la boucle minimale n'en a pas
+        monkeypatch.setattr(boucle, "executer", arret)
+        assert lab10.main(["note-panne"]) == 1
+    sortie = capsys.readouterr().out
+    assert lab10.NOTE.exists() and "budget de tours épuisé" in lab10.NOTE.read_text(encoding="utf-8")
+    assert "incomplète" in sortie and "avant de conclure" in sortie
     assert httpx.get(f"{mocks_servis}/_config").json() == mocks.DEFAUTS           # panne levée à la sortie

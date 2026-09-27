@@ -108,6 +108,34 @@ def test_config_refusee(client):
     assert client.post("/_config", json={"vitesse": 2}).status_code == 400
 
 
+def test_config_corps_non_json_ou_non_objet(client):
+    """M4 : un corps illisible, ou un JSON qui n'est pas un objet, rend un 400 propre — pas un 500."""
+    r = client.post("/_config", content=b"pas du json")
+    assert r.status_code == 400 and r.json()["reason"]
+    r = client.post("/_config", json=[1, 2, 3])
+    assert r.status_code == 400 and r.json()["reason"]
+
+
+@pytest.mark.parametrize("quota", [0, -1])
+def test_config_quota_negatif_ou_nul_refuse(client, quota):
+    """M4 : un quota négatif ou nul (au lieu d'un entier positif, ou null pour désactiver) est un 400."""
+    assert client.post("/_config", json={"quota": quota}).status_code == 400
+
+
+def test_cles_corps_non_json_ou_non_objet(client):
+    r = client.post("/_cles", content=b"pas du json")
+    assert r.status_code == 400 and r.json()["reason"]
+    r = client.post("/_cles", json=[1])
+    assert r.status_code == 400 and r.json()["reason"]
+
+
+def test_canal_corps_non_json_ou_non_objet(client):
+    r = client.post("/canal/alertes", content=b"pas du json")
+    assert r.status_code == 400 and r.json()["reason"]
+    r = client.post("/canal/alertes", json=[1, 2, 3])
+    assert r.status_code == 400 and r.json()["reason"]
+
+
 def test_referentiel_recherche_tolerante(client):
     for nom in ("Vent d'Autan", "vent d’autan", "VENT D AUTAN", "autan"):
         corps = client.get("/referentiel/navires", params={"nom": nom}).json()

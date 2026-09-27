@@ -48,7 +48,16 @@ UNITES = ("_kt", "_kn", "_m", "_km", "_nm", "_ms", "_mm", "_cm", "_h", "_min", "
 DELAI_TOUR_S = float(os.environ.get("PHAROS_DELAI_S", "20"))
 LENTEUR_S = 8.0                     # make lab10-mocks LENTEUR=8s
 CLE = f"verif-{secrets.token_hex(6)}"
-CLE_SALLE = "meteo-salle-2026"                      # valeur par défaut de METEO_CLE (bloc « commun/base.yaml »)
+
+
+def _cle_salle_par_defaut() -> str:
+    """La clé météo de la salle, lue dans l'environnement (METEO_CLE) — avant que « _serveur » ne le remplace
+    par la clé du vérificateur. Si le formateur surcharge METEO_CLE (.env), la détection d'une clé en dur doit
+    viser cette valeur-là, pas une constante codée en dur qui ne correspondrait plus à rien."""
+    return os.environ.get("METEO_CLE", "meteo-salle-2026")
+
+
+CLE_SALLE = _cle_salle_par_defaut()                 # valeur par défaut de METEO_CLE (bloc « commun/base.yaml »)
 # une vraie clé après « apikey= » (la nôtre, ou celle de la salle) — pas un masquage (***, …, <masqué>, xxx…)
 APIKEY = re.compile(r"apikey=([^&\s\"'()<>]+)", re.IGNORECASE)
 
@@ -187,10 +196,20 @@ async def _(ctx):
         raise Echec(f"la clé apparaît dans ce que rend : {', '.join(fuites)}. Le message d'une erreur HTTP porte l'URL "
                     "complète, clé comprise : ne jamais le renvoyer tel quel (bloc 17.1).")
     boucle = _boucle()
+
+    def _executer_boucle():
+        # « autorisation.en_tant_que » repose sur un ContextVar : la boucle ouvre sa propre session (son propre
+        # fil, sa propre boucle asyncio, dans pharos_client.transport.Session), donc l'identité doit être posée
+        # ICI, dans le fil que « asyncio.to_thread » démarre pour exécuter la boucle — pas autour de l'« await »,
+        # sans quoi un serveur qui exige « autorisation.identite() » dans chaque outil verrait « Identité
+        # inconnue » au lieu du message de panne attendu.
+        with autorisation.en_tant_que("jeton-exploitation"):
+            return boucle.executer("Question simulée du LAB 10.", url=_serveur(ctx))
+
     with _mode(panne="meteo"):
         try:
             with ModeleSimule([[appel("a1", "meteo_creneau", {"quais": [3], **JEUDI})], "Réponse simulée."]):
-                _, trace = await asyncio.to_thread(boucle.executer, "Question simulée du LAB 10.", url=_serveur(ctx))
+                _, trace = await asyncio.to_thread(_executer_boucle)
         except NotImplementedError as exc:
             raise Echec("la boucle du LAB 4 n'est pas écrite : ce lab part de etat/da3-fin (make depart LAB=10).") from exc
         except Exception as exc:
@@ -282,11 +301,15 @@ def _ligne_prevision(d: dict) -> bool:
 
 @v.critere("Normalisation : unités dans les noms, dates avec fuseau, une seule règle pour les absences.")
 async def _(ctx):
-    rendus = {"meteo_creneau": await _appeler(ctx, "meteo_creneau", SEMAINE),
-              "meteo_alerte": await _appeler(ctx, "meteo_alerte", {"quai": 3, "horizon_h": 72}),
-              "navire_par_nom": await _appeler(ctx, "navire_par_nom", {"nom": "Vent d'Autan"})}
-    for nom in MENTEURS:
-        rendus[nom] = await _appeler(ctx, "navire_par_nom", {"nom": nom})
+    # I1 : ce critère joue toujours en mode nominal, quel que soit l'interrupteur laissé actif par le brief
+    # (PANNE=meteo, QUOTA, LENTEUR…) — sans quoi un serveur juste échoue ici avec un message qui parle du
+    # plafond au lieu de l'interrupteur resté actif.
+    with _mode():
+        rendus = {"meteo_creneau": await _appeler(ctx, "meteo_creneau", SEMAINE),
+                  "meteo_alerte": await _appeler(ctx, "meteo_alerte", {"quai": 3, "horizon_h": 72}),
+                  "navire_par_nom": await _appeler(ctx, "navire_par_nom", {"nom": "Vent d'Autan"})}
+        for nom in MENTEURS:
+            rendus[nom] = await _appeler(ctx, "navire_par_nom", {"nom": nom})
     erreurs = [f"{n} : {_texte(r)[:150]}" for n, r in rendus.items() if r.is_error or _json(r) is None]
     if erreurs:
         raise Echec("appels nominaux en échec, ou résultat qui n'est pas du JSON (le vérificateur fait une dizaine "
@@ -311,6 +334,24 @@ async def _(ctx):
     if sans_fuseau:
         raise Echec(f"dates sans fuseau : {', '.join(sorted(sans_fuseau)[:3])} — ISO 8601 avec décalage "
                     "(2026-10-08T14:00+02:00). Le référentiel rend l'heure locale sans fuseau, la météo l'heure GMT.")
+
+    def _avec_decalage(valeur) -> bool:
+        if not isinstance(valeur, str) or not DATE_HEURE.match(valeur):
+            return False
+        try:
+            return datetime.fromisoformat(valeur).tzinfo is not None
+        except ValueError:
+            return False
+
+    # M2 : navire_par_nom doit rendre les escales connues (§16, LAB 13 étape 3 ; LAB 10 ext. C) — un binôme qui
+    # les retire pour éviter le contrôle des fuseaux ne doit pas passer ✅.
+    fiche_vent = _fiche(rendus["navire_par_nom"], "Vent d'Autan")
+    escale_0412 = next((e for e in (fiche_vent or {}).get("escales") or []
+                        if isinstance(e, dict) and e.get("escale_id") == "ESC-2026-0412"), None)
+    dates_escale = [e for c, e in (escale_0412 or {}).items() if c in ("debut", "fin") and e is not None]
+    if not escale_0412 or not dates_escale or not all(_avec_decalage(d) for d in dates_escale):
+        raise Echec("navire_par_nom (« Vent d'Autan ») ne rend pas l'escale connue ESC-2026-0412, avec une "
+                    "date-heure et son décalage : navire_par_nom doit rendre les escales (le LAB 13 en a besoin).")
     fiches = {nom: _fiche(rendus[nom], nom) for nom in MENTEURS}
     if not all(fiches.values()):
         raise Echec(f"navire_par_nom ne rend pas la fiche de {', '.join(n for n, f in fiches.items() if not f)}.")
@@ -327,6 +368,14 @@ async def _(ctx):
     # une ligne de prévision (voir _ligne_prevision) : ni le nom du champ d'horodatage ni celui du vent ne sont
     # imposés — seule l'enveloppe de meteo_creneau (resultats/incomplets/complet) est exclue, par sa forme.
     lignes = [d for d in _dictionnaires(_json(rendus["meteo_creneau"])) if _ligne_prevision(d)]
+    if not lignes:
+        # I3 : la spec et le brief laissent la forme de meteo_creneau ouverte — un serveur qui rend des
+        # conditions agrégées (pas une ligne par heure) ne transforme aucune absence en zéro pour autant.
+        # Sans ligne horaire à inspecter, ne pas accuser « une absence est devenue un nombre » : le dire à
+        # constater (👁), pas en échec.
+        return ("👁 aucune ligne de prévision horaire reconnue dans meteo_creneau (un objet par heure, avec son "
+                "heure et vent/houle/visibilité) : la règle des absences côté météo n'a pas pu être contrôlée "
+                "automatiquement — à relire à la main.")
     manquantes = [m for m in (_absence(d, "visib", sous_chaine=True) for d in lignes) if m not in ("nombre", "zéro")]
     if len(manquantes) < attendues:
         raise Echec(f"sur la semaine demandée, la météo omet la visibilité {attendues} fois, votre sortie "
@@ -397,9 +446,15 @@ def _(ctx):
     texte = NOTE.read_text(encoding="utf-8")
     note = texte.split("## Note de l'agent", 1)[-1].split("## Trace", 1)[0]
     trace = texte.split("## Trace", 1)[-1]
-    if not re.search(r"\|\s*meteo_(creneau|alerte)\s*\|[^\n]*\|\s*oui\s*\|", trace):
-        raise Echec("la trace de la note ne montre aucun appel météo en erreur : la note n'a pas été produite en "
-                    "mode panne. Relancer « make lab10-note-panne ».")
+    # I2 : preuve de la panne météo, dans la trace — soit un appel en erreur (Erreur = oui), soit une réponse
+    # partielle vide (tous les quais tombent : resultats vides, complet: false), suite logique de l'étape 4 sans
+    # isError. « make lab10-note-panne » est la seule cible qui écrit ce fichier, toujours sous panne=meteo.
+    lignes_meteo = [l for l in trace.splitlines() if l.strip().startswith("|") and re.search(r"meteo_(creneau|alerte)", l)]
+    en_panne = any(re.search(r"\|\s*oui\s*\|", l) or re.search(r'"?complet"?\s*:\s*false', l, re.IGNORECASE)
+                  for l in lignes_meteo)
+    if not en_panne:
+        raise Echec("la trace de la note ne montre aucun appel météo en erreur (ni une réponse partielle avec "
+                    "complet: false) : la note n'a pas été produite en mode panne. Relancer « make lab10-note-panne ».")
     if not re.search(r"(?:non[\s-]+|pas\s+(?:(?:pu\s+)?être\s+|été\s+)?)évalué|indisponible", note, re.IGNORECASE):
         raise Echec("la note ne dit pas que la météo est non évaluée (ou indisponible) : le message de panne doit "
                     "dire ce qu'il ne faut pas conclure (bloc 17.3). Corriger, puis relancer make lab10-note-panne.")
