@@ -14,7 +14,7 @@ import sqlglot
 from fastmcp.exceptions import ToolError
 from sqlglot import exp
 
-from pharos import journal
+from pharos import journal  # noqa: F401  (étage à écrire : journal.consigner_erreur)
 from pharos.autorisation import Identite
 
 LIMITE = 200                      # LIMIT imposé par vous, jamais demandé au modèle

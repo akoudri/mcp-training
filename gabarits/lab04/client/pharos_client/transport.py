@@ -53,7 +53,7 @@ class Session:
     def __init__(self, url=URL_DEFAUT, jeton: str | None = None, delai_s: float | None = None):
         self.url = url if isinstance(url, str) else getattr(url, "name", "mémoire")
         jeton = jeton or os.environ.get("PHAROS_JETON") or None
-        self.delai_s = delai_s or DELAI_DEFAUT_S
+        self.delai_s = delai_s if delai_s is not None else DELAI_DEFAUT_S
         self._client = Client(url, auth=jeton) if jeton and isinstance(url, str) else Client(url)
         self._evenements = asyncio.new_event_loop()
         self._fil = threading.Thread(target=self._evenements.run_forever, daemon=True)
