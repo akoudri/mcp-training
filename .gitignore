@@ -6,3 +6,6 @@ __pycache__/
 logs/
 sortie/
 .vscode/mcp.json
+salle/
+contrats-partages/
+labs/lab14/salle.env

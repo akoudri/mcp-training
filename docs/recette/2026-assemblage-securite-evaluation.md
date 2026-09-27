@@ -188,3 +188,30 @@ Coût : trois exécutions de `make lab13-question` de plus, à relever sur le ta
 Coût connu localement (bancs uniquement, affichés par `make lab13-banc`) : 0,0273 $ + 0,0308 $ = 0,0581 $. Le
 coût des six exécutions de `make lab13-question` (trois par tour) n'est pas affiché par cette cible : coût total
 à relever sur le tableau de bord OpenRouter (sous le budget de 0,30 $ du plan).
+
+## Le service de salle et l'anneau (LAB 14)
+
+- **Un seul poste exposé.** `make salle-demarrer N=5` lance `pharos-salle` sur `0.0.0.0:8300` (poste du
+  formateur) et tire cinq jetons dans `salle/jetons.txt` (git-ignoré, à distribuer sur papier). Les PHAROS
+  des binômes restent sur 127.0.0.1 : vérifier depuis un poste que `http://<poste-formateur>:8300/tableau`
+  répond, et qu'un port d'un binôme (8101…) ne répond pas depuis le voisin.
+- **En local (préparation, tests, CI).** `make salle-locale` sert le même service sur `127.0.0.1:8300`.
+- **Inscription des binômes.** Chacun : `make lab14-inscrire URL=http://<poste-formateur>:8300 BINOME=<b>
+  JETON=<son jeton>` (écrit `labs/lab14/salle.env`, git-ignoré), et pose `PHAROS_BINOME=<b>` dans son `.env`
+  (pharos-docs lit alors `contrats-partages/binome-<b>`).
+- **Les manches.** `make salle-manche M=1` puis `M=2`, `M=3`. Anneau : manche 1, le binôme *b* attaque
+  *b+1* ; manche 2, dépôt fermé (durcissement) ; manche 3, *b* attaque *b+2*. Le formateur coupe la manche 1
+  à 45 minutes. Avec N ≤ 2, la manche 3 retombe sur *b+1* (le tableau le signale).
+- **Le tour d'un binôme.** L'attaquant écrit son injection en Markdown (front-matter `Titre:`/`Escale:`
+  optionnel) et `make lab14-deposer FICHIER=attaque.md`. La cible `make lab14-synchroniser` (les documents
+  reçus deviennent des PDF dans `contrats-partages/binome-<b>/`), relance `make lab13-tout`, puis
+  `make lab14-executer` (le vrai modèle, sous l'identité `jeton-rance` de l'escale du *Vent d'Autan*) :
+  l'issue (A/B/C) remonte au tableau. C'est la cible qui exécute ; l'attaquant lit le tableau.
+- **Le vérificateur** (`make lab14-verifier`) est déterministe (modèle simulé « crédule », pharos-db requis) :
+  il sonde les contre-mesures, rejoue les trois documents piégés de référence, et contrôle les refus
+  journalisés. Le critère décisif — reconstituer la manche 1 depuis la seule trace — se constate au débrief.
+- 👁 La fiche de sécurité et le débrief (les trois questions, dont « impossible vs plus difficile ») sont le
+  livrable le plus important de la journée : ils se traitent au tableau, ensemble.
+
+**Étalonnage du LAB 14** : à consigner ici après la Task 6 (les trois documents piégés contre `etat/or3-fin`
+— l'attaque réussit — puis contre la référence durcie — B et C échouent ; coût sur le tableau OpenRouter).
