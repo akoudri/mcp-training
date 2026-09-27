@@ -95,8 +95,8 @@ def test_checkpoint_introuvable(travail):
 
 
 def test_lab_inconnu(travail):
-    with pytest.raises(d.Refus, match="LAB 9"):
-        d.depart(travail, 9)
+    with pytest.raises(d.Refus, match="LAB 16"):
+        d.depart(travail, 16)
 
 
 def test_checkpoint_sans_gabarits_refuse(travail):

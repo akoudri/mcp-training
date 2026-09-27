@@ -6,7 +6,7 @@ import time
 import uuid
 
 from pharos_client import modele
-from pharos_client.trace import Enregistrement
+from pharos_client.trace import Enregistrement, borner
 from pharos_client.transport import URL_DEFAUT, Session
 
 CONSIGNE = ("Tu es l'assistant de l'exploitant du terminal portuaire PHAROS. Nous sommes le mardi "
@@ -34,6 +34,14 @@ def _masquer(arguments: dict) -> dict:
     return {k: "***" if any(s in k.casefold() for s in CLES_SENSIBLES) else w for k, w in arguments.items()}
 
 
+def _masquer_texte(texte: str, arguments: dict) -> str:
+    """Un serveur peut renvoyer un argument dans son résultat : ses valeurs secrètes n'entrent pas non plus dans la trace."""
+    for k, w in arguments.items():
+        if any(s in k.casefold() for s in CLES_SENSIBLES) and isinstance(w, str) and w:
+            texte = texte.replace(w, "***")
+    return texte
+
+
 def executer(question: str, *, url: str = URL_DEFAUT, max_tours: int = 8,
              max_tokens: int = 30_000) -> tuple[str, list[Enregistrement]]:
     """Pose la question, laisse le modèle appeler les outils, sait s'arrêter. Rend (réponse, trace)."""
@@ -53,10 +61,11 @@ def executer(question: str, *, url: str = URL_DEFAUT, max_tours: int = 8,
                     return reponse.message.get("content") or "", trace
                 for appel in reponse.appels:
                     debut = time.perf_counter()
-                    resultat = session.appeler(appel.nom, appel.arguments)
+                    resultat = session.appeler(appel.nom, appel.arguments, correlation=correlation)
                     trace.append(Enregistrement(correlation, tour, appel.nom, _masquer(appel.arguments),
                                                 round((time.perf_counter() - debut) * 1000, 1), resultat.octets,
-                                                contexte, resultat.est_erreur))
+                                                contexte, resultat.est_erreur, borner(_masquer_texte(resultat.texte, appel.arguments)),
+                                                session.url))
                     messages.append({"role": "tool", "tool_call_id": appel.id, "content": resultat.texte})
             raise BudgetDepasse(f"budget de tours épuisé ({max_tours})", trace)
     except ArretBoucle:

@@ -1,7 +1,7 @@
 name: pharos
 
 x-python: &python
-  image: pharos/python:1
+  image: pharos/python:2
   build: {context: ., dockerfile: images/python/Dockerfile}
   # Image propre au kit : jamais tirée d'un registre (docker.io n'a pas de pharos/python), construite ici si absente.
   pull_policy: never

@@ -1,0 +1,24 @@
+services:
+  # Base PHAROS (LAB 8 à 12). Publiée sur 127.0.0.1:5433 seulement (5432 est souvent pris sur le poste).
+  # Mot de passe de salle, pas un secret : données fictives, poste local.
+  pharos-db:
+    image: postgres:17.6
+    environment:
+      POSTGRES_PASSWORD: "${PHAROS_DB_MOT_DE_PASSE:-pharos-salle-2026}"
+      POSTGRES_DB: pharos
+    ports: ["127.0.0.1:5433:5432"]
+    volumes: ["pharos-db:/var/lib/postgresql/data"]
+    networks: [pharos]
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "pharos"]
+      interval: 2s
+      retries: 30
+    restart: unless-stopped
+
+  pharos-data:
+    extends: {file: compose/commun/base.yaml, service: python-base}
+    depends_on: [pharos-db]
+    command: python -m watchfiles --filter python "python -m serveurs.pharos_data.serveur" serveurs src
+
+volumes:
+  pharos-db: {}

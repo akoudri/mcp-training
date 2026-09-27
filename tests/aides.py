@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import contextlib
 import importlib.util
+import os
 import shutil
 import sys
 from pathlib import Path
@@ -121,3 +122,10 @@ def etat_complet(destination: Path, lab: int) -> Path:
         ".git", ".venv", "solutions", "__pycache__", ".pytest_cache", "logs", "sortie", ".superpowers", ".env"))
     superposer(destination, RACINE_KIT / "gabarits", RACINE_KIT / "solutions", lab)
     return destination
+
+
+DSN_TEST = os.environ.get("PHAROS_DSN_TEST")
+# Les tests sur la base la RECHARGENT : ils ne tournent que si PHAROS_DSN_TEST est défini (CI, poste du formateur :
+# PHAROS_DSN_TEST=postgresql://postgres:pharos-salle-2026@127.0.0.1:5433/pharos), jamais par défaut.
+base_requise = pytest.mark.skipif(not DSN_TEST, reason="PHAROS_DSN_TEST absent : tests sur la base sautés "
+                                                       "(ils rechargent pharos-db)")

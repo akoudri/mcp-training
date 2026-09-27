@@ -93,3 +93,88 @@ def test_squelette_pas_encore_ecrit(client):
         boucle.executer("question")
     assert issubclass(boucle.BudgetDepasse, boucle.ArretBoucle)
     assert boucle.EchecNonRecuperable("m", [1]).trace == [1]
+
+
+def test_delai_depasse_devient_une_erreur_lisible(client):
+    import asyncio
+
+    transport, *_ = client
+    mcp = FastMCP("lent")
+
+    @mcp.tool
+    async def lent() -> str:
+        """Répond trop tard."""
+        await asyncio.sleep(3)
+        return "fini"
+
+    with transport.Session(mcp, delai_s=1) as s:
+        r = s.appeler("lent", {})
+    assert r.est_erreur and "budget de tour (1 s)" in r.texte and "ne rien en conclure" in r.texte
+
+
+def test_delai_par_defaut_de_salle(client, monkeypatch):
+    transport, *_ = client
+    assert transport.DELAI_DEFAUT_S == 20.0
+    with transport.Session(serveur_demo()) as s:
+        assert s.delai_s == 20.0
+
+
+def test_correlation_transmise_dans_meta(client):
+    from fastmcp import Context
+
+    transport, *_ = client
+    mcp = FastMCP("meta")
+
+    @mcp.tool
+    def correlation(ctx: Context) -> str:
+        """Rend la corrélation reçue."""
+        meta = ctx.request_context.meta
+        brut = meta.model_dump(by_alias=True) if hasattr(meta, "model_dump") else dict(meta or {})
+        return brut.get("pharos/correlation") or "aucune"
+
+    with transport.Session(mcp) as s:
+        assert s.appeler("correlation", {}, correlation="c-7").texte == "c-7"
+        assert s.appeler("correlation", {}).texte == "aucune"
+
+
+def test_jeton_porteur(client, monkeypatch):
+    from pharos import autorisation
+    from tests.aides import servir
+
+    transport, *_ = client
+    mcp = FastMCP("id", auth=autorisation.verificateur())
+
+    @mcp.tool
+    def qui() -> str:
+        """Nom de l'appelant."""
+        return autorisation.identite().nom
+
+    with servir(mcp.http_app(path="/mcp", json_response=True)) as url:
+        with transport.Session(f"{url}/mcp", jeton="jeton-iroise") as s:
+            assert s.appeler("qui", {}).texte == "Consignation Iroise"
+        monkeypatch.setenv("PHAROS_JETON", "jeton-rance")
+        with transport.Session(f"{url}/mcp") as s:
+            assert s.appeler("qui", {}).texte == "Agence Maritime Rance"
+            assert s.url == f"{url}/mcp"
+
+
+def test_trace_resultat_et_serveur(client):
+    _, _, trace, _ = client
+    e = trace.Enregistrement("c", 1, "outil", {}, 1.0, 2, 3)
+    assert (e.resultat, e.serveur) == ("", "")
+    assert trace.borner("court") == "court"
+    long = trace.borner("é" * 5000)
+    assert long.startswith("é" * 4000) and long.endswith("[10000 octets au total]")
+
+
+def test_sans_jeton_le_refus_dit_quoi_faire(client, monkeypatch):
+    from pharos import autorisation
+    from tests.aides import servir
+
+    transport, *_ = client
+    monkeypatch.delenv("PHAROS_JETON", raising=False)
+    mcp = FastMCP("id", auth=autorisation.verificateur())
+    with servir(mcp.http_app(path="/mcp", json_response=True)) as url:
+        with pytest.raises(PermissionError, match="PHAROS_JETON"):
+            with transport.Session(f"{url}/mcp"):
+                pass
