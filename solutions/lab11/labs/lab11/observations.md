@@ -9,14 +9,29 @@ make lab10-question QUESTION="Le plan de placement de jeudi est à revoir, l'esc
 
 | Instant | Ce qui s'affiche | Ce que l'agent dit ou fait |
 |---|---|---|
-| 0 s | À RELEVER à l'étalonnage | |
-| 30 s | | |
-| 90 s | | |
-| fin | | |
+| 0 s | Rien sur la question elle-même : seules les lignes de `docker compose` (création du conteneur `atelier`) | Le tour vient d'être lancé, l'agent n'a encore rien renvoyé |
+| 30 s | Rien de nouveau à l'écran | Le recalcul tourne côté serveur (le vérificateur, lui, voit bien la progression avancer escale par escale) |
+| 90 s | Rien de nouveau à l'écran | idem — toujours en attente du résultat de `recalculer_plan_quai` |
+| fin (≈ 2 min 17 s après le lancement) | Tout apparaît d'un coup, dans l'ordre : la question, « tâche … acceptée par le serveur », puis les 23 lignes « N escales sur 24 » à la suite, la trace d'exécution (2 appels, 1 tour) et la réponse finale du modèle | L'agent restitue une réponse fondée sur le résultat réellement reçu (24 escales, 17 maintenues, 7 à décaler, identifiants et motifs exacts) |
+
+Constat inattendu : à vitesse réelle, avec l'invocation standard (`make lab10-question`, qui passe par
+`docker compose run --rm -T …`, sans pseudo-terminal), l'utilisateur ne voit **rien avancer** pendant le
+calcul — ni à 30 s ni à 90 s — puis les 23 progressions et la réponse s'affichent toutes en même temps, en un
+seul bloc, à la fin. Le serveur envoie bien une progression réelle escale par escale (23 messages distincts, vus
+un par un par le vérificateur) et le client les affiche bien par `print()` à chaque nouveau message reçu : rien
+n'indique une régression du code de la solution. L'explication la plus probable tient à la chaîne
+d'exécution : sans tty (`-T`), la sortie du conteneur n'atteint le terminal qu'au moment où le processus rend
+la main, malgré `PYTHONUNBUFFERED=1`. Autrement dit, le comportement « barre de progression qui avance » décrit
+dans le brief se vérifie côté serveur et côté client (le code), mais pas dans ce que voit concrètement
+l'utilisateur avec la commande `make` telle quelle — un écart entre le mécanisme et son affichage réel, qu'il
+faudra signaler.
 
 L'agent a-t-il, à un moment, annoncé un résultat qu'il n'avait pas reçu ?
 
-- À RELEVER à l'étalonnage.
+- Non. Le modèle n'a répondu qu'après avoir reçu le résultat réel de `recalculer_plan_quai` (120 416 ms), et sa
+  réponse correspond aux données effectivement renvoyées (mêmes identifiants d'escale — dont `ESC-2026-0412`
+  pour le Vent d'Autan —, même bilan 17 maintenues / 7 à décaler). En revanche, comme noté ci-dessus, c'est
+  l'utilisateur qui n'a rien vu défiler avant la fin, pour une raison d'affichage et non de contenu.
 
 ## L'intervalle d'interrogation retenu
 
