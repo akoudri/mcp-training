@@ -79,7 +79,11 @@ async def test_gabarit_serveur_decider_a_ecrire_et_extension_transparente():
     assert r.is_error and "decider : à écrire" in r.content[0].text
 
 
-@pytest.mark.parametrize("chemin", [GABARIT_TACHES, SOLUTION_TACHES])
+@pytest.mark.parametrize("chemin", [
+    GABARIT_TACHES,
+    pytest.param(SOLUTION_TACHES, marks=pytest.mark.skipif(
+        not SOLUTION_TACHES.is_file(), reason="solutions absentes : branche main")),
+])
 async def test_decider_qui_rend_une_mauvaise_valeur_est_dit_au_client(chemin):
     async with Client(jouet(lambda nom, arguments, declare: "TACHE", chemin=chemin)) as c:
         r = await c.call_tool("recalculer_plan_quai", {"date": "2026-10-08"}, raise_on_error=False)
