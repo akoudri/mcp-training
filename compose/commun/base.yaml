@@ -21,4 +21,7 @@ services:
       METEO_CLE: "${METEO_CLE:-meteo-salle-2026}"
       REFERENTIEL_URL: http://mocks:8000/referentiel
       CANAL_URL: http://mocks:8000/canal
+      # Clé qui scelle le requestState (LAB 12) : partagée par les instances de pharos-ops, au moins 32 octets
+      # (le SDK refuse moins). Valeur de salle, pas un secret — comme CLE_SERVEUR, qu'elle ne remplace pas.
+      CLE_ETAT: "${CLE_ETAT:-pharos-salle-2026-cle-etat-mrtr-partagee}"
     restart: unless-stopped

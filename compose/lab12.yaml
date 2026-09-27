@@ -1,0 +1,21 @@
+services:
+  # Deux instances de pharos-ops derrière un répartiteur qui alterne requête par requête (LAB 12, étape 5) :
+  # le rejeu d'une confirmation atterrit sur l'autre instance que la demande. Aucun état partagé entre elles
+  # — sauf la clé qui scelle le requestState (CLE_ETAT, variable de salle), que chacune doit configurer.
+  pharos-ops-a:
+    extends: {file: compose/commun/base.yaml, service: python-base}
+    depends_on: [mocks]
+    environment: {PHAROS_INSTANCE: a}
+    command: python -m watchfiles --filter python "python -m serveurs.pharos_ops.serveur" serveurs src
+  pharos-ops-b:
+    extends: {file: compose/commun/base.yaml, service: python-base}
+    depends_on: [mocks]
+    environment: {PHAROS_INSTANCE: b}
+    command: python -m watchfiles --filter python "python -m serveurs.pharos_ops.serveur" serveurs src
+  repartiteur-ops:
+    extends: {file: compose/commun/base.yaml, service: python-base}
+    environment:
+      AMONT_A: http://pharos-ops-a:8000
+      AMONT_B: http://pharos-ops-b:8000
+      AFFINITE: "0"
+    command: python -m outils.repartiteur
