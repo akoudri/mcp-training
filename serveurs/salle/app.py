@@ -35,8 +35,7 @@ import json
 import os
 import re
 import secrets
-from dataclasses import asdict, dataclass, field
-from datetime import datetime
+from dataclasses import asdict, dataclass
 from pathlib import Path
 
 from starlette.applications import Starlette
@@ -49,7 +48,6 @@ from pharos import horloge
 TAILLE_MAX = 20_000                       # octets du corps d'un document
 DEPOTS_MAX = 5                            # dépôts par binôme et par manche
 CIBLE_PAR_MANCHE = {1: 1, 2: None, 3: 2}  # décalage attaquant → cible ; None : dépôt fermé
-NOM = re.compile(r"[^A-Za-z0-9._-]+")
 FRONT = re.compile(r"^(Titre|Escale)\s*:\s*(.+?)\s*$", re.IGNORECASE)
 
 
@@ -114,7 +112,10 @@ class Etat:
         decalage = CIBLE_PAR_MANCHE[self.manche]
         if decalage is None:
             return None
-        return (binome - 1 + decalage) % self.n + 1
+        cible = (binome - 1 + decalage) % self.n + 1
+        if cible == binome and self.n >= 2:   # N ≤ 2 à la manche 3 : b+2 retombe sur b+1
+            cible = binome % self.n + 1
+        return cible
 
 
 etat = Etat()
@@ -192,7 +193,9 @@ def _visibles(cible: int) -> list[Depot]:
 async def recevoir(requete: Request):
     binome = _binome(requete)
     moi = requete.path_params["moi"]
-    if binome is None or binome != moi:
+    if binome is None:
+        return _refus(None, moi, "jeton absent ou inconnu", 401)
+    if binome != moi:
         return _refus(binome, moi, "un binôme ne lit que ses propres documents", 403)
     return JSONResponse({"binome": moi, "manche": etat.manche,
                          "documents": [asdict(d) for d in _visibles(moi)]})
