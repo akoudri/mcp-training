@@ -15,4 +15,10 @@ services:
     environment:
       # Clé de signature des handles (LAB 2, 3, 5) : valeur de salle, pas un secret (le LAB 5 la fait tourner).
       CLE_SERVEUR: "${CLE_SERVEUR:-pharos-salle-2026}"
+      # Systèmes externes simulés (LAB 10 et suivants), service mocks. La clé météo est une valeur de salle,
+      # pas un secret ; elle ne doit pourtant jamais sortir du serveur (LAB 10, bloc 17.1).
+      METEO_URL: http://mocks:8000/meteo
+      METEO_CLE: "${METEO_CLE:-meteo-salle-2026}"
+      REFERENTIEL_URL: http://mocks:8000/referentiel
+      CANAL_URL: http://mocks:8000/canal
     restart: unless-stopped

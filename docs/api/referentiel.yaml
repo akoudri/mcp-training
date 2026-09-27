@@ -1,0 +1,57 @@
+# Documentation du référentiel navires, telle que le fournisseur la publie (LAB 10).
+# Elle est fournie telle quelle — et, comme souvent, elle ne dit pas tout à fait la vérité.
+# Une API tierce se découvre en l'appelant : make appeler, ou le client de votre serveur.
+openapi: 3.1.0
+info:
+  title: Référentiel navires
+  version: "2.4"
+  description: >
+    Fiches des navires connus de la capitainerie, et leurs escales. Service stable, sans authentification
+    sur le réseau interne. Heures d'escale en heure locale du port.
+servers:
+  - url: http://mocks:8000/referentiel
+paths:
+  /navires:
+    get:
+      summary: Recherche de navires par nom
+      parameters:
+        - {name: nom, in: query, required: false, schema: {type: string},
+           description: "Tout ou partie du nom, sans tenir compte de la casse ni des accents. Absent : tous les navires."}
+        - {name: page, in: query, required: false, schema: {type: integer, minimum: 1, default: 1},
+           description: "Page de résultats (10 fiches par page)."}
+      responses:
+        "200":
+          description: Résultats paginés
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [version, page, pages, total, resultats]
+                properties:
+                  version: {type: string, description: "Version du référentiel"}
+                  page: {type: integer}
+                  pages: {type: integer}
+                  total: {type: integer}
+                  resultats: {type: array, items: {$ref: "#/components/schemas/Navire"}}
+components:
+  schemas:
+    Navire:
+      type: object
+      required: [navire_id, nom, imo, longueur_m, tirant_eau_max_m, pavillon, escales]
+      properties:
+        navire_id: {type: string, pattern: "^NAV-[0-9]{4}$"}
+        nom: {type: string}
+        imo: {type: string, description: "Numéro OMI, 7 chiffres"}
+        longueur_m: {type: number, exclusiveMinimum: 0, description: "Longueur hors tout, en mètres. Toujours renseignée."}
+        tirant_eau_max_m: {type: number, exclusiveMinimum: 0, description: "Tirant d'eau maximal, en mètres. Toujours renseigné."}
+        pavillon: {type: string, description: "Code pays ISO 3166-1 alpha-2"}
+        escales:
+          type: array
+          items:
+            type: object
+            required: [escale_id, quai, debut, fin]
+            properties:
+              escale_id: {type: string}
+              quai: {type: integer, minimum: 1, maximum: 7}
+              debut: {type: string, format: date-time, description: "Heure locale du port"}
+              fin: {type: string, format: date-time, description: "Heure locale du port"}

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import sys
 from dataclasses import dataclass
 
@@ -44,7 +45,9 @@ def mesurer(outils: list) -> list[MesureOutil]:
 
 async def mesurer_serveur(cible) -> list[MesureOutil]:
     from fastmcp import Client
-    async with Client(cible) as c:
+    # Un serveur qui exige une identité (LAB 9 et suivants) : PHAROS_JETON, comme pour la boucle.
+    jeton = os.environ.get("PHAROS_JETON") or None
+    async with (Client(cible, auth=jeton) if jeton and isinstance(cible, str) else Client(cible)) as c:
         return mesurer(await c.list_tools())
 
 

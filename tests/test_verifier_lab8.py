@@ -12,7 +12,7 @@ from fastmcp.exceptions import ToolError
 from outils.construire_etats import superposer
 from outils.verifier.commun import Etat
 from pharos import base
-from tests.aides import base_requise, charger_module, importer_client, servir
+from tests.aides import base_requise, charger_module, client_minimal, importer_client, servir
 
 pytestmark = base_requise
 
@@ -60,42 +60,9 @@ def jouet(*, utc=False, pool_par_appel=False, sans_plafond=False, schema="Fuseau
     return mcp
 
 
-BOUCLE = '''"""Boucle minimale pour les tests du kit : un tour d'outils, puis la réponse."""
-import uuid
-
-from pharos_client import modele
-from pharos_client.trace import Enregistrement, borner
-from pharos_client.transport import Session
-
-
-def executer(question, *, url, **_):
-    correlation, trace = uuid.uuid4().hex[:12], []
-    messages = [{"role": "user", "content": question}]
-    with Session(url) as s:
-        outils = s.lister_outils()
-        for tour in range(1, 5):
-            r = modele.completer(messages, outils)
-            messages.append(r.message)
-            if not r.appels:
-                return r.message.get("content") or "", trace
-            for a in r.appels:
-                res = s.appeler(a.nom, a.arguments, correlation=correlation)
-                trace.append(Enregistrement(correlation, tour, a.nom, a.arguments, 0.0, res.octets, 1,
-                                            res.est_erreur, borner(res.texte), s.url))
-                messages.append({"role": "tool", "tool_call_id": a.id, "content": res.texte})
-    return "", trace
-'''
-
-
 @pytest.fixture(scope="module")
 def client(tmp_path_factory):
-    """Le client du gabarit, avec une boucle minimale (sur main, aucune solution du LAB 4 n'est présente)."""
-    import shutil
-
-    dossier = tmp_path_factory.mktemp("client")
-    shutil.copytree("gabarits/lab04/client", dossier, dirs_exist_ok=True)
-    (dossier / "pharos_client" / "boucle.py").write_text(BOUCLE, encoding="utf-8")
-    return dossier
+    return client_minimal(tmp_path_factory.mktemp("client"))
 
 
 @pytest.fixture

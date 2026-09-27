@@ -13,9 +13,10 @@ L'observateur déclare dès le LAB 0 les ports 8100 à 8105, 8201 et 8204 : les 
 | 8100 | pharos-docs-demo (LAB 0) — VS Code s'y connecte via `http://localhost:8100/mcp` | `observateur:8100` |
 | 8101 | pharos-docs (réservé, LAB 1+) | `observateur:8101` |
 | 8102 | pharos-data (LAB 8, 9) | `observateur:8102` |
-| 8103 | pharos-ops (réservé, LAB 10+) | `observateur:8103` |
+| 8103 | pharos-ops (LAB 10, 11) | `observateur:8103` |
 | 8104 | pharos-legacy, une instance (LAB 2, 3) | `observateur:8104` |
 | 8105 | pharos-quai (LAB 6) | `observateur:8105` |
 | 8201 | répartiteur de pharos-docs, deux instances (LAB 5) | `observateur:8201` |
 | 8204 | répartiteur de pharos-legacy, deux instances (LAB 2 sans affinité, LAB 3 avec) | `observateur:8204` |
 | 5433 | pharos-db, base PHAROS (LAB 8 à 12) — PostgreSQL 17, utilisateur `postgres`, mot de passe de salle `pharos-salle-2026` ; jamais 5432, souvent pris sur le poste | `pharos-db:5432` |
+| — | mocks des systèmes externes (LAB 10 à 14) : météo marine, référentiel navires, canal d'alertes ; **non publiés** sur le poste (interrupteurs : `make lab10-mocks`) | `mocks:8000` |

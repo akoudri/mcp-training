@@ -1,6 +1,6 @@
-# Recette — données (LAB 8, 9)
+# Recette — données et systèmes externes (LAB 8 à 10)
 
-Complète `2026-fil-documentaire.md`. Sous-projet 3, plan 1 ; les LAB 10 à 12 s'y ajouteront.
+Complète `2026-fil-documentaire.md`. Sous-projet 3, plans 1 et 2 ; les LAB 11 et 12 s'y ajouteront.
 ✅ = vérifié par la CI (job `solutions`) ; 👁 = à constater par le formateur.
 
 ## La base en salle
@@ -11,6 +11,21 @@ Complète `2026-fil-documentaire.md`. Sous-projet 3, plan 1 ; les LAB 10 à 12 s
 - `make lab9-politique` n'applique que la politique (après chaque modification de `politique.sql`).
 - Le conteneur `backend-postgres` éventuellement présent sur le poste (port 5432) n'est jamais touché.
 
+## Les mocks en salle (LAB 10 à 14)
+
+- Un seul service, `mocks` (`http://mocks:8000`, réseau Compose seulement) : météo marine, référentiel
+  navires, canal d'alertes. `make lab10-mocks` le démarre s'il ne tourne pas, puis règle ses interrupteurs
+  **à chaud**, sans redémarrage : `PANNE=meteo` (503), `LENTEUR=8s` (quais 5 et 7, ou `LENTEUR_QUAIS=…`),
+  `QUOTA=5` (5 appels par fenêtre glissante de 60 s, puis 429 et `Retry-After: 60`). Sans variable : mode
+  nominal. Les compteurs et le canal sont conservés ; `make lab10-appels` les affiche.
+- La clé météo (`METEO_CLE`, valeur de salle `meteo-salle-2026`) est une variable de Compose, lue par tous les
+  services Python. Le mock l'attend **en paramètre d'URL** : en panne, le message d'erreur de httpx porte l'URL
+  complète, clé comprise — c'est le piège du bloc 17.1, réel.
+- Le référentiel (`donnees/referentiel/navires.yaml`, dérivé de la base) ment comme sa documentation
+  (`docs/api/referentiel.yaml`) ne le dit pas : *Macareux* sans longueur, *Glénan* à longueur `null`,
+  *Molène* à longueur et tirant d'eau maximal `0`. Les heures d'escale y sont locales, sans fuseau ; celles de
+  la météo, en GMT.
+
 ## Vérités
 
 | Question | Vérité | Piège |
@@ -19,6 +34,8 @@ Complète `2026-fil-documentaire.md`. Sous-projet 3, plan 1 ; les LAB 10 à 12 s
 | Mouvements de septembre (plafond, LAB 8) | 6 504 (et plus de 200 sur chaque quai) | — |
 | Escales au quai 3 jeudi, toutes compagnies (LAB 9) | Rance 1 (ESC-2026-0412), Iroise 1 (ESC-2026-0413), exploitation 2 | — |
 | Conflits de créneau jeudi (LAB 9) | ESC-2026-0412 / ESC-2026-0413, 60 min (quai 3) ; une paire au quai 5, 45 min | — |
+| Météo jeudi 8 octobre (LAB 10) | coup de vent sur tout le port de 14 h à 18 h (heure de Paris) : vent 34 kt, rafales 42 kt, houle 2,8 m ; hors de ce créneau, vent sous 25 kt | la météo répond en GMT : 12 h – 16 h |
+| *Vent d'Autan* au référentiel (LAB 10) | NAV-0007, une escale : ESC-2026-0412, quai 3, 8 octobre 6 h – 20 h | heures sans fuseau dans le référentiel |
 
 **Question cible du parcours** (consommée par les LAB 13 et 15) — « L'escale du *Vent d'Autan* de jeudi
 est-elle à risque ? » : ESC-2026-0412, quai 3, jeudi 8 octobre 6 h – 20 h ; définition 2.0 :
@@ -34,6 +51,9 @@ est-elle à risque ? » : ESC-2026-0412, quai 3, jeudi 8 octobre 6 h – 20 h ; 
 | 8 | Critère décisif : la requête est lisible dans la trace | la trace de `make lab8-question` montre le SQL et ses paramètres (le vérificateur le contrôle aussi, ✅) |
 | 9 | À quel étage chaque contournement a été arrêté | `labs/lab9/contournements.md` ; mise en commun en salle |
 | 9 | La question détournée, posée par la boucle | `PHAROS_JETON=jeton-rance make lab8-question QUESTION="Combien d'escales sont prévues au quai 3 jeudi, toutes compagnies confondues ?"` : l'attendu est 1, sans trace d'autre compagnie ; **à l'étalonnage, la boucle a deux fois épuisé son budget de 8 tours sans conclure** (voir la note sous « Étalonnage avec le modèle ») — ce qui compte est qu'aucune escale d'une autre compagnie n'apparaisse dans la trace |
+| 10 | Le refus au quota indique comment consommer moins | `make lab10-mocks QUOTA=5`, puis `make lab10-question` ; le vérificateur affiche le refus obtenu |
+| 10 | Critère décisif : la note en panne ne conclut pas sur la météo | relire `labs/lab10/note-panne.md` (`make lab10-note-panne`) — le vérificateur contrôle les mots « non évaluée » et l'absence de valeur en kt ou en mètres de houle (✅) ; le jugement final est humain |
+| 10 | Le message de panne, lu à voix haute | mise en commun : les trois parties (ce qui est tombé, ce qui reste, ce qu'il ne faut pas conclure) |
 
 ## Durcissement de requete_sql (référence du LAB 9)
 
@@ -77,6 +97,10 @@ LAB 9 — à rappeler en mise en commun.
 | 9 | google/gemini-3.6-flash | Question détournée posée par la boucle (« Combien d'escales sont prévues au quai 3 jeudi, toutes compagnies confondues ? »), sous `jeton-rance`, `jeton-iroise`, `jeton-exploitation` — avec un refus qui ne citait que les tables et colonnes possibles | `jeton-rance` : **arrêt par budget de tours épuisé (8)**, aucune réponse finale (voir note ci-dessous) ; `jeton-iroise` : **1** (ESC-2026-0413, *Cormoran*) ; `jeton-exploitation` : **2** (ESC-2026-0412 *Vent d'Autan*, ESC-2026-0413 *Cormoran*) — écart avec l'attendu (1, 1, 2) sur `jeton-rance` uniquement ; aucune des réponses obtenues ne mentionne une escale d'une autre compagnie | 2026-09-27 |
 | 9 | google/gemini-3.6-flash | Reprise de la même question, `jeton-rance` seul — avec le refus actuel (il cite aussi les fonctions et conversions possibles, dérivées de `FONCTIONS_AUTORISEES` et `TYPES_DE_DONNEES_AUTORISEES`) | **Arrêt par budget de tours épuisé (8), de nouveau** : aucune réponse finale. Les 8 tours ne portent, cette fois, sur aucun nom de fonction ou de conversion hors liste — les refus obtenus concernent une colonne inventée (`debut_embouche`) puis des colonnes de `navires` hors liste blanche ; le modèle retrouve des lignes valables dès le tour 3 mais continue de reformuler la période/le filtre au lieu de conclure. Citer les fonctions et conversions dans le refus ne suffit donc pas à faire converger le modèle sur cette question | 2026-09-27 |
 | — | google/gemini-3.6-flash | Coût total de l'étalonnage (bancs `make lab8-banc` AVANT + APRÈS ; `make lab8-question` n'affiche pas de coût) | 0,0047 $ + 0,0056 $ = **0,0103 $** (les appels `make lab8-question`, y compris la reprise `jeton-rance` : non affiché) | 2026-09-27 |
+| 10 | google/gemini-3.6-flash | `make lab10-note-panne` (boucle du LAB 4, contre pharos-ops, météo en panne 503) — premier essai, pas eu besoin de relancer | Trace à 3 tours : `navire_par_nom` (sans erreur), `meteo_creneau` puis `meteo_alerte` (503, service météo indisponible) ; la note conclut que le risque météo « ne peut pas être évalué », sans inventer de vent, de rafales ni de houle ; critère décisif ✅ | 2026-09-27 |
+| 10 | google/gemini-3.6-flash | `make lab10-appels`, juste après la note en panne ci-dessus | `GET /meteo/previsions` ×4 (2 outils météo × 1 réessai chacun sur le 503 récupérable), `GET /referentiel/navires` ×1 | 2026-09-27 |
+| 10 | google/gemini-3.6-flash | `make tokens-catalogue SERVEUR=http://observateur:8103/mcp PHAROS_JETON=jeton-exploitation` (coût fixe du catalogue de `pharos-ops`, payé à chaque tour de la boucle) | 3 outils, **476 tokens** au total (`meteo_creneau` 205, `meteo_alerte` 139, `navire_par_nom` 132) | 2026-09-27 |
+| — | google/gemini-3.6-flash | Coût de l'étalonnage du LAB 10 (`make lab10-note-panne` — un seul appel de boucle, trois tours — puis `make lab10-appels`, `make tokens-catalogue`, `make lab10-verifier SANS_MODELE=1`, aucun de ces trois derniers n'appelant le modèle) | non affiché (aucune sortie `make` n'expose un coût en dollars ; le tableau de bord OpenRouter n'a pas été consulté, hors périmètre des outils disponibles) — le budget de 0,05 $ n'a manifestement pas été dépassé (un seul appel de boucle, trois tours) | 2026-09-27 |
 
 **Note sur `jeton-rance`** : la boucle a essuyé trois refus successifs de `requete_sql` (colonnes ou syntaxe hors périmètre), obtenu des résultats exploitables aux tours 4 à 7 (dont une réponse à 195 octets couvrant la fenêtre du jeudi), mais a continué à reformuler la requête au lieu de conclure, jusqu'à épuiser le budget de 8 tours sans produire de réponse en langage naturel ; l'appel final (`escales_a_risque`) est hors sujet. Aucune donnée d'une autre compagnie n'apparaît dans les tours exécutés.
 

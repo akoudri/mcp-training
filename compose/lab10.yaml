@@ -1,0 +1,15 @@
+services:
+  # Systèmes externes simulés (LAB 10 à 14) : météo marine, référentiel navires, canal d'alertes, un seul service.
+  # Réseau Compose seulement (http://mocks:8000) ; interrupteurs à chaud par « make lab10-mocks », sans redémarrage.
+  mocks:
+    extends: {file: compose/commun/base.yaml, service: python-base}
+    command: python -m uvicorn serveurs.mocks.app:app --host 0.0.0.0 --port 8000 --log-level warning
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/_sante', timeout=2)"]
+      interval: 2s
+      retries: 30
+
+  pharos-ops:
+    extends: {file: compose/commun/base.yaml, service: python-base}
+    depends_on: [mocks]
+    command: python -m watchfiles --filter python "python -m serveurs.pharos_ops.serveur" serveurs src
