@@ -10,18 +10,22 @@ import shutil
 from pathlib import Path
 
 DEPARTS = {1: "fa2-fin", 2: "pr2-fin", 3: "pr3-fin", 4: "pr5-fin", 5: "or1-fin", 6: "or2-fin", 7: "sr1-fin",
-           8: "tq1-fin", 9: "da1-fin", 10: "da3-fin", 11: "is2-fin", 12: "is3-fin"}
+           8: "tq1-fin", 9: "da1-fin", 10: "da3-fin", 11: "is2-fin", 12: "is3-fin",
+           13: "sr3-fin"}
 SORTIES = {1: "pr2-fin", 2: "pr3-fin", 3: "pr5-fin", 4: "or1-fin", 5: "or2-fin", 6: "sr1-fin", 7: "tq1-fin",
-           8: "da1-fin", 9: "da3-fin", 10: "is2-fin", 11: "is3-fin", 12: "sr3-fin"}
+           8: "da1-fin", 9: "da3-fin", 10: "is2-fin", 11: "is3-fin", 12: "sr3-fin",
+           13: "or3-fin"}
 # Cibles make qui démarrent les services d'un lab, et ports à attendre (via l'observateur).
 DEMARRAGE: dict[int, list[str]] = {1: ["lab1-up"], 2: ["lab2-deux-instances"], 3: ["lab3-deux-instances"],
                                    4: ["lab4-docs"], 5: ["lab5-deux-instances"], 6: ["lab6-quai"],
                                    7: ["lab1-up"], 8: ["lab8-base", "lab8-up"],
                                    9: ["lab8-base", "lab8-up"], 10: ["lab10-mocks", "lab10-up"],
                                    11: ["lab8-base", "lab10-mocks", "lab10-up"],
-                                   12: ["lab8-base", "lab10-mocks", "lab12-deux-instances"]}
+                                   12: ["lab8-base", "lab10-mocks", "lab12-deux-instances"],
+                                   13: ["lab8-base", "lab10-mocks", "lab13-tout"]}
 PORTS_PRETS: dict[int, list[int]] = {1: [8101], 2: [8204], 3: [8204], 4: [8101], 5: [8201], 6: [8105], 7: [8101],
-                                     8: [8102], 9: [8102], 10: [8103], 11: [8103], 12: [8203]}
+                                     8: [8102], 9: [8102], 10: [8103], 11: [8103], 12: [8203],
+                                     13: [8101, 8102, 8103]}
 IGNORES = {"__pycache__", ".pytest_cache"}
 
 

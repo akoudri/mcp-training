@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import contextlib
 import os
 import sys
 from dataclasses import dataclass, field
@@ -75,11 +76,17 @@ async def _executer_appel(client: Client, appel: openrouter.Appel) -> tuple[str,
 
 
 async def executer_banc(cible, questions: list[Question], executions: int = 1, executer: bool = False,
-                        completer=None) -> list[Execution]:
+                        completer=None, outils: list[dict] | None = None) -> list[Execution]:
+    """cible : le serveur dont on présente le catalogue. outils (LAB 13) : un catalogue déjà composé, présenté tel
+    quel — cible vaut alors None, et aucun premier appel n'est exécuté."""
+    if cible is None and outils is None:
+        raise ValueError("executer_banc : ni cible (le serveur dont on lit le catalogue) ni outils (un catalogue "
+                         "composé) — il faut l'un des deux.")
     completer = completer or openrouter.completer
     resultats: list[Execution] = []
-    async with Client(cible) as client:
-        outils = openrouter.outils_openai(await client.list_tools())
+    async with (Client(cible) if cible is not None else contextlib.nullcontext()) as client:
+        if outils is None:
+            outils = openrouter.outils_openai(await client.list_tools())
         for q in questions:
             for _ in range(executions):
                 messages = [{"role": "system", "content": CONSIGNE}, *q.contexte,
@@ -87,7 +94,7 @@ async def executer_banc(cible, questions: list[Question], executions: int = 1, e
                 reponse = await asyncio.to_thread(completer, messages, outils)
                 premier = reponse.appels[0] if reponse.appels else None
                 resultat = est_erreur = None
-                if premier and (executer or q.resultat_attendu):
+                if premier and client is not None and (executer or q.resultat_attendu):
                     resultat, est_erreur = await _executer_appel(client, premier)
                 nom = premier.nom if premier else None
                 arguments = premier.arguments if premier else {}

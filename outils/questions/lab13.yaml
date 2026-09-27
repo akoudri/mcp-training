@@ -1,0 +1,13 @@
+# Banc du premier appel — LAB 13, extension B : la collision de noms sur le catalogue agrégé (bloc 21.1).
+# Le catalogue est présenté comme un client naïf le ferait : en cas de collision, le dernier serveur de
+# labs/lab13/serveurs.json écrase l'autre. Mesurer AVANT de corriger par préfixage, puis après.
+- question: "Quelles escales le Vent d'Autan a-t-il cette semaine, et à quel quai ?"
+  attendu: navire_par_nom
+- question: "Quel est le tirant d'eau maximal du navire Cormoran ?"
+  attendu: navire_par_nom
+- question: "Quelles sont les pénalités de retard au contrat de manutention de l'escale ESC-2026-0412 ?"
+  attendu: rechercher_clause
+- question: "Quelles escales sont à risque jeudi 8 octobre ?"
+  attendu: escales_a_risque
+- question: "Quel vent est prévu au quai 3 jeudi 8 octobre entre 14 h et 18 h ?"
+  attendu: meteo_creneau

@@ -1,4 +1,5 @@
-"""Faits de fastmcp 4.0.10 sur lesquels reposent les LAB 11 et 12 (spec §11, critère d'acceptation §17.3).
+"""Faits de fastmcp 4.0.10 sur lesquels reposent les LAB 11 à 13 (spec §11 du sous-projet 3, critère §17.3 ; MCP
+Apps : décision 5 de la spec du sous-projet 4).
 
 Si une mise à jour de fastmcp en change un, ce test le dit avant les binômes. Aucun modèle, aucun Docker.
 """
@@ -243,3 +244,48 @@ async def test_capacites_du_client_et_pilotage_automatique_de_l_elicitation():
         brut = await c.session.call_tool(name="voir", arguments={}, allow_input_required=True)
     assert r.structured_content == {"reponse": {"x": True}}                   # le client a répondu seul
     assert capacites == [True, True, False] and isinstance(brut, mcp_types.InputRequiredResult)
+
+
+def serveur_vue(vus: list) -> FastMCP:
+    """Un outil qui porte une vue MCP App (LAB 13) : ressource ui:// déclarée à l'avance, et le résultat reste un dict."""
+    from fastmcp.apps import UI_EXTENSION_ID, AppConfig
+
+    mcp = FastMCP("vue")
+
+    @mcp.resource("ui://pharos-ops/plan-quai", name="plan-quai")
+    def vue() -> str:
+        return "<!doctype html><title>plan</title>"
+
+    @mcp.tool(app=AppConfig(resource_uri="ui://pharos-ops/plan-quai"))
+    def plan(ctx: Context) -> dict:
+        vus.append(ctx.client_supports_extension(UI_EXTENSION_ID))
+        return {"date": "2026-10-08", "placements": [{"escale_id": "ESC-2026-0412", "statut": "a_decaler"}]}
+
+    return mcp
+
+
+async def test_mcp_apps_la_vue_se_declare_et_le_texte_reste_le_meme():
+    """LAB 13, étape 4 : fastmcp.apps est dans le paquet de base (aucune dépendance de plus) ; la vue se déclare par
+    une ressource ui:// (type text/html;profile=mcp-app, posé seul) et app=AppConfig(resource_uri=…) sur l'outil
+    (_meta.ui.resourceUri de tools/list). Rien n'est filtré selon le client : avec ou sans l'extension déclarée,
+    le résultat est le même — texte ET structuredContent ; c'est l'hôte qui choisit d'afficher la vue."""
+    from fastmcp.apps import UI_EXTENSION_ID, UI_MIME_TYPE
+    from mcp.client.extension import ClientExtension
+
+    class ExtensionUI(ClientExtension):
+        identifier = UI_EXTENSION_ID
+
+    assert (UI_EXTENSION_ID, UI_MIME_TYPE) == ("io.modelcontextprotocol/ui", "text/html;profile=mcp-app")
+    vus: list = []
+    mcp = serveur_vue(vus)
+    resultats = []
+    for client in (ClientNu(mcp), Client(mcp, extensions=[ExtensionUI()])):
+        async with client:
+            outil = (await client.list_tools())[0]
+            ressource = (await client.list_resources())[0]
+            r = await client.call_tool("plan", {})
+        assert outil.meta["ui"]["resourceUri"] == "ui://pharos-ops/plan-quai"
+        assert str(ressource.uri) == "ui://pharos-ops/plan-quai" and ressource.mime_type == UI_MIME_TYPE
+        resultats.append(("\n".join(b.text for b in r.content), r.structured_content))
+    assert resultats[0] == resultats[1] and "ESC-2026-0412" in resultats[0][0]
+    assert vus == [False, True]          # le serveur PEUT savoir si le client déclare l'extension

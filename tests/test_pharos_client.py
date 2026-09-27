@@ -87,6 +87,17 @@ def test_afficher_arbre(client):
     assert trace.afficher([], sortie=vu.append).startswith("(trace vide")
 
 
+def test_afficher_nomme_le_serveur_des_qu_il_y_en_a_plusieurs(client):
+    _, _, trace, _ = client
+    E = trace.Enregistrement
+    un = [E("c", 1, "navire_par_nom", {}, 1, 1, 1, serveur="http://observateur:8103/mcp")]
+    assert "http://" not in trace.afficher(un, sortie=lambda _t: None)
+    trois = [E("c", 1, "navire_par_nom", {}, 210, 400, 1, serveur="pharos-ops"),
+             E("c", 2, "rechercher_clause", {}, 340, 800, 1, serveur="pharos-docs")]
+    texte = trace.afficher(trois, sortie=lambda _t: None)
+    assert "pharos-ops  navire_par_nom() · 210 ms" in texte and "pharos-docs  rechercher_clause()" in texte
+
+
 def test_squelette_pas_encore_ecrit(client):
     *_, boucle = client
     with pytest.raises(NotImplementedError):

@@ -1,7 +1,7 @@
 ---
 name: PHAROS
 description: Assistant de l'exploitant PHAROS — n'utilise que les outils MCP
-tools: ['pharos-docs-demo/*', 'pharos-docs/*']
+tools: ['pharos-docs-demo/*', 'pharos-docs/*', 'pharos-data/*', 'pharos-ops/*']
 ---
 # Contexte PHAROS
 
