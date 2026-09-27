@@ -12,6 +12,8 @@ import asyncpg
 import sqlglot
 from fastmcp.exceptions import ToolError
 from sqlglot import exp
+from sqlglot.optimizer.qualify import qualify
+from sqlglot.optimizer.scope import traverse_scope
 
 from pharos import journal
 from pharos.autorisation import Identite
@@ -33,13 +35,16 @@ LISTE_BLANCHE: dict[str, set[str]] = {
 # une autre identité ou l'écriture, qu'aucune liste blanche de tables ne peut arrêter).
 # exp.Connector (AND, OR, XOR) est un pur connecteur logique, sans appel ni argument propre : chez sqlglot,
 # And/Or/Xor héritent aussi de exp.Func (détail d'implémentation), sans quoi tout WHERE avec un AND serait
-# refusé ; leurs opérandes restent, eux, inspectés un par un.
+# refusé ; leurs opérandes restent, eux, inspectés un par un. Même chose pour exp.Exists (EXISTS (…)) : un
+# prédicat sur une sous-requête, elle-même analysée comme le reste de la requête.
 # exp.Cast (et sa sous-classe exp.TryCast) ne sont PAS ici : une conversion n'est permise que vers un type de
 # donnée ordinaire — voir TYPES_DE_DONNEES_AUTORISEES et conversion_autorisee(). Sans cette restriction,
 # '...'::regclass, ::regrole, ::regproc ou ::oid transforment le CAST en oracle du catalogue (existence d'une
 # table, d'un rôle, d'une fonction — jusqu'à une énumération par OID).
 FONCTIONS_AUTORISEES = (exp.Count, exp.Sum, exp.Avg, exp.Min, exp.Max, exp.TimestampTrunc, exp.Extract,
-                        exp.Coalesce, exp.Lower, exp.Upper, exp.Round, exp.Abs, exp.Connector)
+                        exp.Coalesce, exp.Lower, exp.Upper, exp.Round, exp.Abs, exp.Connector, exp.Exists)
+# Ce qui figure dans FONCTIONS_AUTORISEES sans être une fonction qu'on appelle : jamais cité dans le refus.
+_PREDICATS = (exp.Connector, exp.Exists)
 # Types de données ordinaires : tout le reste (regclass, regrole, regproc, oid, json(b), bytea, xml, tableaux,
 # types utilisateur…) fait d'un CAST une porte vers le catalogue ou l'écriture, jamais une simple conversion
 # de valeur.
@@ -69,14 +74,64 @@ _NOM_TYPE = {exp.DataType.Type.DECIMAL: "numeric", exp.DataType.Type.FLOAT: "rea
 
 
 def _fonctions_possibles() -> str:
-    """Les noms SQL lisibles de FONCTIONS_AUTORISEES — exp.Connector exclu : un pur connecteur logique
-    (AND/OR/XOR), jamais une fonction appelable par le modèle."""
-    return ", ".join(sorted({_NOM_FONCTION.get(f, f.key) for f in FONCTIONS_AUTORISEES if f is not exp.Connector}))
+    """Les noms SQL lisibles de FONCTIONS_AUTORISEES — _PREDICATS exclus (AND/OR/XOR, EXISTS) : jamais une
+    fonction appelable par le modèle."""
+    return ", ".join(sorted({_NOM_FONCTION.get(f, f.key) for f in FONCTIONS_AUTORISEES if f not in _PREDICATS}))
 
 
 def _conversions_possibles() -> str:
     """Les cibles de conversion lisibles (« ::type ») de TYPES_DE_DONNEES_AUTORISEES."""
     return ", ".join(sorted(f"::{_NOM_TYPE.get(t, t.value.lower())}" for t in TYPES_DE_DONNEES_AUTORISEES))
+
+
+# Le schéma de la liste blanche, tel que sqlglot le lit pour résoudre les colonnes (le type n'y sert pas).
+_SCHEMA = {table: dict.fromkeys(colonnes, "text") for table, colonnes in LISTE_BLANCHE.items()}
+
+
+def _tri_par_alias(colonne: exp.Column) -> bool:
+    """« ORDER BY n », nu, dans l'ORDER BY de la requête elle-même, n alias de sa liste SELECT : le seul endroit
+    où PostgreSQL lit un alias de sortie. Ailleurs — WHERE, GROUP BY, HAVING, OVER (ORDER BY …), ou dans une
+    expression (« ORDER BY -n ») — il lit d'abord la colonne d'entrée du même nom, éventuellement cachée."""
+    tri = colonne.parent
+    return (not colonne.table and isinstance(tri, exp.Ordered) and isinstance(tri.parent, exp.Order)
+            and colonne.name in getattr(tri.parent.parent, "named_selects", ()))
+
+
+def colonnes_resolues(arbre: exp.Expression) -> bool:
+    """Chaque colonne de la requête désigne une colonne de la liste blanche d'une table de sa portée (ou une
+    colonne de sortie d'une sous-requête, d'une CTE, d'un alias de SELECT en ORDER BY) — résolution structurelle,
+    portée par portée, par l'optimiseur de sqlglot, sur un schéma qui ne connaît QUE la liste blanche.
+
+    Pourquoi pas un simple contrôle des noms : pour PostgreSQL, un nom non qualifié qui n'est la colonne d'aucune
+    table mais l'alias d'une table est une référence de LIGNE ENTIÈRE. « SELECT nom::text FROM escales nom » rend
+    toute la ligne d'escale, tarif_negocie compris, alors que « nom » est une colonne autorisée (de navires).
+    Ici, un nom qui ne se résout pas en colonne autorisée — ligne entière, colonne cachée, alias ambigu — est refusé."""
+    arbre = arbre.copy()
+    for colonne in arbre.find_all(exp.Column):
+        colonne.meta["non_qualifiee"] = not colonne.table
+        # Un alias de SELECT repris ailleurs qu'en _tri_par_alias() : sqlglot y lirait l'alias, PostgreSQL la
+        # colonne d'entrée du même nom. Écrire GROUP BY 1 plutôt que GROUP BY <alias>.
+        select = colonne.parent_select
+        if (not colonne.table and select is not None and not _tri_par_alias(colonne)
+                and colonne.name in {e.alias for e in select.expressions if isinstance(e, exp.Alias)}):
+            return False
+    # Renommer les colonnes d'une table (« escales AS e(a, b, …, h) ») nomme aussi ses colonnes cachées, par position.
+    if any(isinstance(t.args.get("alias"), exp.TableAlias) and t.args["alias"].columns
+           for t in arbre.find_all(exp.Table)):
+        return False
+    try:
+        qualify(arbre, schema=_SCHEMA, dialect="postgres", infer_schema=False, validate_qualify_columns=True)
+    except sqlglot.errors.SqlglotError:
+        return False
+    # Resté sans table après résolution (sqlglot ne valide pas tout, HAVING par exemple) : refusé, sauf l'alias
+    # de sortie en ORDER BY.
+    if any(not c.table and not _tri_par_alias(c) for c in arbre.find_all(exp.Column)):
+        return False
+    for portee in traverse_scope(arbre):
+        for colonne in portee.columns:
+            if colonne.table not in portee.sources and colonne.meta.get("non_qualifiee"):
+                return False      # corrélation implicite vers une requête englobante : la qualifier (e.escale_id)
+    return True
 
 
 @asynccontextmanager
@@ -100,6 +155,7 @@ class Analyse:
     select_seul: bool                     # une lecture, sans écriture cachée (CTE, sous-requête)
     tables: set[str]                      # tables lues (les noms de CTE exclus)
     colonnes: set[tuple[str | None, str]]  # (table réelle ou None si non qualifiée, colonne)
+    colonnes_resolues: bool               # voir colonnes_resolues() : chaque colonne est une colonne autorisée
     etoile: bool                          # un * ailleurs que dans count(*)
     fonction_interdite: bool              # un appel absent de FONCTIONS_AUTORISEES (dont tout exp.Anonymous),
                                           # ou une conversion refusée par conversion_autorisee()
@@ -131,8 +187,8 @@ def analyser(sql: str) -> Analyse:
         not (conversion_autorisee(f) if isinstance(f, exp.Cast) else isinstance(f, FONCTIONS_AUTORISEES))
         for a in arbres for f in a.find_all(exp.Func))
     return Analyse(len(arbres), isinstance(racine, exp.Select) and not any(
-        isinstance(n, ecritures) for a in arbres for n in a.walk()), tables, colonnes, etoile,
-        fonction_interdite, table_hors_perimetre)
+        isinstance(n, ecritures) for a in arbres for n in a.walk()), tables, colonnes,
+        len(arbres) == 1 and colonnes_resolues(racine), etoile, fonction_interdite, table_hors_perimetre)
 
 
 def refus(etage: str) -> ToolError:
@@ -165,10 +221,8 @@ async def executer_sur_perimetre(pool, sql: str, appelant: Identite) -> list[dic
         raise refus("table ou colonne hors périmètre")
     if analyse.fonction_interdite:
         raise refus("fonction non autorisée")
-    autorisees = set().union(*(LISTE_BLANCHE[t] for t in analyse.tables))
-    for table, colonne in analyse.colonnes:
-        if colonne not in (LISTE_BLANCHE[table] if table in LISTE_BLANCHE else autorisees):
-            raise refus("table ou colonne hors périmètre")
+    if not analyse.colonnes_resolues:
+        raise refus("table ou colonne hors périmètre")
     async with emprunter(pool, appelant) as connexion:
         try:
             # Étage 3 — plan.

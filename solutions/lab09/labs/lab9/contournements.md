@@ -40,12 +40,12 @@ SELECT x.mouvement_id FROM esc_hdr_legacy x
 | 2 | 2 — liste blanche de tables, avant exécution | « Requête refusée (table ou colonne hors périmètre). Seules des lectures SELECT… » |
 | 3 | 2 — liste blanche de colonnes ; les trois refus ont la même forme et ne citent que la liste blanche | « Requête refusée (table ou colonne hors périmètre). Seules des lectures SELECT… » |
 
-## Au-delà des trois : fonctions et variable de session
+## Au-delà des trois : fonctions, variable de session, conversions, colonnes
 
-Trouvés par la revue de sécurité (correctif Task 11) : quatre sondes qui passaient les quatre étages sans
-qu'aucune des trois contournements ci-dessus ne les couvre — la liste blanche de tables et de colonnes ne
-regarde jamais les fonctions appelées, ni ce qu'une requête peut faire à la variable de session qui porte
-l'identité.
+Une liste blanche de tables et de colonnes vérifiée nom par nom ne suffit pas : elle ne regarde ni les
+fonctions appelées, ni ce qu'une requête peut faire à la variable de session qui porte l'identité, ni le type
+vers lequel on convertit, ni ce que PostgreSQL entend vraiment par un nom de colonne. Les requêtes ci-dessous
+passent un tel filtre ; la solution de référence les arrête toutes.
 
 | | Contournement | Ce qui l'arrête |
 |---|---|---|
@@ -53,28 +53,22 @@ l'identité.
 | 5 | `query_to_xml(...)` exécutant un second SELECT (sur `tarifs`, `escales.tarif_negocie` ou `information_schema.tables`) caché dans une chaîne, invisible à l'analyse syntaxique de la requête externe | Liste blanche de fonctions à l'étage 2 (`FONCTIONS_AUTORISEES`) : `query_to_xml` n'y figure pas — comme toute fonction que sqlglot classe `exp.Anonymous`, toujours refusée |
 | 6 | `to_regclass('esc_hdr_legacy')` — énumère l'existence d'un objet du catalogue sans lire aucune table | Même liste blanche de fonctions : `to_regclass` est `exp.Anonymous`, refusé avant toute exécution |
 | 7 | `lo_from_bytea(0, 'x'::bytea)` — écrit un large object, malgré une requête syntaxiquement SELECT seul | Même liste blanche de fonctions, **et** la transaction en lecture seule (`connexion.transaction(readonly=True)`) : une écriture qui passerait l'étage 2 échouerait à l'étage 4 |
-
-Les quatre sont testés dans `tests/pharos_data/test_cloisonnement.py::test_requete_sql_contournements_avances`,
-sous `jeton-iroise` — chacun refusé, sans qu'aucune réponse ne révèle un montant, un tarif négocié, une table
-du catalogue ou une escale d'un autre agent.
-
-### La conversion (CAST / `::`) rouvrait la même porte
-
-Round 2 de la revue : la liste blanche de fonctions du round précédent laissait passer **toute** `exp.Cast`
-(`CAST(x AS type)` ou `x::type`), sans regarder le type cible. Or PostgreSQL fournit des types de conversion
-qui *sont* le catalogue : convertir vers `regclass`, `regrole`, `regproc` ou `oid` transforme un simple CAST
-en oracle — l'énumération par `to_regclass(...)` (ligne 6) revient sous une autre forme, sans passer par une
-fonction nommée.
-
-| | Contournement | Ce qui l'arrête |
-|---|---|---|
-| 8 | `'esc_hdr_legacy'::regclass::text`, `'pharos_app'::regrole::text`, `'query_to_xml'::regproc::text` — l'existence d'une table, d'un rôle ou d'une fonction, sans lire aucune table | La conversion n'est permise que vers un type de donnée ordinaire (`TYPES_DE_DONNEES_AUTORISEES` : entiers, `numeric`, `real`/`double precision`, texte, `boolean`, dates/heures, `interval`) ; `regclass`, `regrole`, `regproc`, `oid` n'y figurent pas — refusé avant toute exécution, quelle que soit la syntaxe du CAST |
+| 8 | `'esc_hdr_legacy'::regclass::text`, `'pharos_app'::regrole::text`, `'query_to_xml'::regproc::text` — l'existence d'une table, d'un rôle ou d'une fonction, sans lire aucune table : l'énumération de la ligne 6 revient sous forme de conversion | La conversion (`CAST(x AS type)` ou `x::type`) n'est permise que vers un type de donnée ordinaire (`TYPES_DE_DONNEES_AUTORISEES` : entiers, `numeric`, `real`/`double precision`, texte, `boolean`, dates/heures, `interval`) ; `regclass`, `regrole`, `regproc`, `oid` n'y figurent pas — refusé avant toute exécution, quelle que soit la syntaxe du CAST |
 | 9 | `CAST(36907 AS regclass)::text`, `'escales'::regclass::oid::int` — énumération du catalogue par OID, ou obtention de l'OID d'une table connue comme point de départ | Même liste de types : `regclass` et `oid` sont refusés comme cibles de conversion, que la valeur de départ soit un littéral, un OID numérique ou le résultat d'un autre CAST |
+| 10 | `SELECT nom::text FROM escales nom WHERE navire_id IN (SELECT navire_id FROM navires)` — `nom` est une colonne autorisée (de `navires`), mais aucune table de la requête externe n'en a : pour PostgreSQL, c'est alors l'alias de table `nom`, c'est-à-dire **la ligne entière** de l'escale, `tarif_negocie` compris | Résolution des colonnes à l'étage 2 (`colonnes_resolues()`) : l'optimiseur de sqlglot rattache chaque colonne à une table de sa portée, sur un schéma qui ne connaît que la liste blanche ; un nom qui ne se résout pas en colonne autorisée est refusé |
+| 11 | La même colonne cachée lue autrement : `HAVING max(tarif_negocie) > 50000` (que sqlglot ne rattache à aucune table), `escales AS e(a, b, …, h)` (colonnes renommées par position), `SELECT quai AS tarif_negocie … OVER (ORDER BY tarif_negocie)` (un alias de sortie que PostgreSQL lit comme la colonne d'entrée du même nom) | Même étage : une colonne restée sans table après résolution est refusée, les colonnes d'une table ne se renomment pas, et un alias de sortie n'est admis que nu, dans l'ORDER BY de la requête |
 
-Une conversion vers un type ordinaire reste permise (`CAST(quai AS text)`, `debut::date`) : la restriction
-porte sur le type cible, jamais sur CAST en général.
+Ce qui reste permis : une conversion vers un type ordinaire (`CAST(quai AS text)`, `debut::date`), une
+jointure `USING`, `ORDER BY n` sur un alias de la liste SELECT, `EXISTS (…)`, les sous-requêtes et les CTE
+dont les colonnes sont elles-mêmes autorisées. La restriction porte sur ce que désigne chaque nom, jamais sur
+la forme de la requête.
 
-Les neuf sont testés dans `tests/pharos_data/test_cloisonnement.py::test_requete_sql_contournements_avances`
-(et sa contrepreuve `test_requete_sql_conversions_de_type_autorisees`), sous `jeton-iroise` — chacun des
-contournements refusé, sans qu'aucune réponse ne révèle un montant, un tarif négocié, une table du catalogue,
-un rôle ou une escale d'un autre agent ; les conversions ordinaires continuent de fonctionner.
+Tous ces contournements sont joués par `tests/pharos_data/test_cloisonnement.py::test_requete_sql_contournements_avances`
+(seize requêtes, sous `jeton-iroise`) : chacune est refusée, sans qu'aucune réponse ne révèle un montant, un
+tarif négocié, une table du catalogue, un rôle ou une escale d'un autre agent, et chaque refus cite les
+fonctions et conversions possibles. Les contrepreuves `test_requete_sql_conversions_de_type_autorisees` et
+`test_requete_sql_requetes_legitimes` vérifient que les requêtes ordinaires passent toujours.
+
+Une liste blanche reste une défense de l'outil : la colonne `tarif_negocie` est encore lisible par le rôle
+`pharos_agent` dans la base. La masquer au niveau de la base, par les privilèges de colonne, est l'extension B
+du LAB 9.
