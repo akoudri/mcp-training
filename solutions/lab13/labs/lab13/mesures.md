@@ -7,7 +7,7 @@ Consigner les valeurs relevées, **y compris si le résultat est mauvais** : le 
 | | Valeur |
 |---|---|
 | Coût fixe du catalogue, un seul serveur (LAB 10) | 476 tokens (pharos-ops, 3 outils) |
-| Coût fixe du catalogue agrégé | PROVISOIRE 0 tokens |
+| Coût fixe du catalogue agrégé | 2024 tokens |
 | Nombre d'outils exposés au total | 14 |
 
 Collision trouvée, et sa correction :
@@ -19,13 +19,13 @@ préfixage côté serveur : le module est branché sur pharos-data sous le nom d
 
 | | Valeur |
 |---|---|
-| Appels superflus dans la trace | PROVISOIRE 0 |
-| Données sans origine signalées par le vérificateur de note | PROVISOIRE 0 |
+| Appels superflus dans la trace | 0 |
+| Données sans origine signalées par le vérificateur de note | 0 |
 
 ## Étape 5 — Les signaux de dérive (make lab13-derive)
 
 | Signal | Valeur |
 |---|---|
-| Appels hors plan | PROVISOIRE 0 |
-| Étapes annoncées jamais exécutées | PROVISOIRE 0 |
-| Retours en arrière | PROVISOIRE 0 |
+| Appels hors plan | 4 |
+| Étapes annoncées jamais exécutées | 3 |
+| Retours en arrière | 0 |
