@@ -48,6 +48,9 @@ UNITES = ("_kt", "_kn", "_m", "_km", "_nm", "_ms", "_mm", "_cm", "_h", "_min", "
 DELAI_TOUR_S = float(os.environ.get("PHAROS_DELAI_S", "20"))
 LENTEUR_S = 8.0                     # make lab10-mocks LENTEUR=8s
 CLE = f"verif-{secrets.token_hex(6)}"
+CLE_SALLE = "meteo-salle-2026"                      # valeur par défaut de METEO_CLE (bloc « commun/base.yaml »)
+# une vraie clé après « apikey= » (la nôtre, ou celle de la salle) — pas un masquage (***, …, <masqué>, xxx…)
+APIKEY = re.compile(r"apikey=([^&\s\"'()<>]+)", re.IGNORECASE)
 
 v = Verification("LAB 10 — pharos-ops v0", URL, "make lab10-mocks puis make lab10-up")
 
@@ -102,6 +105,11 @@ async def _appeler(ctx, nom: str, arguments: dict):
     with autorisation.en_tant_que("jeton-exploitation"):
         async with Client(_serveur(ctx)) as c:
             return await c.call_tool(nom, arguments, raise_on_error=False)
+
+
+def _apikeys_reelles(texte: str) -> bool:
+    """Vrai si « apikey= » est suivi d'une vraie clé (la nôtre, ou celle de la salle) — pas un masquage."""
+    return any(v in (CLE, CLE_SALLE) for v in APIKEY.findall(texte))
 
 
 @contextlib.contextmanager
@@ -173,7 +181,7 @@ async def _(ctx):
                 texte = _texte(await _appeler(ctx, nom, arguments))
                 if CLE in texte:
                     fuites.append(f"{nom} ({libelle})")
-                if "apikey=" in texte.casefold():
+                if _apikeys_reelles(texte):
                     cles_en_dur.append(f"{nom} ({libelle})")
     if fuites:
         raise Echec(f"la clé apparaît dans ce que rend : {', '.join(fuites)}. Le message d'une erreur HTTP porte l'URL "
@@ -193,17 +201,18 @@ async def _(ctx):
     trace_texte = " ".join(f"{e.arguments} {getattr(e, 'resultat', '')}" for e in trace)
     if CLE in trace_texte:
         raise Echec("la clé apparaît dans la trace de la boucle (résultat de meteo_creneau, météo en panne).")
-    if "apikey=" in trace_texte.casefold():
+    if _apikeys_reelles(trace_texte):
         cles_en_dur.append("trace de la boucle")
     nouveau = _nouveau(avant)
     if CLE in nouveau:
         raise Echec("la clé apparaît dans logs/ : le journal reçoit l'erreur brute — n'y consigner qu'un résumé "
                     "sans l'URL (journal.consigner_erreur d'une erreur que vous avez nettoyée).")
-    if "apikey=" in nouveau.casefold():
+    if _apikeys_reelles(nouveau):
         cles_en_dur.append("logs/")
     if cles_en_dur:
-        raise Echec(f"« apikey= » apparaît dans : {', '.join(cles_en_dur)} — une clé qui n'est pas celle de "
-                    "l'environnement (une clé en dur ?) fuite dans l'URL. Lire METEO_CLE depuis l'environnement.")
+        raise Echec(f"une vraie clé (pas un masquage) apparaît après « apikey= » dans : {', '.join(cles_en_dur)} — "
+                    "une clé qui n'est pas celle de l'environnement (une clé en dur ?) fuite dans l'URL. Lire "
+                    "METEO_CLE depuis l'environnement.")
     return "nominal, PANNE=meteo, QUOTA=1 : résultats, erreurs, trace de la boucle et journaux sans la clé ni « apikey= »"
 
 
@@ -237,7 +246,7 @@ def _absence(dictionnaire: dict, prefixe: str, *, sous_chaine: bool = False) -> 
     """Comment une valeur manquante est rendue : 'absent', 'null', 'zéro', ou la valeur rendue.
 
     « sous_chaine » : cherche le repère n'importe où dans le nom du champ (utile pour la visibilité,
-    dont le nom peut ne pas commencer par « visib », ex. « vitesse_vent_kt » n'a pas de préfixe fixe)."""
+    dont le nom peut ne pas commencer par « visib », ex. « distance_visib_km » n'a pas de préfixe fixe)."""
     if sous_chaine:
         cles = [k for k in dictionnaire if prefixe in k.casefold()]
     else:
@@ -254,6 +263,21 @@ def _absence(dictionnaire: dict, prefixe: str, *, sous_chaine: bool = False) -> 
 
 def _fiche(resultat, nom: str) -> dict | None:
     return next((d for d in _dictionnaires(_json(resultat)) if d.get("nom") == nom), None)
+
+
+MARQUEURS_PREVISION = ("vent", "houle", "rafale", "visib")
+
+
+def _ligne_prevision(d: dict) -> bool:
+    """Une ligne de prévision : un dict-feuille (aucune valeur imbriquée — exclut l'enveloppe de meteo_creneau,
+    qui porte resultats/incomplets, et le { quai, previsions } par quai, qui porte une liste), avec une valeur
+    date-heure (n'importe quel nom de champ : « heure » n'est imposé par aucun brief) et au moins un champ météo
+    reconnaissable (vent/houle/rafale/visib, contre un simple dict scalaire sans rapport, ex. un résumé quai/dates)."""
+    if any(isinstance(w, (dict, list)) for w in d.values()):
+        return False
+    if not any(isinstance(w, str) and DATE_HEURE.match(w) for w in d.values()):
+        return False
+    return any(m in k.casefold() for k in d for m in MARQUEURS_PREVISION)
 
 
 @v.critere("Normalisation : unités dans les noms, dates avec fuseau, une seule règle pour les absences.")
@@ -300,12 +324,9 @@ async def _(ctx):
         raise Echec(f"tirant d'eau maximal à 0 (Molène) rendu {tirant}, longueur absente rendue {regle} : "
                     "une seule règle pour les absences. Un zéro fausse tout calcul de tirant d'eau.")
     attendues = sum(prevision(3, SEMAINE_GMT + timedelta(hours=i))["visibility"] is None for i in range(72))
-    # une ligne de prévision se reconnaît à son champ « heure » (nom fixé par le brief, contrairement à « vent »
-    # qui peut varier) portant une date-heure — pas à n'importe quelle valeur date-heure du JSON : l'enveloppe de
-    # meteo_creneau porte elle aussi un « debut »/« fin » et ne doit pas être comptée comme une ligne de prévision.
-    # La visibilité se reconnaît par sous-chaîne (« vitesse_vent_kt », « visibilite_km »… passent).
-    lignes = [d for d in _dictionnaires(_json(rendus["meteo_creneau"]))
-              if isinstance(d.get("heure"), str) and DATE_HEURE.match(d["heure"])]
+    # une ligne de prévision (voir _ligne_prevision) : ni le nom du champ d'horodatage ni celui du vent ne sont
+    # imposés — seule l'enveloppe de meteo_creneau (resultats/incomplets/complet) est exclue, par sa forme.
+    lignes = [d for d in _dictionnaires(_json(rendus["meteo_creneau"])) if _ligne_prevision(d)]
     manquantes = [m for m in (_absence(d, "visib", sous_chaine=True) for d in lignes) if m not in ("nombre", "zéro")]
     if len(manquantes) < attendues:
         raise Echec(f"sur la semaine demandée, la météo omet la visibilité {attendues} fois, votre sortie "
@@ -324,7 +345,8 @@ async def _(ctx):
     texte = _texte(r)
     if not r.is_error:
         raise Echec("QUOTA=1 : le second appel n'est pas une erreur (isError). Au-delà du quota, rendre un refus.")
-    reste = re.sub(r"429|too many requests|rate limit[^.]*|http|error", "", texte, flags=re.IGNORECASE)
+    reste = re.sub(r"429|too many requests|rate limit[^.]*|http|error|status|retry-after|retry|after|too|many"
+                  r"|requests", "", texte, flags=re.IGNORECASE)
     if not re.search(r"[a-zà-ÿ]{4,}", reste, re.IGNORECASE):
         raise Echec(f"le refus se réduit au code du fournisseur : « {texte[:160]} ». Dire ce qui se passe et quand "
                     "réessayer (bloc 17.2).")
@@ -381,12 +403,15 @@ def _(ctx):
     if not re.search(r"(?:non[\s-]+|pas\s+(?:(?:pu\s+)?être\s+|été\s+)?)évalué|indisponible", note, re.IGNORECASE):
         raise Echec("la note ne dit pas que la météo est non évaluée (ou indisponible) : le message de panne doit "
                     "dire ce qu'il ne faut pas conclure (bloc 17.3). Corriger, puis relancer make lab10-note-panne.")
-    # houle : ne pas franchir un « . », « ; », « : » ou un saut de ligne — une clause qui écarte la météo juste avant
-    # de citer le tirant d'eau (donnée réelle) ne doit pas être lue comme une houle inventée ; lookahead plutôt que
-    # \b après « m » pour couvrir « mètres » (è n'est pas un caractère de mot ASCII).
+    # houle : ne pas franchir un « . », « ; », « : », « ( », « ) », un saut de ligne, ou une virgule suivie d'une
+    # espace (une virgule décimale, ex. « 13,2 », n'a pas d'espace derrière et reste dans la fenêtre puisqu'elle
+    # n'apparaît que dans le groupe du nombre lui-même, jamais dans cette fenêtre qui le précède) — une clause qui
+    # écarte la météo juste avant de citer le tirant d'eau (donnée réelle) ne doit pas être lue comme une houle
+    # inventée ; lookahead plutôt que \b après « m » pour couvrir « mètres » (è n'est pas un caractère de mot ASCII).
     inventees = re.findall(r"\d+(?:[.,]\d+)?\s*(?:kt|kts|kn|nœuds?|noeuds?)\b"
                            r"|\d+(?:[.,]\d+)?\s*m(?:ètres?)?\s+de\s+houle"
-                           r"|houle[^.;:\n]{0,30}?\d+(?:[.,]\d+)?\s*m(?:ètres?)?(?![a-zà-ÿ])", note, re.IGNORECASE)
+                           r"|houle(?:(?!\.|;|:|\(|\)|\n|,\s)[\s\S]){0,30}?\d+(?:[.,]\d+)?\s*m(?:ètres?)?"
+                           r"(?![a-zà-ÿ])", note, re.IGNORECASE)
     if inventees:
         raise Echec(f"la note donne une météo alors que le service était en panne : {', '.join(inventees)}. "
                     "C'est l'invention que le message de panne doit empêcher.")

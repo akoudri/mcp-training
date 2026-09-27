@@ -48,10 +48,29 @@ L'escale ESC-2026-0412 du Vent d'Autan (quai 3, jeudi 6 h – 20 h). Vent et hou
 | 2 | meteo_creneau | {'quais': [3]} | oui | Le service météo marine est indisponible… |
 """
 
+# N2 : même chose avec une virgule (suivie d'une espace) au lieu d'un « ; ».
+NOTE_HOULE_VIRGULE_TIRANT = NOTE_HOULE_AVANT_TIRANT.replace(" ; ", ", ")
+
+# N2 : et avec des parenthèses.
+NOTE_HOULE_PARENTHESE_TIRANT = """# LAB 10 — note produite en mode panne
+
+## Note de l'agent
+
+L'escale ESC-2026-0412 du Vent d'Autan (quai 3, jeudi 6 h – 20 h). Houle non évaluée (tirant d'eau 13,2 m).
+
+## Trace
+
+| Tour | Outil | Arguments | Erreur | Résultat (début) |
+|---|---|---|---|---|
+| 1 | navire_par_nom | {'nom': "Vent d'Autan"} | non | {"navires": […]} |
+| 2 | meteo_creneau | {'quais': [3]} | oui | Le service météo marine est indisponible… |
+"""
+
 
 def jouet(*, fuite=False, journal_brut=False, cause=False, zero=False, zero_meteo=False, sans_fuseau=False,
           sequentiel=False, quatre=False, latitude=False, refus_nu=False, latitude_deg=False, longueur_param=False,
-          nom_vent=None, incomplet_sans_quai=False, cle_dur=False) -> FastMCP:
+          nom_vent=None, nom_heure=None, incomplet_sans_quai=False, cle_dur=False, apikey_masque=None,
+          refus_quota_texte=None) -> FastMCP:
     mcp = FastMCP("jouet", middleware=[journal.Journal("pharos-ops")])
 
     def nombre(valeur, meteo=False):
@@ -75,15 +94,20 @@ def jouet(*, fuite=False, journal_brut=False, cause=False, zero=False, zero_mete
                 raise ToolError("Le service météo est indisponible. Ne pas conclure sur la météo.") from exc
             if refus_nu and isinstance(exc, httpx.HTTPStatusError) and exc.response.status_code == 429:
                 raise ToolError("HTTP 429 Too Many Requests") from None
+            if refus_quota_texte and isinstance(exc, httpx.HTTPStatusError) and exc.response.status_code == 429:
+                raise ToolError(refus_quota_texte) from None
             if cle_dur:
                 raise ToolError("Le service météo est indisponible (apikey=meteo-salle-2026). Ne pas conclure sur "
+                                "la météo : la signaler comme non évaluée.") from None
+            if apikey_masque:
+                raise ToolError(f"Le service météo est indisponible (apikey={apikey_masque}). Ne pas conclure sur "
                                 "la météo : la signaler comme non évaluée.") from None
             raise ToolError("Le service météo est indisponible. Les navires restent accessibles. Ne pas conclure "
                             "sur la météo : la signaler comme non évaluée ; pour consommer moins, grouper les quais.") \
                 from None
         h = brut["hourly"]
-        cle_vent = nom_vent or "vent_kt"
-        return [{"heure": heure(t, True), cle_vent: v, "houle_m": w, "visibilite_km": nombre(s, meteo=True)}
+        cle_vent, cle_heure = nom_vent or "vent_kt", nom_heure or "heure"
+        return [{cle_heure: heure(t, True), cle_vent: v, "houle_m": w, "visibilite_km": nombre(s, meteo=True)}
                 for t, v, w, s in zip(h["time"], h["wind_speed_10m"], h["wave_height"], h["visibility"])]
 
     def paris(texte: str) -> datetime:
@@ -250,9 +274,13 @@ async def test_coordonnee_attrapee_par_prefixe_sans_faux_positif(mocks_servis, c
     assert not any("Trois outils, et aucun paramètre" in libelle for libelle in _echecs(rapport)), rapport.texte()
 
 
-async def test_normalisation_indifferente_au_nom_du_champ_vent(mocks_servis, client, note, monkeypatch):
-    """M1 : une ligne de prévision se repère par une valeur date-heure, pas par un champ qui commence par « vent »."""
-    rapport = await _rapport(jouet(nom_vent="vitesse_vent_kt"), mocks_servis, client, monkeypatch)
+@pytest.mark.parametrize("nom_heure", [None, "horodatage", "date"])
+async def test_normalisation_indifferente_au_nom_des_champs(mocks_servis, client, note, monkeypatch, nom_heure):
+    """M1 : une ligne de prévision se repère à un dict-feuille (aucune valeur imbriquée) portant une valeur
+    date-heure ET un champ météo reconnaissable (vent/houle/rafale/visib) — ni le nom du champ d'horodatage
+    (« heure » n'est imposé par aucun brief : « horodatage », « date »… doivent aussi passer) ni celui du champ
+    de vent (« vitesse_vent_kt ») ne sont requis."""
+    rapport = await _rapport(jouet(nom_vent="vitesse_vent_kt", nom_heure=nom_heure), mocks_servis, client, monkeypatch)
     assert _echecs(rapport) == {}, rapport.texte()
 
 
@@ -269,9 +297,25 @@ async def test_incomplet_sans_quai_ne_plante_pas(mocks_servis, client, note, mon
 
 
 async def test_apikey_en_dur_dans_le_message(mocks_servis, client, note, monkeypatch):
-    """M8 : une clé qui n'est pas celle de l'environnement (codée en dur) doit aussi être détectée."""
+    """M8/N1 : une vraie clé qui n'est pas celle de l'environnement (ici la clé de la salle, codée en dur)
+    doit être détectée après « apikey= »."""
     echecs = _echecs(await _rapport(jouet(cle_dur=True), mocks_servis, client, monkeypatch))
     assert "apikey=" in _un(echecs, "clé"), echecs
+
+
+@pytest.mark.parametrize("masque", ["***", "…", "<masqué>", "xxx"])
+async def test_apikey_masquee_ne_fait_pas_echouer(mocks_servis, client, note, monkeypatch, masque):
+    """N1 : un masquage après « apikey= » (pas une vraie clé) ne doit pas faire échouer le critère de la clé."""
+    rapport = await _rapport(jouet(apikey_masque=masque), mocks_servis, client, monkeypatch)
+    assert _echecs(rapport) == {}, rapport.texte()
+
+
+@pytest.mark.parametrize("texte", ["Status 429", "429 Retry-After: 60"])
+async def test_refus_quota_vocabulaire_http_insuffisant(mocks_servis, client, note, monkeypatch, texte):
+    """N3 : status/retry-after/retry/after/too/many/requests comptent comme vocabulaire HTTP à retirer avant de
+    chercher un mot français — ces refus ne disent toujours rien de plus que le fournisseur."""
+    echecs = _echecs(await _rapport(jouet(refus_quota_texte=texte), mocks_servis, client, monkeypatch))
+    assert "se réduit au code" in _un(echecs, "quota"), echecs
 
 
 @pytest.mark.parametrize("texte, attendu", [
@@ -299,10 +343,14 @@ async def test_note_du_critere_decisif(mocks_servis, client, note, monkeypatch, 
     NOTE_OK.replace("Météo non évaluée", "La météo n'a pas été évaluée"),
     NOTE_OK.replace("Météo non évaluée", "Météo pas évaluée"),
     NOTE_HOULE_AVANT_TIRANT,
-], ids=["non-evaluee-tiret", "pas-pu-etre-evaluee", "pas-ete-evaluee", "pas-evaluee", "houle-avant-tirant"])
+    NOTE_HOULE_VIRGULE_TIRANT,
+    NOTE_HOULE_PARENTHESE_TIRANT,
+], ids=["non-evaluee-tiret", "pas-pu-etre-evaluee", "pas-ete-evaluee", "pas-evaluee", "houle-avant-tirant-point-virgule",
+        "houle-avant-tirant-virgule", "houle-avant-tirant-parenthese"])
 async def test_note_du_critere_decisif_formulations_acceptees(mocks_servis, client, note, monkeypatch, texte):
-    """I2 : ces formulations doivent être reconnues comme un refus de conclure ; la houle citée avant un tirant
-    d'eau (au-delà d'un « ; ») ne doit pas être lue comme une météo inventée."""
+    """I2/N2 : ces formulations doivent être reconnues comme un refus de conclure ; la houle citée avant un
+    tirant d'eau réel, au-delà d'un « ; », d'une « , » suivie d'une espace, ou entre parenthèses, ne doit pas
+    être lue comme une météo inventée."""
     note.write_text(texte, encoding="utf-8")
     rapport = await _rapport(jouet(), mocks_servis, client, monkeypatch)
     assert _echecs(rapport) == {}, rapport.texte()
