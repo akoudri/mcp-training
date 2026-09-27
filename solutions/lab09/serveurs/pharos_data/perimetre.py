@@ -34,8 +34,30 @@ LISTE_BLANCHE: dict[str, set[str]] = {
 # exp.Connector (AND, OR, XOR) est un pur connecteur logique, sans appel ni argument propre : chez sqlglot,
 # And/Or/Xor héritent aussi de exp.Func (détail d'implémentation), sans quoi tout WHERE avec un AND serait
 # refusé ; leurs opérandes restent, eux, inspectés un par un.
+# exp.Cast (et sa sous-classe exp.TryCast) ne sont PAS ici : une conversion n'est permise que vers un type de
+# donnée ordinaire — voir TYPES_DE_DONNEES_AUTORISEES et conversion_autorisee(). Sans cette restriction,
+# '...'::regclass, ::regrole, ::regproc ou ::oid transforment le CAST en oracle du catalogue (existence d'une
+# table, d'un rôle, d'une fonction — jusqu'à une énumération par OID).
 FONCTIONS_AUTORISEES = (exp.Count, exp.Sum, exp.Avg, exp.Min, exp.Max, exp.TimestampTrunc, exp.Extract,
-                        exp.Coalesce, exp.Lower, exp.Upper, exp.Round, exp.Abs, exp.Cast, exp.Connector)
+                        exp.Coalesce, exp.Lower, exp.Upper, exp.Round, exp.Abs, exp.Connector)
+# Types de données ordinaires : tout le reste (regclass, regrole, regproc, oid, json(b), bytea, xml, tableaux,
+# types utilisateur…) fait d'un CAST une porte vers le catalogue ou l'écriture, jamais une simple conversion
+# de valeur.
+TYPES_DE_DONNEES_AUTORISEES = {
+    exp.DataType.Type.INT, exp.DataType.Type.BIGINT, exp.DataType.Type.SMALLINT,
+    exp.DataType.Type.DECIMAL, exp.DataType.Type.FLOAT, exp.DataType.Type.DOUBLE,
+    exp.DataType.Type.TEXT, exp.DataType.Type.VARCHAR, exp.DataType.Type.CHAR,
+    exp.DataType.Type.BOOLEAN, exp.DataType.Type.DATE, exp.DataType.Type.TIME,
+    exp.DataType.Type.TIMESTAMP, exp.DataType.Type.TIMESTAMPTZ, exp.DataType.Type.INTERVAL,
+}
+
+
+def conversion_autorisee(f: exp.Expression) -> bool:
+    """Une exp.Cast (ou exp.TryCast) n'est permise que vers un type de TYPES_DE_DONNEES_AUTORISEES ;
+    une exp.JSONCast est toujours refusée (elle n'existe pas pour convertir une simple valeur)."""
+    if isinstance(f, exp.JSONCast):
+        return False
+    return isinstance(f, exp.Cast) and f.to.this in TYPES_DE_DONNEES_AUTORISEES
 
 
 @asynccontextmanager
@@ -60,7 +82,8 @@ class Analyse:
     tables: set[str]                      # tables lues (les noms de CTE exclus)
     colonnes: set[tuple[str | None, str]]  # (table réelle ou None si non qualifiée, colonne)
     etoile: bool                          # un * ailleurs que dans count(*)
-    fonction_interdite: bool              # un appel absent de FONCTIONS_AUTORISEES (dont tout exp.Anonymous)
+    fonction_interdite: bool              # un appel absent de FONCTIONS_AUTORISEES (dont tout exp.Anonymous),
+                                          # ou une conversion refusée par conversion_autorisee()
     table_hors_perimetre: bool            # une table qualifiée par un schéma, ou du catalogue (pg_*, information_schema)
 
 
@@ -85,8 +108,9 @@ def analyser(sql: str) -> Analyse:
                 for a in arbres for c in a.find_all(exp.Column) if not isinstance(c.this, exp.Star)}
     etoile = any(isinstance(s, exp.Star) and not isinstance(s.parent, exp.Count)
                  for a in arbres for s in a.find_all(exp.Star))
-    fonction_interdite = any(not isinstance(f, FONCTIONS_AUTORISEES)
-                             for a in arbres for f in a.find_all(exp.Func))
+    fonction_interdite = any(
+        not (conversion_autorisee(f) if isinstance(f, exp.Cast) else isinstance(f, FONCTIONS_AUTORISEES))
+        for a in arbres for f in a.find_all(exp.Func))
     return Analyse(len(arbres), isinstance(racine, exp.Select) and not any(
         isinstance(n, ecritures) for a in arbres for n in a.walk()), tables, colonnes, etoile,
         fonction_interdite, table_hors_perimetre)

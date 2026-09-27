@@ -57,3 +57,24 @@ l'identité.
 Les quatre sont testés dans `tests/pharos_data/test_cloisonnement.py::test_requete_sql_contournements_avances`,
 sous `jeton-iroise` — chacun refusé, sans qu'aucune réponse ne révèle un montant, un tarif négocié, une table
 du catalogue ou une escale d'un autre agent.
+
+### La conversion (CAST / `::`) rouvrait la même porte
+
+Round 2 de la revue : la liste blanche de fonctions du round précédent laissait passer **toute** `exp.Cast`
+(`CAST(x AS type)` ou `x::type`), sans regarder le type cible. Or PostgreSQL fournit des types de conversion
+qui *sont* le catalogue : convertir vers `regclass`, `regrole`, `regproc` ou `oid` transforme un simple CAST
+en oracle — l'énumération par `to_regclass(...)` (ligne 6) revient sous une autre forme, sans passer par une
+fonction nommée.
+
+| | Contournement | Ce qui l'arrête |
+|---|---|---|
+| 8 | `'esc_hdr_legacy'::regclass::text`, `'pharos_app'::regrole::text`, `'query_to_xml'::regproc::text` — l'existence d'une table, d'un rôle ou d'une fonction, sans lire aucune table | La conversion n'est permise que vers un type de donnée ordinaire (`TYPES_DE_DONNEES_AUTORISEES` : entiers, `numeric`, `real`/`double precision`, texte, `boolean`, dates/heures, `interval`) ; `regclass`, `regrole`, `regproc`, `oid` n'y figurent pas — refusé avant toute exécution, quelle que soit la syntaxe du CAST |
+| 9 | `CAST(36907 AS regclass)::text`, `'escales'::regclass::oid::int` — énumération du catalogue par OID, ou obtention de l'OID d'une table connue comme point de départ | Même liste de types : `regclass` et `oid` sont refusés comme cibles de conversion, que la valeur de départ soit un littéral, un OID numérique ou le résultat d'un autre CAST |
+
+Une conversion vers un type ordinaire reste permise (`CAST(quai AS text)`, `debut::date`) : la restriction
+porte sur le type cible, jamais sur CAST en général.
+
+Les neuf sont testés dans `tests/pharos_data/test_cloisonnement.py::test_requete_sql_contournements_avances`
+(et sa contrepreuve `test_requete_sql_conversions_de_type_autorisees`), sous `jeton-iroise` — chacun des
+contournements refusé, sans qu'aucune réponse ne révèle un montant, un tarif négocié, une table du catalogue,
+un rôle ou une escale d'un autre agent ; les conversions ordinaires continuent de fonctionner.
