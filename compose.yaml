@@ -20,6 +20,10 @@ services:
     profiles: [outils]
     environment:
       CLE_SERVEUR: "${CLE_SERVEUR:-pharos-salle-2026}"
+      METEO_URL: http://mocks:8000/meteo
+      METEO_CLE: "${METEO_CLE:-meteo-salle-2026}"
+      REFERENTIEL_URL: http://mocks:8000/referentiel
+      CANAL_URL: http://mocks:8000/canal
 
   observateur:
     image: mitmproxy/mitmproxy:${MITMPROXY_VERSION:-12.2.3}
