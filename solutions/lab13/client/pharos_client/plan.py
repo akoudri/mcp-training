@@ -51,7 +51,9 @@ class PlanIllisible(ValueError):
 
 def demander_plan(messages: list[dict], outils: list[dict]) -> str:
     """Un appel au modèle, avec le catalogue (pour qu'il nomme des outils réels) mais sans droit d'en appeler un."""
-    reponse = modele.completer([*messages, {"role": "user", "content": INVITE_PLAN}], outils, tool_choice="none")
+    noms = ", ".join(o["function"]["name"] for o in outils)
+    invite = f"{INVITE_PLAN} Outils disponibles, à nommer exactement : {noms}."
+    reponse = modele.completer([*messages, {"role": "user", "content": invite}], outils, tool_choice="none")
     return reponse.message.get("content") or ""
 
 
