@@ -96,3 +96,35 @@ async def test_journal_garde_la_cause_d_une_erreur_masquee():
     [ligne] = journal.lire("essai")
     assert ligne["issue"] == "refus"
     assert 'relation "tarifs" does not exist' in ligne["erreur_brute"]
+
+
+async def test_les_refus_protocolaires_sont_journalises():
+    """LAB 12 : un requestState altéré est refusé par le SDK avant l'outil ; le journal le garde quand même."""
+    import mcp_types
+    from fastmcp import Context
+    from mcp.server.request_state import RequestStateSecurity
+    from mcp.shared.exceptions import MCPError
+
+    mcp = FastMCP("essai", middleware=[journal.Journal("essai")],
+                  request_state_security=RequestStateSecurity(keys=["cle-de-test-journal-au-moins-32-octets"]))
+
+    @mcp.tool
+    async def publier(escale_id: str, ctx: Context) -> dict:
+        """Demande une confirmation, puis publie."""
+        if ctx.input_responses:
+            return {"publiee": True}
+        return mcp_types.InputRequiredResult(
+            input_requests={"ok": mcp_types.ElicitRequest(params=mcp_types.ElicitRequestFormParams(
+                message="Publier ?", requested_schema={"type": "object", "properties": {"x": {"type": "boolean"}}}))},
+            request_state="{}")
+
+    oui = {"ok": mcp_types.ElicitResult(action="accept", content={"x": True})}
+    async with Client(mcp) as c:
+        demande = await c.session.call_tool(name="publier", arguments={"escale_id": "ESC-2026-0412"},
+                                            allow_input_required=True)
+        with pytest.raises(MCPError):
+            await c.session.call_tool(name="publier", arguments={"escale_id": "ESC-2026-0405"}, input_responses=oui,
+                                      request_state=demande.request_state, allow_input_required=True)
+    [refus] = [l for l in journal.lire("essai") if l["issue"] == "refus"]
+    assert (refus["outil"], refus["arguments"]) == ("publier", {"escale_id": "ESC-2026-0405"})
+    assert refus["message"] == "Invalid or expired requestState" and refus["erreur_brute"].startswith("MCPError")

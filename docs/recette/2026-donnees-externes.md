@@ -1,6 +1,6 @@
-# Recette — données et systèmes externes (LAB 8 à 10)
+# Recette — données et systèmes externes (LAB 8 à 12)
 
-Complète `2026-fil-documentaire.md`. Sous-projet 3, plans 1 et 2 ; les LAB 11 et 12 s'y ajouteront.
+Complète `2026-fil-documentaire.md`. Sous-projet 3, plans 1 à 3.
 ✅ = vérifié par la CI (job `solutions`) ; 👁 = à constater par le formateur.
 
 ## La base en salle
@@ -25,6 +25,26 @@ Complète `2026-fil-documentaire.md`. Sous-projet 3, plans 1 et 2 ; les LAB 11 e
   (`docs/api/referentiel.yaml`) ne le dit pas : *Macareux* sans longueur, *Glénan* à longueur `null`,
   *Molène* à longueur et tirant d'eau maximal `0`. Les heures d'escale y sont locales, sans fuseau ; celles de
   la météo, en GMT.
+
+## Le recalcul et la publication en salle (LAB 11, 12)
+
+- Le moteur du LAB 11 (`src/pharos_ops/planification.py`) lit la base sous `pharos_planification` : le
+  chargement lui donne une politique de lecture sur chaque table où la politique du binôme active la RLS
+  (`planification_lit_tout`), sans quoi il ne verrait plus rien. Jeudi : 24 escales, 5 s chacune à vitesse
+  réelle (deux minutes) ; `make lab11-scaffold VITESSE=rapide` divise par dix et redémarre `pharos-ops`, qu'il
+  faut relancer sans `VITESSE` pour la vérification à vitesse réelle.
+- L'état des tâches vit en mémoire (backend `memory://`), une seule instance : un redémarrage de `pharos-ops`
+  (y compris le rechargement automatique après une modification du code) perd les tâches en cours.
+- Un client ne déclare l'extension Tasks que si `fastmcp_tasks` est importé : c'est ce que fait
+  `client/pharos_client/taches.py` (fourni). Un appel ordinaire sur une journée attend alors la fin en silence et
+  coupe au budget de tour (20 s) — le piège du LAB 11.
+- Une exception pendant une tâche la termine en `completed` avec un résultat en erreur (fastmcp 4.0.10 réserve
+  `failed` aux fautes de protocole) : c'est « l'échec » que le vérificateur attend.
+- LAB 12 : `make lab12-canal` remet le canal à zéro (et les compteurs des mocks) ; `make lab12-compteur` est la
+  seule vérité. Les deux instances (`make lab12-deux-instances`, port 8203) partagent `CLE_ETAT` (variable de
+  salle, au moins 32 octets — le SDK refuse `CLE_SERVEUR`, trop courte). Un `requestState` altéré, expiré ou
+  rejoué avec d'autres arguments est refusé par le SDK avant l'outil ; le journal (`logs/pharos-ops.jsonl`) le
+  consigne quand même.
 
 ## Vérités
 
@@ -54,6 +74,9 @@ est-elle à risque ? » : ESC-2026-0412, quai 3, jeudi 8 octobre 6 h – 20 h ; 
 | 10 | Le refus au quota indique comment consommer moins | `make lab10-mocks QUOTA=5`, puis `make lab10-question` ; le vérificateur affiche le refus obtenu |
 | 10 | Critère décisif : la note en panne ne conclut pas sur la météo | relire `labs/lab10/note-panne.md` (`make lab10-note-panne`) — le vérificateur contrôle les mots « non évaluée » et l'absence de valeur en kt ou en mètres de houle (✅) ; le jugement final est humain |
 | 10 | Le message de panne, lu à voix haute | mise en commun : les trois parties (ce qui est tombé, ce qui reste, ce qu'il ne faut pas conclure) |
+| 11 | L'échec en panne porte les trois parties (extension B) | `make lab10-mocks PANNE=meteo` pendant un recalcul de la journée ; le vérificateur affiche l'échec obtenu |
+| 11 | Critère décisif, à vitesse réelle : ce que voit l'utilisateur minute par minute | `labs/lab11/observations.md` ; mise en commun : « qu'a vu l'utilisateur à la quatre-vingt-dixième seconde ? » |
+| 12 | Les deux chiffres de la mise en commun : alertes parties à l'étape 1, et à la fin | `labs/lab12/mesures.md` et `make lab12-compteur` ; le second doit être zéro partout |
 
 ## Durcissement de requete_sql (référence du LAB 9)
 
@@ -101,6 +124,9 @@ LAB 9 — à rappeler en mise en commun.
 | 10 | google/gemini-3.6-flash | `make lab10-appels`, juste après la note en panne ci-dessus | `GET /meteo/previsions` ×4 (2 outils météo × 1 réessai chacun sur le 503 récupérable), `GET /referentiel/navires` ×1 | 2026-09-27 |
 | 10 | google/gemini-3.6-flash | `make tokens-catalogue SERVEUR=http://observateur:8103/mcp PHAROS_JETON=jeton-exploitation` (coût fixe du catalogue de `pharos-ops`, payé à chaque tour de la boucle) | 3 outils, **476 tokens** au total (`meteo_creneau` 205, `meteo_alerte` 139, `navire_par_nom` 132) | 2026-09-27 |
 | — | google/gemini-3.6-flash | Coût de l'étalonnage du LAB 10 (`make lab10-note-panne` — un seul appel de boucle, trois tours — puis `make lab10-appels`, `make tokens-catalogue`, `make lab10-verifier SANS_MODELE=1`, aucun de ces trois derniers n'appelant le modèle) | non affiché (aucune sortie `make` n'expose un coût en dollars ; le tableau de bord OpenRouter n'a pas été consulté, hors périmètre des outils disponibles) — le budget de 0,05 $ n'a manifestement pas été dépassé (un seul appel de boucle, trois tours) | 2026-09-27 |
+| 11 | google/gemini-3.6-flash | `make lab11-scaffold` (vitesse réelle) puis `make lab11-verifier SANS_MODELE=1` (**modèle simulé**, mesure de ce qui s'affiche) ; ensuite, sur le **vrai modèle**, un seul appel `make lab10-question QUESTION="Le plan de placement de jeudi est à revoir, l'escale du Vent d'Autan a été décalée."`, horodaté par un tube ligne à ligne (`\| while IFS= read -r l; do printf '%s  %s\n' "$(date +%T)" "$l"; done`, sans passer par un filtre qui bufferise la sortie de `make`, sans quoi tout apparaît d'un bloc à la fin) | **Run modèle simulé** (vitesse réelle) : à 0 s la création du conteneur `atelier`, puis « tâche … acceptée par le serveur » (le vérificateur n'affiche pas sa question simulée ; avec `make lab10-question`, la question s'affiche entre les deux, comme le consigne `observations.md`) ; à 30 s, 4 à 5 lignes « N escales sur 24 » ; à 90 s, une quinzaine de lignes — au fil de l'eau, cohérent avec une escale toutes les 5 s et une interrogation toutes les 2 s. **Run vrai modèle** (l'appel unique) : fin à **2 min 17 s** (137 s) avec **23** lignes « N escales sur 24 » affichées au total, puis la trace (2 appels, 1 tour : `navire_par_nom` 103 ms, `recalculer_plan_quai` 120 416 ms, journée entière, en tâche) et la réponse — 24 escales, 17 maintenues, 7 à décaler dont le Vent d'Autan (`ESC-2026-0412`), identifiants et motifs exacts ; **aucune invention** : le modèle n'a rien annoncé avant le retour réel de l'outil | 2026-09-27 |
+| 12 (étape 1) | google/gemini-3.6-flash | Étape 1 sans garde-fou (script jetable, hors dépôt, jamais commité), superposée au LAB 11 ; trois conversations vierges, `make lab12-canal` avant chacune (remet le canal et les compteurs des mocks à zéro), même question : `QUESTION="L'escale du Vent d'Autan de jeudi est à risque. Préviens l'exploitant."` | Compteur (`make lab12-compteur`) après chaque conversation : **1, 1, 1** ; trace de chaque conversation : **un seul** appel `publier_alerte` — chiffre honnête, pas « 2 ou 3 » comme l'exemple du brief l'évoquait | 2026-09-27 |
+| — | google/gemini-3.6-flash | Coût de l'étalonnage des LAB 11 et 12 (Tasks 6 et 9 : un appel réel pour le LAB 11, trois pour le LAB 12 étape 1 ; `make lab11-verifier SANS_MODELE=1` et `make lab12-verifier SANS_MODELE=1` n'appellent pas le modèle) | non affiché (aucune sortie `make` n'expose un coût en dollars ; `pharos_client` n'imprime aucune information de coût/usage) — à relever par l'utilisateur sur le tableau de bord OpenRouter | 2026-09-27 |
 
 **Note sur `jeton-rance`** : la boucle a essuyé trois refus successifs de `requete_sql` (colonnes ou syntaxe hors périmètre), obtenu des résultats exploitables aux tours 4 à 7 (dont une réponse à 195 octets couvrant la fenêtre du jeudi), mais a continué à reformuler la requête au lieu de conclure, jusqu'à épuiser le budget de 8 tours sans produire de réponse en langage naturel ; l'appel final (`escales_a_risque`) est hors sujet. Aucune donnée d'une autre compagnie n'apparaît dans les tours exécutés.
 

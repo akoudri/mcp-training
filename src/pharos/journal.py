@@ -8,6 +8,10 @@ Fichier : logs/<serveur>.jsonl (dossier git-ignoré). Chaque ligne : horodatage,
 identite, issue (ok | refus | erreur), message (ce que le client a reçu), erreur_brute (jamais renvoyée
 au client). C'est la trace d'audit qui garde les appels REFUSÉS (LAB 14), et l'endroit où l'erreur brute
 de la base est journalisée sans être diffusée (slide 300) : journal.consigner_erreur(exc).
+
+Les refus PROTOCOLAIRES — un requestState altéré, expiré ou rejoué avec d'autres arguments (LAB 12), refusé par
+le SDK avant l'outil — n'atteignent jamais le code du binôme : l'intergiciel les journalise aussi (issue
+« refus », outil et arguments de la requête refusée).
 """
 
 from __future__ import annotations
@@ -19,6 +23,7 @@ from pathlib import Path
 
 from fastmcp.exceptions import ToolError
 from fastmcp.server.middleware import Middleware
+from mcp.shared.exceptions import MCPError
 from starlette.middleware import Middleware as MiddlewareAsgi
 
 from pharos import horloge
@@ -101,6 +106,21 @@ class Journal(Middleware):
         issue = "refus" if getattr(resultat, "is_error", False) else "ok"
         ecrire(self.serveur, **champs, issue=issue, message=None, erreur_brute=" | ".join(erreurs) or None)
         return resultat
+
+
+    async def on_message(self, context, call_next):
+        """Refus levés par le SDK avant l'outil (requestState invalide…) : on_call_tool ne les voit pas."""
+        try:
+            return await call_next(context)
+        except MCPError as exc:
+            if context.method == "tools/call":
+                # À ce stade, le message est encore la requête brute (un dict) : l'outil n'est pas résolu.
+                brut = context.message if isinstance(context.message, dict) else \
+                    context.message.model_dump(by_alias=True) if hasattr(context.message, "model_dump") else {}
+                ecrire(self.serveur, correlation=_meta(context).get(CLE_CORRELATION), outil=brut.get("name"),
+                       arguments=brut.get("arguments") or {}, identite=_identite(),
+                       issue="refus", message=str(exc), erreur_brute=f"{exc.__class__.__name__}: {exc}")
+            raise
 
 
 class _JournalHttp:

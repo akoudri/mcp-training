@@ -73,6 +73,24 @@ def _lignes(d: generer.Donnees) -> dict[str, list[tuple]]:
     }
 
 
+# Le moteur de planification du LAB 11 lit toutes les escales sous pharos_planification (position assumée,
+# spec §9.5 : pharos-ops ne cloisonne pas au socle). Une table sous RLS sans politique pour ce rôle ne lui
+# rendrait rien : après la politique du binôme, le kit lui en donne une, en lecture seule, sur chaque table
+# où la RLS est activée.
+PLANIFICATION_SQL = """
+DO $$
+DECLARE t text;
+BEGIN
+  FOREACH t IN ARRAY ARRAY['agents', 'navires', 'quais', 'escales', 'mouvements'] LOOP
+    IF (SELECT relrowsecurity FROM pg_class WHERE oid = t::regclass) THEN
+      EXECUTE format('DROP POLICY IF EXISTS planification_lit_tout ON %I', t);
+      EXECUTE format('CREATE POLICY planification_lit_tout ON %I FOR SELECT TO pharos_planification USING (true)', t);
+    END IF;
+  END LOOP;
+END $$;
+"""
+
+
 class PolitiqueInvalide(Exception):
     """labs/lab9/politique.sql ne s'applique pas ; le message est celui de PostgreSQL."""
 
@@ -85,6 +103,7 @@ async def appliquer_politique(connexion: asyncpg.Connection, chemin: Path = POLI
         async with connexion.transaction():
             await connexion.execute("SET LOCAL ROLE pharos_proprietaire")
             await connexion.execute(chemin.read_text(encoding="utf-8"))
+            await connexion.execute(PLANIFICATION_SQL)
     except asyncpg.PostgresError as exc:
         raise PolitiqueInvalide(f"{exc.__class__.__name__}: {exc}") from exc
     return True

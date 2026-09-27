@@ -12,4 +12,7 @@ services:
   pharos-ops:
     extends: {file: compose/commun/base.yaml, service: python-base}
     depends_on: [mocks]
+    environment:
+      # Moteur de planification du LAB 11 : « rapide » divise les durées par dix (make lab11-scaffold VITESSE=rapide).
+      PHAROS_VITESSE: "${PHAROS_VITESSE:-}"
     command: python -m watchfiles --filter python "python -m serveurs.pharos_ops.serveur" serveurs src
