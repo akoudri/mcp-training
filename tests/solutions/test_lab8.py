@@ -6,8 +6,8 @@ from outils.construire_etats import superposer
 from outils.verifier.commun import Etat
 from tests.aides import base_requise, charger_module, importer_client, servir
 
-pytestmark = [pytest.mark.skipif(not Path("solutions/lab08").is_dir(),
-                                 reason="instantanés présents sur la branche solutions uniquement"), base_requise]
+pytestmark = pytest.mark.skipif(not Path("solutions/lab08").is_dir(),
+                                reason="instantanés présents sur la branche solutions uniquement")
 
 
 @pytest.fixture(scope="module")
@@ -17,6 +17,7 @@ def etat(tmp_path_factory):
     return dossier
 
 
+@base_requise
 async def test_la_solution_passe_son_verificateur(etat, base_de_test, monkeypatch):
     serveur = charger_module(etat / "serveurs" / "pharos_data" / "serveur.py", "solution_lab8_serveur")
     with importer_client(etat / "client"):

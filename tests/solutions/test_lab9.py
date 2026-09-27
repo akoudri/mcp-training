@@ -5,8 +5,8 @@ import pytest
 from outils.verifier.commun import Etat
 from tests.aides import DSN_TEST, base_requise, etat_complet, importer_paquet, servir
 
-pytestmark = [pytest.mark.skipif(not Path("solutions/lab09").is_dir(),
-                                 reason="instantanés présents sur la branche solutions uniquement"), base_requise]
+pytestmark = pytest.mark.skipif(not Path("solutions/lab09").is_dir(),
+                                reason="instantanés présents sur la branche solutions uniquement")
 
 
 @pytest.fixture(scope="module")
@@ -14,6 +14,7 @@ def etat(tmp_path_factory):
     return etat_complet(tmp_path_factory.mktemp("etat-lab9"), 9)      # le sous-processus pytest importe src/
 
 
+@base_requise
 async def test_la_solution_passe_son_verificateur(etat, base_de_test, monkeypatch, tmp_path):
     from donnees.base.__main__ import charger
 
