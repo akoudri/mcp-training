@@ -11,9 +11,9 @@ L'observateur déclare dès le LAB 0 les ports 8100 à 8105, 8201, 8203 et 8204 
 | 7001 | Inspector — observateur de trafic (mot de passe `pharos`) | `observateur:8081` |
 | 7002 | Inspector officiel (`make inspector-client`) | — |
 | 8100 | pharos-docs-demo (LAB 0) — VS Code s'y connecte via `http://localhost:8100/mcp` | `observateur:8100` |
-| 8101 | pharos-docs (réservé, LAB 1+) | `observateur:8101` |
-| 8102 | pharos-data (LAB 8, 9) | `observateur:8102` |
-| 8103 | pharos-ops, une instance (LAB 10, 11 ; étapes 1 à 4 du LAB 12) | `observateur:8103` |
+| 8101 | pharos-docs (LAB 1, 7 ; LAB 13 à 15 avec pharos-data et pharos-ops : `make lab13-tout`) | `observateur:8101` |
+| 8102 | pharos-data (LAB 8, 9, 13 à 15) | `observateur:8102` |
+| 8103 | pharos-ops, une instance (LAB 10, 11, 13 à 15 ; étapes 1 à 4 du LAB 12) | `observateur:8103` |
 | 8104 | pharos-legacy, une instance (LAB 2, 3) | `observateur:8104` |
 | 8105 | pharos-quai (LAB 6) | `observateur:8105` |
 | 8201 | répartiteur de pharos-docs, deux instances (LAB 5) | `observateur:8201` |
