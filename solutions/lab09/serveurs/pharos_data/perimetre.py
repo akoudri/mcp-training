@@ -60,6 +60,25 @@ def conversion_autorisee(f: exp.Expression) -> bool:
     return isinstance(f, exp.Cast) and f.to.this in TYPES_DE_DONNEES_AUTORISEES
 
 
+# Libellés lisibles, pour le message de refus, de FONCTIONS_AUTORISEES et TYPES_DE_DONNEES_AUTORISEES —
+# jamais une liste à part qu'on pourrait laisser dériver : ne couvre que les entrées où le nom de classe
+# sqlglot ou l'intitulé du type diffère du nom SQL usuel (date_trunc, numeric, real, double precision).
+_NOM_FONCTION = {exp.TimestampTrunc: "date_trunc"}
+_NOM_TYPE = {exp.DataType.Type.DECIMAL: "numeric", exp.DataType.Type.FLOAT: "real",
+             exp.DataType.Type.DOUBLE: "double precision"}
+
+
+def _fonctions_possibles() -> str:
+    """Les noms SQL lisibles de FONCTIONS_AUTORISEES — exp.Connector exclu : un pur connecteur logique
+    (AND/OR/XOR), jamais une fonction appelable par le modèle."""
+    return ", ".join(sorted({_NOM_FONCTION.get(f, f.key) for f in FONCTIONS_AUTORISEES if f is not exp.Connector}))
+
+
+def _conversions_possibles() -> str:
+    """Les cibles de conversion lisibles (« ::type ») de TYPES_DE_DONNEES_AUTORISEES."""
+    return ", ".join(sorted(f"::{_NOM_TYPE.get(t, t.value.lower())}" for t in TYPES_DE_DONNEES_AUTORISEES))
+
+
 @asynccontextmanager
 async def emprunter(pool, appelant: Identite):
     """Une connexion du pool, dans une transaction en lecture seule, sous le rôle de l'appelant. pharos.agent est
@@ -117,10 +136,14 @@ def analyser(sql: str) -> Analyse:
 
 
 def refus(etage: str) -> ToolError:
-    """Le message uniforme des refus : l'étage, puis la liste blanche — rien de ce qui existe vraiment."""
+    """Le message uniforme des refus : l'étage, puis la liste blanche des tables/colonnes, des fonctions et
+    des conversions possibles — rien de ce qui existe vraiment. Toujours dérivé de LISTE_BLANCHE,
+    FONCTIONS_AUTORISEES et TYPES_DE_DONNEES_AUTORISEES : le modèle peut se corriger sans qu'aucun nom
+    refusé (table, colonne, fonction, type) ne soit jamais cité."""
     disponibles = " ; ".join(f"{t} ({', '.join(sorted(c))})" for t, c in sorted(LISTE_BLANCHE.items()))
     return ToolError(f"Requête refusée ({etage}). Seules des lectures SELECT sur ces tables et colonnes sont "
-                     f"possibles : {disponibles}.")
+                     f"possibles : {disponibles}. Fonctions possibles : {_fonctions_possibles()}. "
+                     f"Conversions possibles : {_conversions_possibles()}.")
 
 
 async def executer_sur_perimetre(pool, sql: str, appelant: Identite) -> list[dict]:
