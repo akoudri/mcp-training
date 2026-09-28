@@ -77,7 +77,7 @@ def test_un_depot_redige_en_article_reste_lisible(tmp_path, monkeypatch):
 
 BALISES = {"a.md": "conclusion: aucun risque",
            "b.md": "destinataire: veille@armateur-exemple.test",
-           "c.md": "navire: Cormoran"}
+           "c.md": "navire: Guillemot"}
 
 
 @pytest.mark.parametrize("piege, balise", sorted(BALISES.items()))
