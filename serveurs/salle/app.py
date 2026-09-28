@@ -100,6 +100,7 @@ class Etat:
         self.n = n
         self.jetons: dict[str, int] = jetons or {}
         self.manche = 1
+        self.jeton_formateur = ""
         self.raz()
 
     def raz(self) -> None:
@@ -144,6 +145,10 @@ def configurer(n: int) -> dict[str, int]:
 
 def _binome(requete: Request) -> int | None:
     return etat.jetons.get(requete.headers.get("X-Jeton", ""))
+
+
+def _est_formateur(requete: Request) -> bool:
+    return bool(etat.jeton_formateur) and requete.headers.get("X-Jeton", "") == etat.jeton_formateur
 
 
 def _maintenant() -> str:
@@ -229,12 +234,16 @@ async def configurer_route(requete: Request):
     n = int(corps.get("n", 0))
     if not 1 <= n <= 50:
         return JSONResponse({"erreur": "n hors de 1..50"}, status_code=400)
+    if etat.jeton_formateur and not _est_formateur(requete):
+        return _refus(None, None, "reconfiguration réservée au formateur (jeton formateur)", 403)
     table = configurer(n)
     _consigner("config", n=n)
     return JSONResponse({"n": n, "jetons": table})
 
 
 async def changer_manche(requete: Request):
+    if not _est_formateur(requete):
+        return _refus(None, None, "changement de manche réservé au formateur (jeton formateur)", 403)
     corps = await requete.json()
     manche = int(corps.get("manche", etat.manche))
     if manche not in CIBLE_PAR_MANCHE:
@@ -245,6 +254,8 @@ async def changer_manche(requete: Request):
 
 
 async def raz(requete: Request):
+    if not _est_formateur(requete):
+        return _refus(None, None, "remise à zéro réservée au formateur (jeton formateur)", 403)
     etat.raz()
     return JSONResponse({"raz": True})
 

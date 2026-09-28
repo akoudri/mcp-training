@@ -57,7 +57,7 @@ def test_l_anneau_boucle_modulo_n(salle):
 def test_l_anneau_n2_manche3_retombe_sur_b_plus_1(salle):
     S, c, jeton = salle
     tbl = S.configurer(2); j = {b: x for x, b in tbl.items()}
-    c.post("/_manche", json={"manche": 3})
+    c.post("/_manche", json={"manche": 3}, headers={"X-Jeton": j[0]})
     assert c.post("/depots/2", headers={"X-Jeton": j[1]}, content=b"Titre: t\n\na").status_code == 200
     assert c.post("/depots/1", headers={"X-Jeton": j[1]}, content=b"x").status_code == 403
 
@@ -65,7 +65,7 @@ def test_l_anneau_n2_manche3_retombe_sur_b_plus_1(salle):
 def test_manche_2_ferme_le_depot_mais_la_cible_voit_ses_documents(salle):
     S, c, jeton = salle
     c.post("/depots/3", headers={"X-Jeton": jeton[2]}, content=b"Titre: t\n\na")
-    c.post("/_manche", json={"manche": 2})
+    c.post("/_manche", json={"manche": 2}, headers={"X-Jeton": jeton[0]})
     r = c.post("/depots/3", headers={"X-Jeton": jeton[2]}, content=b"y")
     assert r.status_code == 403 and "fermé" in r.json()["motif"]
     r = c.get("/depots/3", headers={"X-Jeton": jeton[3]})
@@ -74,7 +74,7 @@ def test_manche_2_ferme_le_depot_mais_la_cible_voit_ses_documents(salle):
 
 def test_manche_3_le_binome_b_attaque_b_plus_2(salle):
     S, c, jeton = salle
-    c.post("/_manche", json={"manche": 3})
+    c.post("/_manche", json={"manche": 3}, headers={"X-Jeton": jeton[0]})
     assert c.post("/depots/4", headers={"X-Jeton": jeton[2]}, content=b"z").json()["cible"] == 4
     assert c.post("/depots/3", headers={"X-Jeton": jeton[2]}, content=b"z").status_code == 403
 
@@ -98,7 +98,7 @@ def test_quota_et_taille(salle):
     for _ in range(5):
         assert c.post("/depots/3", headers={"X-Jeton": jeton[2]}, content=b"a").status_code == 200
     assert c.post("/depots/3", headers={"X-Jeton": jeton[2]}, content=b"a").status_code == 429
-    c.post("/_raz")
+    c.post("/_raz", headers={"X-Jeton": jeton[0]})
     gros = ("x" * 20_001).encode()
     assert c.post("/depots/3", headers={"X-Jeton": jeton[2]}, content=gros).status_code == 413
 
@@ -117,6 +117,14 @@ def test_le_front_matter_porte_le_titre_et_l_escale(salle):
            content="Titre: Avenant\nEscale: ESC-2026-0413\n\ncorps".encode())
     d = c.get("/depots/3", headers={"X-Jeton": jeton[3]}).json()["documents"][0]
     assert d["titre"] == "Avenant" and d["escale"] == "ESC-2026-0413"
+
+
+def test_routes_admin_reservees_au_formateur(salle):
+    S, c, jeton = salle
+    assert c.post("/_manche", json={"manche": 2}).status_code == 403
+    assert c.post("/_manche", json={"manche": 2}, headers={"X-Jeton": jeton[0]}).status_code == 200
+    assert c.post("/_raz").status_code == 403
+    assert c.post("/_raz", headers={"X-Jeton": jeton[0]}).status_code == 200
 
 
 def test_tableau_liste_les_cibles(salle):

@@ -44,6 +44,15 @@ def _lire_env() -> dict[str, str]:
     return valeurs
 
 
+def _jeton_formateur() -> str | None:
+    """Lit le jeton formateur écrit par « jetons » dans salle/jetons.txt (ligne « jeton formateur : … »)."""
+    if JETONS.exists():
+        for ligne in JETONS.read_text(encoding="utf-8").splitlines():
+            if ligne.startswith("jeton formateur :"):
+                return ligne.split(":", 1)[1].strip()
+    return None
+
+
 def _requete(methode: str, url: str, jeton: str | None = None, **options) -> httpx.Response:
     entetes = {"X-Jeton": jeton} if jeton else {}
     try:
@@ -72,6 +81,8 @@ def deposer(fichier: Path, cible: int | None = None) -> str:
         if decalage is None:
             raise Refus(f"dépôt fermé à la manche {manche}.")
         cible = (binome - 1 + decalage) % n + 1
+        if cible == binome and n >= 2:   # N ≤ 2 à la manche 3 : b+2 retombe sur b+1 (comme le service)
+            cible = binome % n + 1
     r = _requete("POST", f"{env['SALLE_URL']}/depots/{cible}", jeton=env["SALLE_JETON"],
                  content=corps.encode("utf-8"))
     if r.status_code != 200:
@@ -114,7 +125,7 @@ def remonter_issue(objectif: str, reussite: bool, preuve: str) -> str:
 def tirer_jetons(n: int, url: str) -> str:
     from serveurs.salle import app as salle
 
-    jetons = _requete("POST", f"{url.rstrip('/')}/_config", json={"n": n})
+    jetons = _requete("POST", f"{url.rstrip('/')}/_config", jeton=_jeton_formateur(), json={"n": n})
     if jetons.status_code == 200:
         table = jetons.json()["jetons"]
     else:
@@ -141,7 +152,10 @@ def tableau() -> str:
 
 
 def changer_manche(manche: int, url: str) -> str:
-    r = _requete("POST", f"{url.rstrip('/')}/_manche", json={"manche": manche})
+    jeton = _jeton_formateur()
+    if jeton is None:
+        raise Refus("jeton formateur introuvable dans salle/jetons.txt : lancer d'abord make salle-jetons N=…")
+    r = _requete("POST", f"{url.rstrip('/')}/_manche", jeton=jeton, json={"manche": manche})
     if r.status_code != 200:
         raise Refus(r.json().get("erreur", r.text))
     ouvert = r.json()["depot_ouvert"]
