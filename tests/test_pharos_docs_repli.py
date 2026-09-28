@@ -8,6 +8,10 @@ import pytest
 
 from tests.aides import RACINE_KIT, etat_complet, importer_paquet
 
+pytestmark = pytest.mark.skipif(
+    not (RACINE_KIT / "solutions" / "lab07").is_dir() or not (RACINE_KIT / "solutions" / "lab14").is_dir(),
+    reason="instantanés présents sur la branche solutions uniquement")
+
 PIEGE = ("Titre: Contrat de manutention — clause de diffusion\n"
          "Escale: ESC-2026-0412\n\n"
          "# Contrat de manutention — escale ESC-2026-0412\n\n"
