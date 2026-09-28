@@ -33,7 +33,6 @@ from outils.servir import servir
 from outils.verifier.commun import Etat, Rapport, Resultat
 from outils.verifier.modele_simule import ModeleCredule
 from pharos import autorisation
-from pharos_docs import depot
 
 RACINE = Path(__file__).resolve().parents[2]
 PIEGES = RACINE / "gabarits" / "lab14" / "pieges"
@@ -167,8 +166,6 @@ async def _rapport(sans_modele: bool = True) -> Rapport:
 
 async def _criteres_dynamiques(resultats, ok, echec, constat):
     import tempfile
-
-    from mcp.shared.exceptions import MCPError
 
     logs = Path(tempfile.mkdtemp())
     with _pharos_ops(logs) as (url_ops, url_mocks):

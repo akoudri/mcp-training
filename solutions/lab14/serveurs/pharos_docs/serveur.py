@@ -21,7 +21,6 @@ from serveurs.pharos_docs.ressources import RessourceAvecTaille
 
 mcp = FastMCP("pharos-docs")
 
-EXTRAIT_MAX = 1500
 DUREE_HANDLE_S = int(os.environ.get("PHAROS_DUREE_HANDLE_S", "900"))
 Sujet = Literal["penalites", "delais", "manutention", "assurance"]
 TITRES = {"penalites": "pénalités", "delais": "délais", "manutention": "manutention", "assurance": "assurance"}
