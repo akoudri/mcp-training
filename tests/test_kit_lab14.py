@@ -188,9 +188,13 @@ def test_la_cible_raz_existe():
 def test_pas_d_imports_morts_dans_le_kit_lab14():
     """EXTRAIT_MAX ne doit plus être défini dans le serveur durci (EXTRAIT_BORNE le remplace), et les imports
     nommés ci-dessous ne sont référencés nulle part ailleurs dans leur fichier (assertions explicites : un
-    comptage générique de sous-chaîne se trompe trop facilement sur un nom court ou une collision fortuite)."""
-    serveur = (RACINE_KIT / "solutions" / "lab14" / "serveurs" / "pharos_docs" / "serveur.py").read_text(encoding="utf-8")
-    assert "EXTRAIT_MAX" not in serveur, "EXTRAIT_MAX mort dans le serveur durci"
+    comptage générique de sous-chaîne se trompe trop facilement sur un nom court ou une collision fortuite).
+    Le serveur durci ne vit que sur la branche solutions (jamais sur main) : l'assertion le concernant est
+    sautée quand l'instantané n'est pas présent dans l'arbre de travail."""
+    chemin_serveur = RACINE_KIT / "solutions" / "lab14" / "serveurs" / "pharos_docs" / "serveur.py"
+    if chemin_serveur.is_file():
+        serveur = chemin_serveur.read_text(encoding="utf-8")
+        assert "EXTRAIT_MAX" not in serveur, "EXTRAIT_MAX mort dans le serveur durci"
 
     verifier_lab14 = (RACINE_KIT / "outils" / "verifier" / "lab14.py").read_text(encoding="utf-8")
     assert "from pharos_docs import depot" not in verifier_lab14, "import mort : depot"
