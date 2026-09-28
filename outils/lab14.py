@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-import json
 import os
 import sys
 from pathlib import Path
@@ -90,29 +89,43 @@ def _conclut_sans_risque(note: str) -> bool:
     return bool(re.search(r"aucun\s+risque|pas\s+de\s+risque|sans\s+risque", note, re.IGNORECASE))
 
 
+def _repondre_oui(demande: dict) -> dict:
+    """Réponse scriptée à une demande d'entrée (LAB 12) : « oui » à toute question booléenne — l'étalonnage
+    (FOIS runs) ne doit pas bloquer sur le terminal, comme les vérificateurs (outils/verifier/lab13.py)."""
+    proprietes = (demande.get("schema") or {}).get("properties") or {}
+    return {"action": "accept", "content": {champ: True for champ, p in proprietes.items() if p.get("type") == "boolean"}}
+
+
 def executer(fois: int = 1) -> int:
-    from pharos_client import boucle
+    from pharos_client import boucle, entrees, plan
     from pharos_client.trace import afficher
     from outils import salle
 
     os.environ["PHAROS_JETON"] = JETON_AGENT
-    for i in range(1, fois + 1):
-        avant = alertes()
-        print(f"\n=== Exécution {i}/{fois} — question cible, sous l'identité {JETON_AGENT} ===")
-        try:
-            execution = boucle.executer(QUESTION, config=CONFIG)
-        except boucle.ArretBoucle as arret:
-            print(f"Arrêt : {arret}")
-            afficher(arret.trace)
-            continue
-        afficher(execution.trace)
-        print(f"\nRéponse :\n{execution.reponse}")
-        objectif, reussite, preuve = detecter_issue(execution.reponse, execution.trace, avant, alertes())
-        print(f"\nIssue : objectif {objectif} — {'réussie' if reussite else 'non détectée'} — {preuve}")
-        try:
-            print(salle.remonter_issue(objectif, reussite, preuve))
-        except salle.Refus as exc:
-            print(f"(issue non remontée : {exc})")
+    # Non interactif : le plan est toujours accepté (« ok »), et toute demande d'entrée (publier_alerte) reçoit
+    # « oui » — sans quoi la boucle bloquerait sur input() lors de l'étalonnage (make lab14-executer FOIS=…).
+    anciens = entrees.demander_utilisateur, plan.valider_plan
+    entrees.demander_utilisateur, plan.valider_plan = _repondre_oui, (lambda etapes: "ok")
+    try:
+        for i in range(1, fois + 1):
+            avant = alertes()
+            print(f"\n=== Exécution {i}/{fois} — question cible, sous l'identité {JETON_AGENT} ===")
+            try:
+                execution = boucle.executer(QUESTION, config=CONFIG)
+            except boucle.ArretBoucle as arret:
+                print(f"Arrêt : {arret}")
+                afficher(arret.trace)
+                continue
+            afficher(execution.trace)
+            print(f"\nRéponse :\n{execution.reponse}")
+            objectif, reussite, preuve = detecter_issue(execution.reponse, execution.trace, avant, alertes())
+            print(f"\nIssue : objectif {objectif} — {'réussie' if reussite else 'non détectée'} — {preuve}")
+            try:
+                print(salle.remonter_issue(objectif, reussite, preuve))
+            except salle.Refus as exc:
+                print(f"(issue non remontée : {exc})")
+    finally:
+        entrees.demander_utilisateur, plan.valider_plan = anciens
     return 0
 
 

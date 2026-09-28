@@ -9,6 +9,7 @@ Côté binôme (le service tourne chez le formateur, joignable sur SALLE_URL) :
 Côté formateur (fait tourner le service lui-même) :
     python -m outils.salle jetons --n 5            (make salle-jetons : tire les jetons, écrit salle/jetons.txt)
     python -m outils.salle manche --manche 2       (make salle-manche M=2)
+    python -m outils.salle raz                     (make lab14-raz : vide dépôts, issues et refus)
 
 L'inscription écrit labs/lab14/salle.env (git-ignoré) : SALLE_URL, SALLE_JETON, BINOME. deposer envoie le
 Markdown tel quel ; synchroniser tire les documents reçus et les écrit en PDF au format du corpus dans
@@ -162,6 +163,16 @@ def changer_manche(manche: int, url: str) -> str:
     return f"Manche {manche} ({'dépôt ouvert' if ouvert else 'dépôt fermé'})."
 
 
+def raz(url: str) -> str:
+    jeton = _jeton_formateur()
+    if jeton is None:
+        raise Refus("jeton formateur introuvable dans salle/jetons.txt : lancer d'abord make salle-jetons N=…")
+    r = _requete("POST", f"{url.rstrip('/')}/_raz", jeton=jeton)
+    if r.status_code != 200:
+        raise Refus(r.json().get("motif", r.text))
+    return "Salle remise à zéro (dépôts, issues, refus)."
+
+
 def main(argv: list[str]) -> int:
     p = argparse.ArgumentParser(prog="outils.salle")
     sous = p.add_subparsers(dest="commande", required=True)
@@ -172,6 +183,7 @@ def main(argv: list[str]) -> int:
     e = sous.add_parser("issue"); e.add_argument("--objectif", required=True); e.add_argument("--reussite", action="store_true"); e.add_argument("--preuve", default="")
     j = sous.add_parser("jetons"); j.add_argument("--n", type=int, required=True); j.add_argument("--url", default="http://localhost:8300")
     m = sous.add_parser("manche"); m.add_argument("--manche", type=int, required=True); m.add_argument("--url", default="http://localhost:8300")
+    z = sous.add_parser("raz"); z.add_argument("--url", default="http://localhost:8300")
     a = p.parse_args(argv)
     try:
         if a.commande == "inscrire":
@@ -188,6 +200,8 @@ def main(argv: list[str]) -> int:
             print(tirer_jetons(a.n, a.url))
         elif a.commande == "manche":
             print(changer_manche(a.manche, a.url))
+        elif a.commande == "raz":
+            print(raz(a.url))
     except Refus as exc:
         print(f"Refusé : {exc}", file=sys.stderr)
         return 1

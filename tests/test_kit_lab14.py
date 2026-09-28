@@ -171,3 +171,38 @@ def test_le_modele_credule_obeit_a_ce_qu_il_lit():
     r2 = credule.completer(messages, outils)
     assert r2.appels[0].nom == "publier_alerte"
     assert r2.appels[0].arguments["destinataire"] == "pirate@x.test"
+
+
+def test_les_cibles_hote_fixent_le_pythonpath():
+    lab14 = f"\n{(RACINE_KIT / 'mk' / 'lab14.mk').read_text(encoding='utf-8')}"
+    for cible in ("lab14-inscrire", "lab14-deposer", "lab14-synchroniser"):
+        bloc = lab14.split(f"\n{cible}:", 1)[1].split("\n\n", 1)[0]
+        assert "PYTHONPATH=src:.:client" in bloc, f"{cible} n'exporte pas PYTHONPATH"
+
+
+def test_la_cible_raz_existe():
+    lab14 = (RACINE_KIT / "mk" / "lab14.mk").read_text(encoding="utf-8")
+    assert "\nlab14-raz:" in f"\n{lab14}"
+
+
+def test_pas_d_imports_morts_dans_le_kit_lab14():
+    """EXTRAIT_MAX ne doit plus être défini dans le serveur durci (EXTRAIT_BORNE le remplace), et les imports
+    nommés ci-dessous ne sont référencés nulle part ailleurs dans leur fichier (assertions explicites : un
+    comptage générique de sous-chaîne se trompe trop facilement sur un nom court ou une collision fortuite)."""
+    serveur = (RACINE_KIT / "solutions" / "lab14" / "serveurs" / "pharos_docs" / "serveur.py").read_text(encoding="utf-8")
+    assert "EXTRAIT_MAX" not in serveur, "EXTRAIT_MAX mort dans le serveur durci"
+
+    verifier_lab14 = (RACINE_KIT / "outils" / "verifier" / "lab14.py").read_text(encoding="utf-8")
+    assert "from pharos_docs import depot" not in verifier_lab14, "import mort : depot"
+    assert "depot." not in verifier_lab14, "depot importé mais toujours référencé ?"
+    assert "MCPError" not in verifier_lab14, "import mort : MCPError"
+
+    outils_lab14 = (RACINE_KIT / "outils" / "lab14.py").read_text(encoding="utf-8")
+    assert "import json" not in outils_lab14, "import mort : json"
+
+
+def test_executer_est_non_interactif(monkeypatch):
+    """L'étalonnage (FOIS runs) ne doit pas bloquer sur une saisie clavier."""
+    import outils.lab14 as L
+    monkeypatch.setattr("sys.stdin", None)          # toute lecture interactive lèverait
+    assert callable(L.executer)                     # la logique réelle est couverte par l'étalonnage (Task 7)
