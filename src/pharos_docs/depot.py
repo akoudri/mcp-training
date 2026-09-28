@@ -40,7 +40,8 @@ def _flux(markdown: str) -> list:
         if not bloc:
             continue
         style = TITRE if bloc.startswith("#") else CORPS
-        flux.append(Paragraph(_echapper(bloc.lstrip("# ").replace("\n", "<br/>")), style))
+        sans_prefixe = re.sub(r"^#+\s*", "", bloc)   # seul le préfixe de titre (« # », « ## », …) est retiré
+        flux.append(Paragraph(_echapper(sans_prefixe.replace("\n", "<br/>")), style))
     return flux or [Paragraph("(document vide)", CORPS)]
 
 
