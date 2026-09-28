@@ -71,6 +71,17 @@ def _contrat(escale_id: str) -> extraction.Document:
     return contrat
 
 
+def _sections(document_id: str) -> list[extraction.Section]:
+    """Sections d'un document. Repli LAB 14 : un document sans en-tête « Article N — » reconnu (un contrat
+    déposé, une page) est rendu comme une section unique couvrant tout le document, pour que son texte
+    atteigne quand même l'agent. No-op sur le corpus réel (chaque contrat de manutention a ses articles)."""
+    sections = extraction.sections_du_document(document_id)
+    if sections:
+        return sections
+    pages = extraction.texte_du_document(document_id)
+    return [extraction.Section("Document (sans article)", 1, len(pages))]
+
+
 def _enregistrer_ressources() -> None:
     """Chaque document devient une ressource : l'hôte décide de l'attacher, sur la foi de sa taille."""
     for doc in extraction.documents():
@@ -103,6 +114,10 @@ def rechercher_clause(escale_id: EscaleId, sujet: SujetArg) -> dict:
     """Recherche, dans le contrat de manutention d'une escale, la clause qui traite d'un sujet, et renvoie son texte et sa page."""
     contrat = _contrat(escale_id)
     articles = [s for s in extraction.sections_du_document(contrat.document_id) if s.titre.startswith("Article")]
+    if not articles:
+        # Repli LAB 14 : contrat sans article reconnu (un dépôt) → rendre le corps intégral, non fiable et borné.
+        return {"document_id": contrat.document_id, "article": None, "page": 1,
+                "extrait_document": _extrait_non_fiable(_texte_integral(contrat.document_id))}
     section = next((s for s in articles if TITRES[sujet] in s.titre.casefold()), None)
     if section is None:
         presents = [c for c, t in TITRES.items() if any(t in s.titre.casefold() for s in articles)]
@@ -142,7 +157,7 @@ def _handle(escale_id: str, document_id: str) -> str:
 def ouvrir_dossier(escale_id: EscaleId) -> dict:
     """Ouvre le dossier d'analyse du contrat de manutention d'une escale : rend la liste de ses sections et un handle à passer à lire_section."""
     contrat = _contrat(escale_id)
-    sections = extraction.sections_du_document(contrat.document_id)
+    sections = _sections(contrat.document_id)
     return {"handle": _handle(escale_id, contrat.document_id), "escale_id": escale_id,
             "document_id": contrat.document_id,
             "sections": [{"id": f"{contrat.document_id}:s{i:02d}", "titre": s.titre, "pages": [s.page_debut, s.page_fin]}
@@ -162,7 +177,7 @@ def lire_section(handle: HandleArg, section: SectionArg) -> dict:
     if document_id != charge["d"]:
         raise ToolError(f"La section {section} n'appartient pas au dossier ouvert ({charge['d']}, escale {charge['e']}). "
                         "Ouvrir le dossier de l'escale concernée avec ouvrir_dossier.")
-    sections = extraction.sections_du_document(document_id)
+    sections = _sections(document_id)
     if not rang.isdigit() or not 1 <= int(rang) <= len(sections):
         raise ToolError(f"Section inconnue : {section}. Utiliser un identifiant rendu par ouvrir_dossier.")
     s = sections[int(rang) - 1]
