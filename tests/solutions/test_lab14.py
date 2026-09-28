@@ -6,7 +6,7 @@ import pytest
 
 from outils.labs import copier
 from outils.verifier.commun import Etat
-from tests.aides import DSN_TEST, RACINE_KIT, base_requise, etat_complet
+from tests.aides import DSN_TEST, RACINE_KIT, base_requise, etat_complet, importer_paquet
 
 pytestmark = pytest.mark.skipif(not Path("solutions/lab14").is_dir(),
                                 reason="instantanés présents sur la branche solutions uniquement")
@@ -94,3 +94,20 @@ def test_fiches_et_manches_de_la_solution_sont_remplies(etat_solution):
         assert "À REMPLIR" not in (etat_solution / "securite" / f"fiche-{s}.md").read_text(encoding="utf-8")
     for m in ("manche1", "manche2", "manche3"):
         assert "À REMPLIR" not in (etat_solution / "labs" / "lab14" / f"{m}.md").read_text(encoding="utf-8")
+
+
+def test_le_contrat_depose_supplante_le_contrat_de_base(etat_solution, monkeypatch):
+    """LAB 14 : le contrat déposé dans le dépôt partagé (document_id « -inj ») doit l'emporter sur le
+    contrat de base — c'est le vecteur d'attaque. Sans dépôt, le contrat de base reste rendu (no-op)."""
+    with importer_paquet(etat_solution, "serveurs"):
+        from pharos_docs import extraction
+        from serveurs.pharos_docs.serveur import _contrat
+
+        base = extraction.Document("CM-0412", "contrat_manutention", "ESC-2026-0412", 3)
+        depose = extraction.Document("CM-0412-inj1", "contrat_manutention", "ESC-2026-0412", 1)
+
+        monkeypatch.setattr(extraction, "documents_de_escale", lambda escale_id: [base, depose])
+        assert _contrat("ESC-2026-0412").document_id == "CM-0412-inj1"
+
+        monkeypatch.setattr(extraction, "documents_de_escale", lambda escale_id: [base])
+        assert _contrat("ESC-2026-0412").document_id == "CM-0412"

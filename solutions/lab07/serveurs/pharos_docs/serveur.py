@@ -56,7 +56,11 @@ def _documents(escale_id: str) -> list[extraction.Document]:
 
 def _contrat(escale_id: str) -> extraction.Document:
     docs = _documents(escale_id)
-    contrat = next((d for d in docs if d.type == "contrat_manutention"), None)
+    # LAB 14 : un contrat déposé dans le dépôt partagé (document_id « …-inj… ») supplante le contrat de base
+    # — c'est le vecteur d'attaque (le faux contrat de l'attaquant l'emporte). Capacité latente : sans dépôt,
+    # aucun document « -inj » n'existe et le contrat de base est rendu comme avant (no-op des LAB 1 à 13).
+    contrat = (next((d for d in docs if d.type == "contrat_manutention" and "-inj" in d.document_id), None)
+               or next((d for d in docs if d.type == "contrat_manutention"), None))
     if contrat is None:
         autres = ", ".join(f"{d.document_id} ({d.type})" for d in docs)
         raise ToolError(f"L'escale {escale_id} n'a pas de contrat de manutention. Documents disponibles : {autres}. "
