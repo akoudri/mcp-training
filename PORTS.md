@@ -19,5 +19,6 @@ L'observateur déclare dès le LAB 0 les ports 8100 à 8105, 8201, 8203 et 8204 
 | 8201 | répartiteur de pharos-docs, deux instances (LAB 5) | `observateur:8201` |
 | 8203 | répartiteur de pharos-ops, deux instances (LAB 12) | `observateur:8203` |
 | 8204 | répartiteur de pharos-legacy, deux instances (LAB 2 sans affinité, LAB 3 avec) | `observateur:8204` |
+| 8300 | pharos-salle — service de salle du LAB 14, poste du formateur : SEUL port ouvert sur le réseau de salle (make salle-demarrer) ; sinon 127.0.0.1 | — |
 | 5433 | pharos-db, base PHAROS (LAB 8 à 12) — PostgreSQL 17, utilisateur `postgres`, mot de passe de salle `pharos-salle-2026` ; jamais 5432, souvent pris sur le poste | `pharos-db:5432` |
 | — | mocks des systèmes externes (LAB 10 à 14) : météo marine, référentiel navires, canal d'alertes ; **non publiés** sur le poste (interrupteurs : `make lab10-mocks`) | `mocks:8000` |

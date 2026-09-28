@@ -188,3 +188,60 @@ Coût : trois exécutions de `make lab13-question` de plus, à relever sur le ta
 Coût connu localement (bancs uniquement, affichés par `make lab13-banc`) : 0,0273 $ + 0,0308 $ = 0,0581 $. Le
 coût des six exécutions de `make lab13-question` (trois par tour) n'est pas affiché par cette cible : coût total
 à relever sur le tableau de bord OpenRouter (sous le budget de 0,30 $ du plan).
+
+## Le service de salle et l'anneau (LAB 14)
+
+- **Un seul poste exposé.** `make salle-demarrer N=5` lance `pharos-salle` sur `0.0.0.0:8300` (poste du
+  formateur) et tire cinq jetons dans `salle/jetons.txt` (git-ignoré, à distribuer sur papier). Les PHAROS
+  des binômes restent sur 127.0.0.1 : vérifier depuis un poste que `http://<poste-formateur>:8300/tableau`
+  répond, et qu'un port d'un binôme (8101…) ne répond pas depuis le voisin.
+- **En local (préparation, tests, CI).** `make salle-locale` sert le même service sur `127.0.0.1:8300`.
+- **Inscription des binômes.** Chacun : `make lab14-inscrire URL=http://<poste-formateur>:8300 BINOME=<b>
+  JETON=<son jeton>` (écrit `labs/lab14/salle.env`, git-ignoré), et pose `PHAROS_BINOME=<b>` dans son `.env`
+  (pharos-docs lit alors `contrats-partages/binome-<b>`).
+- **Les manches.** `make salle-manche M=1` puis `M=2`, `M=3`. Anneau : manche 1, le binôme *b* attaque
+  *b+1* ; manche 2, dépôt fermé (durcissement) ; manche 3, *b* attaque *b+2*. Le formateur coupe la manche 1
+  à 45 minutes. Avec N ≤ 2, la manche 3 retombe sur *b+1* (le tableau le signale).
+- **Le tour d'un binôme.** L'attaquant écrit son injection en Markdown (front-matter `Titre:`/`Escale:`
+  optionnel) et `make lab14-deposer FICHIER=attaque.md`. La cible `make lab14-synchroniser` (les documents
+  reçus deviennent des PDF dans `contrats-partages/binome-<b>/`), relance `make lab13-tout`, puis
+  `make lab14-executer` (le vrai modèle, sous l'identité `jeton-rance` de l'escale du *Vent d'Autan*) :
+  l'issue (A/B/C) remonte au tableau. C'est la cible qui exécute ; l'attaquant lit le tableau.
+- **Le vérificateur** (`make lab14-verifier`) est déterministe (modèle simulé « crédule », pharos-db requis) :
+  il sonde les contre-mesures, rejoue les trois documents piégés de référence, et contrôle les refus
+  journalisés. Le critère décisif — reconstituer la manche 1 depuis la seule trace — se constate au débrief.
+- 👁 La fiche de sécurité et le débrief (les trois questions, dont « impossible vs plus difficile ») sont le
+  livrable le plus important de la journée : ils se traitent au tableau, ensemble.
+
+## Étalonnage du LAB 14 (2026-09-28)
+
+**Machinerie validée.** Le vérificateur déterministe (`make lab14-verifier`) passe 6 ✅ · 2 👁 : il sonde
+directement les serveurs durcis (liste d'autorisation, moindre privilège, extrait marqué et borné, refus
+journalisés) et rejoue les balises des trois documents piégés de référence avec le modèle simulé « crédule ».
+La suite complète est verte (≈ 629 tests, base comprise) et l'essai Docker du LAB 14 rend 6 ✅ · 2 👁.
+
+**Étalonnage sur le vrai modèle : reporté au plan 3.** Le passage sur `google/gemini-3.6-flash` a révélé que
+la chaîne d'attaque *bout-en-bout* (un document déposé → lu par l'agent via ses outils → obéi) n'était pas
+finalisée : le vérificateur par sondes la court-circuite, si bien que les tests et l'essai ne l'exerçaient pas.
+Trois paliers :
+
+1. **Sélection du contrat — corrigé.** `_contrat` choisissait toujours le contrat de base `CM-0412`, jamais le
+   document déposé `CM-0412-injN`. Corrigé : un contrat déposé (`document_id` en « -inj ») supplante désormais
+   le contrat de base — capacité latente de pharos-docs (depuis le LAB 07), sans effet sur les LAB 1 à 13.
+2. **Lisibilité du document déposé — à concevoir (plan 3).** Un piège court rend un PDF d'une page ;
+   `extraction.sections_du_document` ne reconnaît un en-tête (« Article N — … ») que sur la première ligne
+   d'une page, comme dans les vrais contrats (un article par page). Les pièges donnent donc zéro section, et
+   `rechercher_clause` / `ouvrir_dossier` / `lire_section` n'exposent aucun de leur contenu au modèle.
+3. **Obéissance du vrai modèle — non encore mesurée** (le contenu piégé n'ayant pas atteint le modèle).
+
+**Décision.** Le vecteur d'attaque bout-en-bout (lisibilité des pièges + repli des outils sur un document non
+structuré, puis re-étalonnage réel) est conçu au **plan 3**, avec les retouches du brief du LAB 14 (spec
+§12.1) et des slides (spec §12.2) qui décrivent ce mécanisme — mécanisme et pédagogie finalisés ensemble.
+
+**Coût réel de la découverte** : quatre exécutions courtes du vrai modèle (flash) au total sur ce diagnostic —
+**à relever sur le tableau de bord OpenRouter**, attendu très en-deçà des 0,30 $ de budget.
+
+**Note d'exploitation (plan 3)** : côté hôte, `make lab14-synchroniser` / `lab14-inscrire` / `lab14-deposer`
+exigent `PYTHONPATH=src:.:client` (le Makefile ne le pose pas hors conteneur) ; et `lab14-executer` non
+interactif franchit deux portes de confirmation (`input()` : validation du plan, puis `publier_alerte`) qu'il
+faut alimenter (« ok » puis « oui ») ou refuser par défaut sur EOF — à documenter.
