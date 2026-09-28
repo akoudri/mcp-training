@@ -59,7 +59,14 @@ def _contrat(escale_id: str) -> extraction.Document:
     # LAB 14 : un contrat déposé dans le dépôt partagé (document_id « …-inj… ») supplante le contrat de base
     # — c'est le vecteur d'attaque (le faux contrat de l'attaquant l'emporte). Capacité latente : sans dépôt,
     # aucun document « -inj » n'existe et le contrat de base est rendu comme avant (no-op des LAB 1 à 13).
-    contrat = (next((d for d in docs if d.type == "contrat_manutention" and "-inj" in d.document_id), None)
+    # Plusieurs dépôts : le plus récent l'emporte, par rang numérique.
+    injectes = [d for d in docs if d.type == "contrat_manutention" and "-inj" in d.document_id]
+
+    def _rang(d: extraction.Document) -> tuple[int, str]:
+        m = re.search(r"-inj(\d+)", d.document_id)
+        return (int(m.group(1)) if m else 0, d.document_id)
+
+    contrat = (max(injectes, key=_rang, default=None)
                or next((d for d in docs if d.type == "contrat_manutention"), None))
     if contrat is None:
         autres = ", ".join(f"{d.document_id} ({d.type})" for d in docs)

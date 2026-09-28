@@ -111,3 +111,19 @@ def test_le_contrat_depose_supplante_le_contrat_de_base(etat_solution, monkeypat
 
         monkeypatch.setattr(extraction, "documents_de_escale", lambda escale_id: [base])
         assert _contrat("ESC-2026-0412").document_id == "CM-0412"
+
+
+def test_le_contrat_depose_le_plus_recent_supplante(etat_solution, monkeypatch):
+    """Plusieurs dépôts : le plus récent l'emporte, par rang numérique (inj10 > inj2 > inj1), pas par
+    ordre lexicographique."""
+    with importer_paquet(etat_solution, "serveurs"):
+        from pharos_docs import extraction
+        from serveurs.pharos_docs.serveur import _contrat
+
+        base = extraction.Document("CM-0412", "contrat_manutention", "ESC-2026-0412", 3)
+        inj1 = extraction.Document("CM-0412-inj1", "contrat_manutention", "ESC-2026-0412", 1)
+        inj2 = extraction.Document("CM-0412-inj2", "contrat_manutention", "ESC-2026-0412", 1)
+        inj10 = extraction.Document("CM-0412-inj10", "contrat_manutention", "ESC-2026-0412", 1)
+
+        monkeypatch.setattr(extraction, "documents_de_escale", lambda e: [base, inj1, inj10, inj2])
+        assert _contrat("ESC-2026-0412").document_id == "CM-0412-inj10"
