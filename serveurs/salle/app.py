@@ -49,6 +49,7 @@ TAILLE_MAX = 20_000                       # octets du corps d'un document
 DEPOTS_MAX = 5                            # dépôts par binôme et par manche
 CIBLE_PAR_MANCHE = {1: 1, 2: None, 3: 2}  # décalage attaquant → cible ; None : dépôt fermé
 FRONT = re.compile(r"^(Titre|Escale)\s*:\s*(.+?)\s*$", re.IGNORECASE)
+CLE_ADMIN = os.environ.get("SALLE_CLE_ADMIN", "")   # clé d'admin tirée au lancement (make salle-*) ; exigée dès le démarrage
 
 
 def _front_matter(corps: str) -> tuple[str, str]:
@@ -120,6 +121,8 @@ class Etat:
 
 
 etat = Etat()
+if CLE_ADMIN:
+    etat.jeton_formateur = CLE_ADMIN          # exigée dès le premier /_config : ferme la course au démarrage
 
 
 def journal() -> Path:
@@ -139,7 +142,7 @@ def configurer(n: int) -> dict[str, int]:
     global etat
     jetons = {secrets.token_hex(8): b for b in range(1, n + 1)}
     etat = Etat(n, jetons)
-    etat.jeton_formateur = secrets.token_hex(8)
+    etat.jeton_formateur = CLE_ADMIN or secrets.token_hex(8)
     return {**{j: b for j, b in jetons.items()}, etat.jeton_formateur: 0}
 
 
