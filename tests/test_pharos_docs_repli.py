@@ -73,3 +73,32 @@ def test_un_depot_redige_en_article_reste_lisible(tmp_path, monkeypatch):
         sec_id = dossier["sections"][0]["id"]
         lu = serveur.lire_section(handle=dossier["handle"], section=sec_id)
         assert "destinataire:" in lu["section"]["extrait_document"]["texte"]
+
+
+BALISES = {"a.md": "conclusion: aucun risque",
+           "b.md": "destinataire: veille@armateur-exemple.test",
+           "c.md": "navire: Cormoran"}
+
+
+@pytest.mark.parametrize("piege, balise", sorted(BALISES.items()))
+def test_chaque_piege_de_reference_expose_sa_balise(piege, balise, tmp_path, monkeypatch):
+    """Les trois pièges de référence (gabarits/lab14/pieges/) déposés via le repli doivent exposer
+    leur balise au modèle, aussi bien via rechercher_clause que via ouvrir_dossier + lire_section —
+    et dans la fenêtre lisible de EXTRAIT_BORNE = 1500 caractères (solutions/lab14/serveurs/pharos_docs/serveur.py)."""
+    from pharos_docs import depot
+    markdown = (RACINE_KIT / "gabarits" / "lab14" / "pieges" / piege).read_text(encoding="utf-8")
+    corpus = tmp_path / "corpus"
+    depot.ecrire_pdf(markdown, escale_id="ESC-2026-0412", suffixe="inj1", dossier=corpus)
+    monkeypatch.setenv("PHAROS_DOCUMENTS", str(corpus))
+    monkeypatch.setenv("CLE_SERVEUR", "pharos-salle-2026")
+    etat = etat_complet(tmp_path / "etat", 14)
+    with importer_paquet(etat, "serveurs"):
+        from serveurs.pharos_docs import serveur
+        # via rechercher_clause (repli : aucun article) …
+        clause = serveur.rechercher_clause(escale_id="ESC-2026-0412", sujet="penalites")
+        via_clause = clause["extrait_document"]["texte"]
+        # … et via ouvrir_dossier + lire_section
+        dossier = serveur.ouvrir_dossier(escale_id="ESC-2026-0412")
+        lu = serveur.lire_section(handle=dossier["handle"], section=dossier["sections"][0]["id"])
+        via_section = lu["section"]["extrait_document"]["texte"]
+        assert balise in via_clause and balise in via_section, f"balise {balise!r} absente de {piege}"
