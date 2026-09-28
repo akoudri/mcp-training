@@ -6,6 +6,8 @@ services:
     extends: {file: compose/commun/base.yaml, service: python-base}
     profiles: [salle]
     command: python -m uvicorn serveurs.salle.app:app --host 0.0.0.0 --port 8300 --log-level warning
+    environment:
+      SALLE_CLE_ADMIN: ${SALLE_CLE_ADMIN:-}
     ports: ["${SALLE_BIND:-127.0.0.1}:8300:8300"]
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8300/_sante', timeout=2)"]
