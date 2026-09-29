@@ -34,7 +34,9 @@ async def test_erreurs_metier(client, arguments, attendu):
 @pytest.mark.parametrize("sujet", ["penalites", "delais", "manutention", "assurance"])
 async def test_extrait_borne(client, sujet):
     r = await _appel(client, "rechercher_clause", {"escale_id": "ESC-2026-0412", "sujet": sujet})
-    assert not r.is_error and 0 < len(r.data["texte"]) <= 1500
+    assert not r.is_error
+    extrait = r.data.get("texte") or r.data["extrait_document"]["texte"]
+    assert 0 < len(extrait) <= 1500
 
 
 # 4. Handles
