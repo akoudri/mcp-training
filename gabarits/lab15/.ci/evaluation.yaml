@@ -1,0 +1,25 @@
+# Chaîne d'évaluation (LAB 15, étape 4) — à compléter. SÉPARÉE de la chaîne rapide (.ci/rapide.yaml) :
+# le jeu coûte des minutes et des crédits, il ne tourne que lorsqu'un de ses déclencheurs a bougé.
+# (Dans un vrai dépôt, ce fichier vivrait dans .github/workflows/ ; ici, il est vérifié, pas exécuté.)
+#
+# Les déclencheurs (bloc 26.4) :
+#   - un changement de prompt système (client/pharos_client/consigne.md) ou des serveurs (le catalogue) ;
+#   - avant chaque publication : un tag v* ;
+#   - un changement de modèle : un lancement manuel, avec le modèle en entrée.
+# Sans `branches`, GitHub ignore les pushes de branche dès que `paths` ou `tags` sont donnés.
+# Le job lance make lab15-chaine, qui compare les empreintes à evaluation/reference.json : « rien à lancer » si
+# rien n'a bougé, sinon le jeu puis le rapport — et la chaîne prend le code de sortie du rapport.
+name: evaluation
+on:
+  push:
+    paths: []          # à compléter
+    tags: []           # à compléter
+  # workflow_dispatch : à compléter (une entrée « modele »)
+
+jobs:
+  evaluation:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      # à compléter : la clé OpenRouter vient des secrets du dépôt (OPENROUTER_API_KEY), jamais du fichier ;
+      # PHAROS_MODELE vient de l'entrée du lancement manuel ; PUBLICATION=1 sur un tag.

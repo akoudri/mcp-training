@@ -1,0 +1,8 @@
+id: escales-a-risque-jeudi
+famille: simple
+contexte: {date: "2026-10-06", identite: exploitation, base: bb49a8976abecad4, confirmation: refuser}
+question: "Quelles escales sont à risque jeudi 8 octobre ?"
+attendu:
+  contient: ["ESC-2026-0412", "ESC-2026-0413", "ESC-2026-1369", "ESC-2026-1370"]
+  outils_attendus: [escales_a_risque]
+tolerance: 2/3

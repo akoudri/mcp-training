@@ -1,0 +1,236 @@
+"""Harnais du LAB 15 : contexte figé, document piégé chargé le temps d'un cas, exécution sur un client simulé
+(identité, plan, confirmation, compteurs, garde de recalculer_plan_quai), parallélisme par processus, filtre CAS=.
+Ni base, ni Docker, ni modèle."""
+
+import json
+import os
+from pathlib import Path
+
+import pytest
+
+from outils.evaluation import cas as cas_mod
+from outils.evaluation import harnais, resultats
+from tests.aides import RACINE_KIT, importer_client, un_cas
+
+
+def test_le_contexte_fige_refuse_date_base_et_restes_du_lab14(tmp_path):
+    cas = [un_cas(id="ok"), un_cas(id="vieux", contexte=cas_mod.Contexte("2026-10-05", "exploitation", "autre"))]
+    assert harnais.contexte_fige(cas[:1], aujourdhui="2026-10-06", base="bb49a8976abecad4", racine=tmp_path) == []
+    (tmp_path / "contrats-partages" / "binome-2").mkdir(parents=True)
+    (tmp_path / "contrats-partages" / "binome-2" / "ESC-2026-0412__contrat_manutention__CM-0412-inj1.pdf").write_bytes(b"")
+    problemes = harnais.contexte_fige(cas, aujourdhui="2026-10-06", base="bb49a8976abecad4", racine=tmp_path)
+    assert len(problemes) == 3
+    (tmp_path / "contrats-partages" / "evaluation").mkdir()
+    (tmp_path / "contrats-partages" / "evaluation" / "ESC-2026-0409__contrat_manutention__CM-0409-inj1.pdf").write_bytes(b"")
+    reste = harnais.contexte_fige(cas[:1], aujourdhui="2026-10-06", base="bb49a8976abecad4", racine=tmp_path)
+    assert len(reste) == 2 and "interrompue" in reste[1] and "rm contrats-partages/evaluation/*.pdf" in reste[1]
+    assert "vieux : date 2026-10-05" in problemes[0] and "vieux : empreinte de base autre" in problemes[1]
+    assert "documents du LAB 14" in problemes[2] and "binome-2" in problemes[2]
+
+def test_le_document_piege_est_charge_le_temps_du_cas(tmp_path):
+    (tmp_path / "piege.md").write_text("Titre: Avenant\nEscale: ESC-2026-0409\n\nTexte.\n", encoding="utf-8")
+    cas = un_cas(famille="securite", document="piege.md", tolerance=(3, 3))
+    with harnais.document_charge(cas, tmp_path) as chemin:
+        assert chemin.name == "ESC-2026-0409__contrat_manutention__CM-0409-inj1.pdf" and chemin.exists()
+        assert chemin.parent == tmp_path / "contrats-partages" / "evaluation"
+    assert not chemin.exists()
+    assert harnais.escale_du_document("sans en-tête") == "ESC-2026-0412"
+
+CLIENT = {
+    "__init__.py": "",
+    "transport.py": "from dataclasses import dataclass\n@dataclass\nclass Resultat:\n    texte: str\n    est_erreur: bool\n"
+                    "    octets: int\n",
+    "modele.py": "from types import SimpleNamespace\n"
+                 "def completer(messages, outils, **options):\n"
+                 "    return SimpleNamespace(usage={'prompt_tokens': 1000, 'completion_tokens': 50, 'cost': 0.0012})\n",
+    "entrees.py": "from pharos_client.transport import Resultat\n"
+                  "def appeler_brut(session, nom, arguments, **options):\n    return Resultat('ok', False, 2)\n"
+                  "def demander_utilisateur(demande):\n    return input('?')\n",
+    "plan.py": "from dataclasses import dataclass, field\n@dataclass\nclass Execution:\n    plan: list\n    reponse: str\n"
+               "    trace: list = field(default_factory=list)\n"
+               "def afficher_plan(etapes, sortie=print):\n    print('PLAN AFFICHÉ')\n"
+               "def valider_plan(etapes):\n    return input('?')\n",
+    "boucle.py": (
+        "import os\nfrom pharos_client import entrees, modele, plan\n"
+        "class ArretBoucle(Exception):\n    def __init__(self, m, trace):\n        super().__init__(m); self.trace = trace\n"
+        "def executer(question):\n"
+        "    if question == 'arrêt':\n        raise ArretBoucle('budget de tours épuisé (12)', [{'outil': 'x'}])\n"
+        "    plan.afficher_plan([])\n    decision = plan.valider_plan([])\n"
+        "    modele.completer([], [])\n"
+        "    journee = entrees.appeler_brut(None, 'recalculer_plan_quai', {'date': '2026-10-08'})\n"
+        "    quai = entrees.appeler_brut(None, 'recalculer_plan_quai', {'date': '2026-10-08', 'quai': 3})\n"
+        "    conf = entrees.demander_utilisateur({'schema': {'properties': {'confirmer': {'type': 'boolean'}}}})\n"
+        "    reponse = (f\"jeton={os.environ.get('PHAROS_JETON')} decision={decision} \"\n"
+        "               f\"confirmer={conf['content']['confirmer']} journee={journee.est_erreur} quai={quai.est_erreur}\")\n"
+        "    return plan.Execution([], reponse, [{'outil': 'recalculer_plan_quai', 'resultat': 'ok'}])\n"),
+}
+
+@pytest.fixture
+def client_simule(tmp_path):
+    paquet = tmp_path / "client" / "pharos_client"
+    paquet.mkdir(parents=True)
+    for nom, texte in CLIENT.items():
+        (paquet / nom).write_text(texte, encoding="utf-8")
+    with importer_client(tmp_path / "client"):
+        yield tmp_path / "client"
+
+@pytest.mark.parametrize("confirmation, attendu", [("refuser", "confirmer=False"), ("accepter", "confirmer=True")])
+def test_une_execution_fige_identite_plan_confirmation_et_compte(client_simule, monkeypatch, confirmation, attendu):
+    monkeypatch.delenv("PHAROS_JETON", raising=False)
+    import pharos_client.plan as plan
+    cas = un_cas(contexte=cas_mod.Contexte("2026-10-06", "rance", "b", confirmation),
+                 contient=["jeton=jeton-rance", "decision=ok", attendu, "journee=True", "quai=False"],
+                 outils_attendus=["recalculer_plan_quai"])
+    d = harnais.executer_une(cas)
+    assert d["reussite"], d["raisons"]
+    assert d["tokens"] == {"entree": 1000, "sortie": 50} and d["cout"] == 0.0012
+    assert d["avertissements"] == ["recalculer_plan_quai demandé sur la journée entière : non exécuté"]
+    assert "PHAROS_JETON" not in os.environ and plan.valider_plan.__name__ == "valider_plan"
+
+def test_un_arret_est_un_resultat_et_le_cas_se_note(client_simule):
+    d = harnais.executer_une(un_cas(question="arrêt", contient=["x"]))
+    assert not d["reussite"] and d["arret"] == "budget de tours épuisé (12)" and d["outils"] == ["x"]
+
+def test_lancer_et_assembler_sans_parallelisme(client_simule):
+    cas = [un_cas(id="a", contient=["decision=ok"]), un_cas(id="b", contient=["introuvable"])]
+    vus = []
+    cas_resultats = harnais.lancer(cas, fois=2, parallele=1, afficher=vus.append)
+    assert [(r["id"], r["reussites"], r["reussi"]) for r in cas_resultats] == [("a", 2, True), ("b", 0, False)]
+    assert vus == ["  ✅ a (simple) : 2/2", "  ❌ b (simple) : 0/2"]
+    resultat = harnais.assembler(cas_resultats, fois=2, modele="m", empreintes={}, horodatage="h")
+    assert resultat["cout_total"] == 0.0048 and resultat["tokens_total"] == 4200
+    assert "élément manquant : introuvable" in resultats.tableau(resultat)
+
+def test_trois_cas_en_parallele_chacun_dans_son_processus(client_simule, monkeypatch):
+    """Le chemin réel (processus « spawn ») : les cas voyagent, chaque processus a son identité et ses compteurs."""
+    monkeypatch.setenv("PYTHONPATH", os.pathsep.join(str(p) for p in (RACINE_KIT / "src", RACINE_KIT, client_simule)))
+    avant = os.environ.get("PHAROS_JETON")
+    identites = ["exploitation", "rance", "iroise", "rance"]
+    cas = [un_cas(id=f"c{i}", contexte=cas_mod.Contexte("2026-10-06", ident, "b"), contient=[f"jeton=jeton-{ident}"])
+           for i, ident in enumerate(identites)]
+    cas_resultats = harnais.lancer(cas, fois=2, parallele=3, afficher=lambda _: None)
+    assert [(r["id"], r["reussites"]) for r in cas_resultats] == [("c0", 2), ("c1", 2), ("c2", 2), ("c3", 2)]
+    assert os.environ.get("PHAROS_JETON") == avant
+
+
+def test_un_filtre_cas_inconnu_est_refuse(tmp_path, monkeypatch):
+    from outils.evaluation import __main__ as cli
+
+    (tmp_path / "a.yaml").write_text('id: a\nfamille: simple\ncontexte: {date: "2026-10-06", identite: exploitation, '
+                                     'base: b}\nquestion: q\nattendu: {contient: [x]}\n', encoding="utf-8")
+    monkeypatch.setattr(cli, "CAS", tmp_path)
+    assert [c.id for c in cli._charger_cas("a")] == ["a"]
+    with pytest.raises(cas_mod.CasInvalide, match="cas inconnu"):
+        cli._charger_cas("a,zz")
+    monkeypatch.setattr(cli, "CAS", tmp_path / "vide")
+    with pytest.raises(cas_mod.CasInvalide, match="make lab15-exemple"):
+        cli._charger_cas(None)
+
+
+def test_referencer_sans_resultat_le_dit_sans_trace(tmp_path, monkeypatch, capsys):
+    from outils.evaluation import __main__ as cli
+
+    monkeypatch.setattr(cli, "SORTIE", tmp_path)
+    assert cli.referencer(None) == 1
+    assert "make lab15-lancer" in capsys.readouterr().out
+
+
+EMPREINTES = {"base": "b", "catalogue": "cat", "prompt": "pr", "modele": "m"}
+
+
+def _referencer_dans(tmp_path, monkeypatch, ids=("a", "b", "c")):
+    """Un dépôt minimal : trois cas dans evaluation/cas/, sortie/lab15/ et evaluation/reference.json."""
+    from outils.evaluation import __main__ as cli
+
+    cas = tmp_path / "evaluation" / "cas"
+    cas.mkdir(parents=True)
+    for i in ids:
+        (cas / f"{i}.yaml").write_text(f'id: {i}\nfamille: simple\ncontexte: {{date: "2026-10-06", identite: '
+                                       'exploitation, base: b}\nquestion: q\nattendu: {contient: [x]}\n',
+                                       encoding="utf-8")
+    monkeypatch.setattr(cli, "RACINE", tmp_path)
+    monkeypatch.setattr(cli, "CAS", cas)
+    monkeypatch.setattr(cli, "REFERENCE", tmp_path / "evaluation" / "reference.json")
+    monkeypatch.setattr(cli, "SORTIE", tmp_path / "sortie")
+    (tmp_path / "sortie").mkdir()
+    return cli
+
+
+def _resultat(tmp_path, nom, taux: dict, fois=3, **empreintes):
+    chemin = tmp_path / "sortie" / f"{nom}.json"
+    chemin.write_text(json.dumps({"modele": "m", "empreintes": {**EMPREINTES, **empreintes}, "fois": fois,
+                                  "cas": [{"id": i, "famille": "simple", "tolerance": "2/3", "reussites": r,
+                                           "executions": fois, "reussi": r * 3 >= 2 * fois, "detail": []}
+                                          for i, r in taux.items()]}), encoding="utf-8")
+    return str(chemin)
+
+
+def _taux(cli) -> dict:
+    ref = json.loads(cli.REFERENCE.read_text(encoding="utf-8"))
+    return {c["id"]: (c["reussites"], c["resultat"]) for c in ref["cas"]}
+
+
+def test_referencer_un_jeu_complet_remplace_la_reference(tmp_path, monkeypatch, capsys):
+    cli = _referencer_dans(tmp_path, monkeypatch)
+    assert cli.referencer(_resultat(tmp_path, "r1", {"a": 3, "b": 3, "c": 3})) == 0
+    assert cli.referencer(_resultat(tmp_path, "r2", {"a": 2, "b": 3, "c": 1}, catalogue="autre")) == 0
+    assert _taux(cli) == {"a": (2, "r2.json"), "b": (3, "r2.json"), "c": (1, "r2.json")}
+    assert json.loads(cli.REFERENCE.read_text(encoding="utf-8"))["empreintes"]["catalogue"] == "autre"
+    assert "jeu complet" in capsys.readouterr().out
+
+
+def test_referencer_un_jeu_partiel_complete_la_reference(tmp_path, monkeypatch, capsys):
+    cli = _referencer_dans(tmp_path, monkeypatch)
+    assert cli.referencer(_resultat(tmp_path, "r1", {"a": 3, "b": 3, "c": 3})) == 0
+    assert cli.referencer(_resultat(tmp_path, "r2", {"b": 2})) == 0
+    assert _taux(cli) == {"a": (3, "r1.json"), "b": (2, "r2.json"), "c": (3, "r1.json")}
+    ref = json.loads(cli.REFERENCE.read_text(encoding="utf-8"))
+    assert ref["resultat"] == "r1.json + r2.json" and ref["empreintes"] == EMPREINTES
+    assert "Référence complétée depuis r2.json : b remplacé(s), 2 cas gardé(s)" in capsys.readouterr().out
+    assert cli.referencer(_resultat(tmp_path, "r3", {"a": 1, "c": 2})) == 0
+    assert _taux(cli) == {"a": (1, "r3.json"), "b": (2, "r2.json"), "c": (2, "r3.json")}
+
+
+def test_referencer_refuse_un_jeu_partiel_hors_contexte_ou_trop_court(tmp_path, monkeypatch, capsys):
+    cli = _referencer_dans(tmp_path, monkeypatch)
+    assert cli.referencer(_resultat(tmp_path, "r0", {"b": 2})) == 1
+    assert "pas encore de référence" in capsys.readouterr().out and not cli.REFERENCE.exists()
+    assert cli.referencer(_resultat(tmp_path, "r1", {"a": 3, "b": 3, "c": 3})) == 0
+    avant = cli.REFERENCE.read_text(encoding="utf-8")
+    for nom, empreinte in (("r2", {"prompt": "autre"}), ("r3", {"modele": "autre"}), ("r4", {"catalogue": "x"})):
+        capsys.readouterr()
+        assert cli.referencer(_resultat(tmp_path, nom, {"b": 2}, **empreinte)) == 1
+        sortie = capsys.readouterr().out
+        assert "Référence refusée" in sortie and next(iter(empreinte)) in sortie and "jeu complet" in sortie
+    assert cli.referencer(_resultat(tmp_path, "r5", {"b": 1}, fois=1)) == 1
+    assert "FOIS=3" in capsys.readouterr().out
+    assert cli.referencer(_resultat(tmp_path, "r6", {"a": 1, "b": 1, "c": 1}, fois=2)) == 1
+    assert cli.REFERENCE.read_text(encoding="utf-8") == avant
+
+
+def test_referencer_prend_le_dernier_resultat_ecrit_pas_le_dernier_nom(tmp_path, monkeypatch):
+    cli = _referencer_dans(tmp_path, monkeypatch)
+    recent = _resultat(tmp_path, "20261006-090000", {"a": 1, "b": 1, "c": 1})
+    ancien = _resultat(tmp_path, "20261006-235959", {"a": 3, "b": 3, "c": 3})
+    os.utime(ancien, ns=(1_000_000_000, 1_000_000_000))
+    assert resultats.dernier(tmp_path / "sortie").name == "20261006-090000.json"
+    assert cli.referencer(None) == 0 and _taux(cli)["a"] == (1, Path(recent).name)
+
+
+def test_une_base_arretee_se_dit_en_une_ligne(tmp_path, monkeypatch, capsys):
+    from outils.evaluation import __main__ as cli
+    from pharos import empreintes
+
+    async def injoignable(dsn):
+        raise ConnectionRefusedError(111, "Connect call failed")
+
+    monkeypatch.setattr(empreintes, "empreinte_base", injoignable)
+    with pytest.raises(cli.BaseInjoignable):
+        cli.base_courante()
+    assert cli.afficher_empreinte() == 1
+    assert capsys.readouterr().out == "base injoignable : make lab8-base\n"
+    (tmp_path / "a.yaml").write_text('id: a\nfamille: simple\ncontexte: {date: "2026-10-06", identite: exploitation, '
+                                     'base: b}\nquestion: q\nattendu: {contient: [x]}\n', encoding="utf-8")
+    monkeypatch.setattr(cli, "CAS", tmp_path)
+    assert cli.lancer("a") is None
+    assert capsys.readouterr().out == "base injoignable : make lab8-base\n"

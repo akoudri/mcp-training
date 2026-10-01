@@ -113,6 +113,20 @@ def test_collisions_et_rapport_du_catalogue():
     assert [o["function"]["name"] for o in ecrases].count("navire_par_nom") == 1
 
 
+def test_la_collision_masque_un_outil_et_le_banc_mesure_les_deux_ordres():
+    catalogues = {"pharos-docs": [outil("rechercher_clause")],
+                  "pharos-data": [outil("navire_par_nom", "Fiche sans les escales.")],
+                  "pharos-ops": [outil("navire_par_nom", "Fiche et escales.")]}
+    assert lab13.masques(catalogues) == ["navire_par_nom : l'outil de pharos-data est masqué par celui de pharos-ops"]
+    (titre1, ordre1), (titre2, ordre2) = lab13.ordres(catalogues)
+    assert (titre1, titre2) == ("ordre de la configuration", "ordre inverse") and ordre1 is catalogues
+    assert lab13.masques(ordre2) == ["navire_par_nom : l'outil de pharos-ops est masqué par celui de pharos-data"]
+    vu = {o["function"]["name"]: o["function"]["description"] for o in lab13.outils_ecrases(ordre2)}
+    assert vu["navire_par_nom"] == "Fiche sans les escales."
+    sans = {"pharos-docs": [outil("rechercher_clause")], "pharos-ops": [outil("navire_par_nom")]}
+    assert [t for t, _ in lab13.ordres(sans)] == ["ordre de la configuration"] and lab13.masques(sans) == []
+
+
 def test_signaux_et_note_relisent_l_execution_gardee(tmp_path, monkeypatch, capsys):
     execution = {"question": "Q ?", "plan": [{"numero": 1, "outil": "a", "serveur": "s", "raison": ""}],
                  "reponse": "Houle de 2,8 m.", "arret": None,

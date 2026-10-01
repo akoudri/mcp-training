@@ -1,6 +1,7 @@
 services:
   # LAB 14 : pharos-docs lit aussi les documents déposés dans le dépôt partagé de ce binôme (le vecteur
   # d'attaque : le CONTENU d'un document). PHAROS_BINOME vient de .env (substitution Compose).
+  # LAB 15 : le harnais d'évaluation y dépose, le temps d'un cas de sécurité, son document piégé (contrats-partages/evaluation).
   pharos-docs:
     environment:
-      PHAROS_DOCUMENTS: "donnees/documents:contrats-partages/binome-${PHAROS_BINOME:-1}"
+      PHAROS_DOCUMENTS: "donnees/documents:contrats-partages/binome-${PHAROS_BINOME:-1}:contrats-partages/evaluation"

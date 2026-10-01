@@ -4,7 +4,7 @@ python -m outils.lab13 catalogue                  (make lab13-catalogue)       c
 python -m outils.lab13 question [--q 1|2|3] [--question "…"]   (make lab13-question)   votre agent, le vrai modèle
 python -m outils.lab13 note                       (make lab13-verifier-note)   la dernière note, élément par élément
 python -m outils.lab13 derive                     (make lab13-derive)          les trois signaux de la dernière exécution
-python -m outils.lab13 banc [--executions 3]      (make lab13-banc)            extension B : le premier appel, catalogue agrégé
+python -m outils.lab13 banc [--executions 3]      (make lab13-banc)            extension B : le premier appel, catalogue agrégé, dans les deux ordres
 
 La configuration des serveurs est labs/lab13/serveurs.json. L'exécution de la question cible (Q=1) est gardée dans
 labs/lab13/execution.json (question, plan, réponse, trace) : c'est elle que relisent note, derive et le critère
@@ -253,6 +253,20 @@ def outils_ecrases(catalogues: dict[str, list]) -> list[dict]:
     return openrouter.outils_openai(list(par_nom.values()))
 
 
+def masques(catalogues: dict[str, list]) -> list[str]:
+    """Ce que la collision coûte sans bruit : pour chaque nom en double, le serveur dont l'outil disparaît. C'est
+    l'ordre des serveurs qui décide — d'où le banc mesuré dans les deux ordres."""
+    return [f"{nom} : l'outil de {', '.join(serveurs[:-1])} est masqué par celui de {serveurs[-1]}"
+            for nom, serveurs in sorted(collisions(catalogues).items())]
+
+
+def ordres(catalogues: dict[str, list]) -> list[tuple[str, dict[str, list]]]:
+    """Les ordres à mesurer : celui de la configuration et, s'il y a collision, l'ordre inverse (l'autre outil gagne)."""
+    if not collisions(catalogues):
+        return [("ordre de la configuration", catalogues)]
+    return [("ordre de la configuration", catalogues), ("ordre inverse", dict(reversed(list(catalogues.items()))))]
+
+
 def main(argv: list[str]) -> int:
     p = argparse.ArgumentParser(prog="outils.lab13")
     sous = p.add_subparsers(dest="commande", required=True)
@@ -279,9 +293,12 @@ def main(argv: list[str]) -> int:
         return 0
     catalogues = asyncio.run(lister(lire_serveurs()))
     print(rapport_catalogue(catalogues) + "\n")
-    executions = asyncio.run(banc.executer_banc(None, banc.charger_questions(QUESTIONS_BANC), a.executions,
-                                                outils=outils_ecrases(catalogues)))
-    print(banc.formater(executions, "Banc du premier appel — catalogue agrégé (LAB 13, extension B)"))
+    questions = banc.charger_questions(QUESTIONS_BANC)
+    for titre, ordre in ordres(catalogues):
+        print("\n".join(f"Masqué ({titre}) — {m}" for m in masques(ordre)))
+        executions = asyncio.run(banc.executer_banc(None, questions, a.executions, outils=outils_ecrases(ordre)))
+        print(banc.formater(executions, f"Banc du premier appel — catalogue agrégé, {titre} (LAB 13, extension B)")
+              + "\n")
     return 0
 
 

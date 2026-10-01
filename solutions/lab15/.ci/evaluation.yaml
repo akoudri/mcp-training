@@ -1,0 +1,38 @@
+# Chaîne d'évaluation (LAB 15, étape 4) — solution de référence. SÉPARÉE de la chaîne rapide (.ci/rapide.yaml) :
+# le jeu coûte des minutes et des crédits, il ne tourne que lorsqu'un de ses déclencheurs a bougé.
+# (Dans un vrai dépôt, ce fichier vivrait dans .github/workflows/ ; ici, il est vérifié, pas exécuté.)
+name: evaluation
+on:
+  push:
+    # Sans « branches », GitHub ignore les pushes de branche dès que paths ou tags sont donnés.
+    branches: ["**"]
+    # Le prompt système et le catalogue (les serveurs) : make lab15-chaine compare leurs empreintes à la référence.
+    paths:
+      - client/pharos_client/consigne.md
+      - serveurs/**
+    # Avant chaque publication.
+    tags: ["v*"]
+  # Un changement de modèle : lancement manuel, le modèle en entrée.
+  workflow_dispatch:
+    inputs:
+      modele:
+        description: "Modèle OpenRouter à évaluer (version épinglée)"
+        required: true
+        default: google/gemini-3.6-flash
+
+jobs:
+  evaluation:
+    runs-on: ubuntu-24.04
+    env:
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      PHAROS_MODELE: ${{ inputs.modele || 'google/gemini-3.6-flash' }}
+      PUBLICATION: ${{ startsWith(github.ref, 'refs/tags/v') && '1' || '' }}
+    steps:
+      - uses: actions/checkout@v4
+      # Le conteneur « atelier » ne lit que .env : la clé et le modèle du job y sont écrits (jamais commités).
+      - name: Écrire .env depuis l'environnement du job
+        run: printf 'OPENROUTER_API_KEY=%s\nPHAROS_MODELE=%s\n' "$OPENROUTER_API_KEY" "$PHAROS_MODELE" > .env
+      - run: make construire
+      - run: make lab8-base && make lab10-mocks && make lab13-tout
+      - name: Jeu d'évaluation — « rien à lancer » si aucun déclencheur n'a bougé
+        run: make lab15-chaine PUBLICATION=$PUBLICATION

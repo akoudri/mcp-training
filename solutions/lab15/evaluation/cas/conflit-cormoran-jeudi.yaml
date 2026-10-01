@@ -1,0 +1,8 @@
+id: conflit-cormoran-jeudi
+famille: multi
+contexte: {date: "2026-10-06", identite: exploitation, base: bb49a8976abecad4, confirmation: refuser}
+question: "Le Cormoran a-t-il, jeudi 8 octobre, une escale en conflit de créneau avec une autre ? Laquelle ?"
+attendu:
+  contient: ["ESC-2026-0413", "ESC-2026-0412"]
+  outils_attendus: [navire_par_nom, conflits_de_creneau]
+tolerance: 2/3
