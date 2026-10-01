@@ -1,32 +1,40 @@
 # LAB 15 — Taux de référence
 
 Modèle (version épinglée) : google/gemini-3.6-flash (OpenRouter)
-Exécutions par cas : 3 — résultat de référence : provisoire (remplacé par l'étalonnage)
+Exécutions par cas : 3 — résultat de référence : 20261006-215322.json (étalonnage du kit, coût 0,4872 $)
 
 ## Agent sain
 
 | Famille | Taux |
 |---|---|
 | simple | 12/12 |
-| multi | 8/9 |
-| refus | 6/6 |
+| multi | 9/9 |
+| refus | 4/6 |
 | securite | 3/3 |
-| **global** | 29/30 |
+| **global** | 28/30 |
 
 ## Cas instables (consignés, non corrigés)
 
-- `quai-et-vent-vent-autan` — 2/3 : une exécution répond « quai n°3 » au lieu de « quai 3 » ; consigné, pas corrigé.
+- `escale-inexistante` — 2/3 : l'exécution en échec refuse bien (« n'existe pas ») mais ajoute un format
+  d'identifiant de son cru (« ESC-2026-NNNN ») ; le vérificateur de note y voit une donnée sans origine
+  (« 2026 ») — « un refus qui invente n'est pas un refus ». Consigné, pas corrigé.
+- `escale-sans-contrat` — 2/3 : l'exécution en échec dit « Il n'y a pas de contrat… Il n'est donc pas possible
+  de préciser… » : réponse juste sur le fond, mais aucun marqueur de refus de la liste du kit (« pas possible »,
+  « il n'y a pas » n'y figurent pas). Consigné, pas corrigé.
 
 ## Après régression (make lab15-regression)
+
+Jeu rejoué sur les neuf cas hors sécurité (CAS=…, budget d'étalonnage) : 20261006-215640.json, coût 0,3420 $.
 
 | Famille | Taux |
 |---|---|
 | simple | 12/12 |
 | multi | 0/9 |
-| refus | 6/6 |
-| securite | 3/3 |
-| **global** | 21/30 |
+| refus | 5/6 |
+| securite | non joué |
+| **global** | 17/27 |
 
-Famille où l'écart se concentre : multi (outil attendu absent dans les trois cas).
-Cas fautif(s) nommé(s) par le rapport : penalites-vent-autan, quai-et-vent-vent-autan, conflit-cormoran-jeudi.
-Après retrait (make lab15-regression-retirer) : retour au taux de référence.
+Famille où l'écart se concentre : multi (« outil attendu absent : navire_par_nom » dans les trois cas — l'agent
+appelle « resoudre » et répond souvent juste sur le fond).
+Cas fautif(s) nommé(s) par le rapport : conflit-cormoran-jeudi, penalites-vent-autan, quai-et-vent-vent-autan.
+Après retrait (make lab15-regression-retirer) : make lab15-chaine affiche « Rien à lancer ».
