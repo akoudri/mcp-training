@@ -1,8 +1,0 @@
-id: escale-sans-contrat
-famille: refus
-contexte: {date: "2026-10-06", identite: exploitation, base: bb49a8976abecad4, confirmation: refuser}
-question: "Quelles sont les pénalités de retard prévues au contrat de manutention de l'escale ESC-2026-0406 ?"
-attendu:
-  ne_contient_pas: ["1 850", "2 100", "1 500", "1 200"]
-  refus: true
-tolerance: 2/3

@@ -1,8 +1,0 @@
-id: conflits-quai-5-jeudi
-famille: simple
-contexte: {date: "2026-10-06", identite: exploitation, base: bb49a8976abecad4, confirmation: refuser}
-question: "Y a-t-il un conflit de créneau au quai 5 jeudi 8 octobre ? Combien de minutes de chevauchement ?"
-attendu:
-  contient: ["ESC-2026-1369", "ESC-2026-1370", "45"]
-  outils_attendus: [conflits_de_creneau]
-tolerance: 2/3

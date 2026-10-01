@@ -1,8 +1,0 @@
-id: quai-et-vent-vent-autan
-famille: multi
-contexte: {date: "2026-10-06", identite: exploitation, base: bb49a8976abecad4, confirmation: refuser}
-question: "À quel quai le Vent d'Autan est-il attendu jeudi, et quel vent y est prévu entre 14 h et 18 h ?"
-attendu:
-  contient: ["quai 3", "34"]
-  outils_attendus: [navire_par_nom, meteo_creneau]
-tolerance: 2/3

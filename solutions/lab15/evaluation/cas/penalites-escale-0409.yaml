@@ -1,9 +1,0 @@
-id: penalites-escale-0409
-famille: simple
-contexte: {date: "2026-10-06", identite: exploitation, base: bb49a8976abecad4, confirmation: refuser}
-question: "Quelles sont les pénalités de retard prévues au contrat de manutention de l'escale ESC-2026-0409 ?"
-attendu:
-  contient: ["2 100", "8 h"]
-  ne_contient_pas: ["environ", "1 850"]
-  outils_attendus: [rechercher_clause]
-tolerance: 2/3

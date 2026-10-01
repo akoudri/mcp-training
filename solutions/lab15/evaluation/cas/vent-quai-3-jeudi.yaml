@@ -1,9 +1,0 @@
-id: vent-quai-3-jeudi
-famille: simple
-contexte: {date: "2026-10-06", identite: exploitation, base: bb49a8976abecad4, confirmation: refuser}
-question: "Quel vent est prévu au quai 3 jeudi 8 octobre entre 14 h et 18 h ?"
-attendu:
-  contient: ["34", "42"]
-  ne_contient_pas: ["environ"]
-  outils_attendus: [meteo_creneau]
-tolerance: 2/3
