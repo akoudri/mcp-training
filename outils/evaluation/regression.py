@@ -25,8 +25,8 @@ def appliquer(source: str) -> str:
     if REGRESSE in source:
         raise RegressionImpossible("la régression est déjà posée (make lab15-regression-retirer pour la retirer).")
     if source.count(SAIN) != 1:
-        raise RegressionImpossible(f"déclaration introuvable dans {SERVEUR} : « {SAIN} » (pharos-ops du LAB 14 "
-                                   "attendu, etat/sg1-fin).")
+        raise RegressionImpossible(f"la déclaration de l'outil visé est introuvable dans {SERVEUR} (pharos-ops du "
+                                   "LAB 14 attendu, etat/sg1-fin) — pharos-ops a-t-il été modifié ?")
     return source.replace(SAIN, REGRESSE)
 
 

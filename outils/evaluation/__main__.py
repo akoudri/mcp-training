@@ -115,7 +115,11 @@ def lancer(filtre: str | None = None, fois: int = 3) -> Path | None:
 
 
 def referencer(chemin: str | None) -> int:
-    source = Path(chemin) if chemin else resultats.dernier(SORTIE)
+    try:
+        source = Path(chemin) if chemin else resultats.dernier(SORTIE)
+    except FileNotFoundError as exc:
+        print(exc)
+        return 1
     resultat = resultats.charger(source)
     REFERENCE.parent.mkdir(parents=True, exist_ok=True)
     REFERENCE.write_text(json.dumps(resultats.reduire(resultat, source.name), ensure_ascii=False, indent=2) + "\n",

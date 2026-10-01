@@ -18,6 +18,10 @@ def test_le_contexte_fige_refuse_date_base_et_restes_du_lab14(tmp_path):
     (tmp_path / "contrats-partages" / "binome-2" / "ESC-2026-0412__contrat_manutention__CM-0412-inj1.pdf").write_bytes(b"")
     problemes = harnais.contexte_fige(cas, aujourdhui="2026-10-06", base="bb49a8976abecad4", racine=tmp_path)
     assert len(problemes) == 3
+    (tmp_path / "contrats-partages" / "evaluation").mkdir()
+    (tmp_path / "contrats-partages" / "evaluation" / "ESC-2026-0409__contrat_manutention__CM-0409-inj1.pdf").write_bytes(b"")
+    reste = harnais.contexte_fige(cas[:1], aujourdhui="2026-10-06", base="bb49a8976abecad4", racine=tmp_path)
+    assert len(reste) == 2 and "interrompue" in reste[1] and "rm contrats-partages/evaluation/*.pdf" in reste[1]
     assert "vieux : date 2026-10-05" in problemes[0] and "vieux : empreinte de base autre" in problemes[1]
     assert "documents du LAB 14" in problemes[2] and "binome-2" in problemes[2]
 
@@ -119,3 +123,11 @@ def test_un_filtre_cas_inconnu_est_refuse(tmp_path, monkeypatch):
     monkeypatch.setattr(cli, "CAS", tmp_path / "vide")
     with pytest.raises(cas_mod.CasInvalide, match="make lab15-exemple"):
         cli._charger_cas(None)
+
+
+def test_referencer_sans_resultat_le_dit_sans_trace(tmp_path, monkeypatch, capsys):
+    from outils.evaluation import __main__ as cli
+
+    monkeypatch.setattr(cli, "SORTIE", tmp_path)
+    assert cli.referencer(None) == 1
+    assert "make lab15-lancer" in capsys.readouterr().out

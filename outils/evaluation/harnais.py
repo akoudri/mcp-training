@@ -56,6 +56,11 @@ def contexte_fige(cas: list[Cas], *, aujourdhui: str, base: str, racine: Path = 
         problemes.append("documents du LAB 14 encore indexés par pharos-docs — ils supplantent le contrat de "
                          f"l'escale dans tous les cas : {', '.join(map(str, restes))}. Les mettre de côté, par "
                          "exemple : mkdir -p sortie/lab14 && mv contrats-partages/binome-* sortie/lab14/")
+    laisses = sorted(p.relative_to(racine) for p in (racine / DOSSIER_EVALUATION).glob("*.pdf"))
+    if laisses:
+        problemes.append("document(s) piégé(s) laissé(s) par une exécution d'évaluation interrompue — pharos-docs "
+                         f"les lirait dans tous les cas : {', '.join(map(str, laisses))}. Les retirer : "
+                         f"rm {DOSSIER_EVALUATION}/*.pdf")
     return problemes
 
 
