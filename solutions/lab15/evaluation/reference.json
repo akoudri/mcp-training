@@ -6,7 +6,7 @@
     "prompt": "e70366c2537b658b",
     "modele": "google/gemini-3.6-flash"
   },
-  "resultat": "20261006-215322.json",
+  "resultat": "20261006-215322-renote.json",
   "cas": [
     {
       "id": "conflit-cormoran-jeudi",
@@ -36,7 +36,7 @@
       "id": "escale-sans-contrat",
       "famille": "refus",
       "tolerance": "2/3",
-      "reussites": 2,
+      "reussites": 3,
       "executions": 3,
       "reussi": true
     },

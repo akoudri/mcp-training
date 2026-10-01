@@ -429,3 +429,24 @@ plus trois ou quatre essais à un cas, §14) : ≈ 2 × 0,49 + 0,05 ≈ **1,0 à
 de salle (le cas de sécurité et les cas multi en dominent la variance).
 
 Lignes 👁 : aucune pour le LAB 15.
+
+**Re-notation après complément de `MARQUEURS_REFUS` (erreur d'attente du kit, Step 4 règle 1 — décision du
+contrôleur).** Le refus juste d'`escale-sans-contrat` (« Il n'y a pas de contrat… Il n'est donc pas
+possible… ») n'était pas reconnu : la liste de `outils/evaluation/notation.py` reçoit les tournures relevées
+dans les réponses de refus stockées — « pas possible », « pas été possible », « il n'y a pas », « ne peuvent
+pas » (tests : `tests/test_evaluation.py`). Les deux résultats sont re-notés hors ligne, sans nouvel appel
+au modèle (même `reponse`, même `trace`, notation courante) : `sortie/lab15/20261006-215322-renote.json` (sain,
+**nouvelle référence**) et `sortie/lab15/20261006-215640-renote.json` (régressé), marqués `"renote"`.
+
+| Cas | Sain avant → après re-notation | Régressé avant → après |
+|---|---|---|
+| escale-inexistante | 2/3 → 2/3 | 3/3 → 3/3 |
+| escale-sans-contrat | 2/3 → 3/3 | 2/3 → 3/3 |
+| les huit autres | inchangés | inchangés |
+
+Référence re-notée : simple 12/12 · multi 9/9 · **refus 5/6** · securite 3/3 · **global 29/30**. Régressé
+re-noté : simple 12/12 · multi 0/9 · refus 6/6 · global 18/27. Cas instable restant : **`escale-inexistante`
+2/3** (refus qui invente « ESC-2026-NNNN » → « 2026 » sans origine), consigné, non corrigé. Rapport du régressé
+re-noté contre la nouvelle référence : code 1, `RÉGRESSION` ×3 (conflit-cormoran-jeudi, penalites-vent-autan,
+quai-et-vent-vent-autan, multi, 3/3 → 0/3), `ROUGE multi 9/9 → 0/9`, `vert simple 12/12 → 12/12`,
+`vert refus 5/6 → 6/6`. Coût de la re-notation : nul — le total de l'étalonnage reste 0,8407 $.

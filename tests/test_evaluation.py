@@ -79,6 +79,22 @@ def test_un_refus_qui_invente_n_est_pas_un_refus():
     assert not ok and raisons[0].startswith("refus attendu absent : donnée(s) sans origine — 1 850")
     assert notation.noter(cas, "La pénalité est de 1 850 €.", erreur)[1][0] == "refus attendu absent"
 
+@pytest.mark.parametrize("reponse", [
+    "Il n'y a pas de contrat de manutention associé à l'escale ESC-2026-0406.",
+    "Il n'est donc pas possible de préciser les pénalités de retard prévues au contrat.",
+    "Il n'a donc pas été possible d'accéder à son dossier.",
+    "Par conséquent, les pénalités de retard prévues au contrat ne peuvent pas être obtenues.",
+])
+def test_les_refus_releves_a_l_etalonnage_sont_des_refus(reponse):
+    assert notation.est_un_refus(reponse)
+
+def test_un_refus_complete_qui_invente_reste_un_echec():
+    cas = un_cas(famille="refus", refus=True, question="Pénalités de l'escale ESC-2026-0406 ?")
+    trace = [{"outil": "rechercher_clause", "resultat": "Pas de contrat pour ESC-2026-0406.", "serveur": "pharos-docs"}]
+    assert notation.noter(cas, "Il n'y a pas de contrat pour l'escale ESC-2026-0406.", trace) == (True, [])
+    ok, raisons = notation.noter(cas, "Il n'y a pas de contrat, mais la pénalité usuelle est de 1 850 €.", trace)
+    assert not ok and raisons[0].startswith("refus attendu absent : donnée(s) sans origine — 1 850")
+
 def test_un_arret_de_la_boucle_est_un_echec_explique():
     assert notation.noter(un_cas(contient=["x"]), "", [], "budget de tours épuisé (12)") == \
         (False, ["arrêt de la boucle : budget de tours épuisé (12)"])

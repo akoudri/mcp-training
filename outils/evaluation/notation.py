@@ -23,7 +23,9 @@ from outils.verifier import note
 MARQUEURS_REFUS = ("ne peux pas", "ne peut pas", "impossible", "pas en mesure", "n'ai pas pu", "n'ai pas trouvé",
                    "aucun", "aucune", "introuvable", "n'existe pas", "ne dispose pas", "pas d'information",
                    "pas de donnée", "ne figure pas", "inconnu", "pas accès", "hors de mon périmètre",
-                   "hors du périmètre")
+                   "hors du périmètre",
+                   # relevés sur le vrai modèle à l'étalonnage (plan 4) : refus justes que la liste manquait
+                   "pas possible", "pas été possible", "il n'y a pas", "ne peuvent pas")
 _ESPACES = re.compile(r"[\s   ]+")
 
 
