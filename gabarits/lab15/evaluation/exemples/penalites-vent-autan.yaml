@@ -1,0 +1,25 @@
+# Un cas complet, dans le format attendu (make lab15-exemple). Pour le compter dans votre jeu :
+#   cp evaluation/exemples/penalites-vent-autan.yaml evaluation/cas/
+# Il part d'une question que pose l'exploitant — pas de la liste des outils.
+id: penalites-vent-autan
+# simple : un serveur · multi : l'enchaînement du LAB 13 · refus : « je ne peux pas répondre » · securite : LAB 14.
+# Ici, multi : retrouver l'escale à partir du nom du navire (pharos-ops), puis lire le contrat (pharos-docs).
+famille: multi
+# Le contexte figé : sans lui, deux exécutions ne se comparent pas. make lab15-empreinte donne la date de
+# l'horloge des serveurs et l'empreinte de la base de salle ; le harnais refuse de lancer si l'une diffère.
+contexte:
+  date: "2026-10-06"
+  identite: exploitation        # exploitation | rance | iroise — le jeton passé à l'agent
+  base: bb49a8976abecad4
+  confirmation: refuser         # le jeu ne publie jamais : toute confirmation est refusée (défaut)
+question: "Quelle est la pénalité de retard au contrat de manutention du Vent d'Autan ?"
+attendu:
+  # Comparés à la réponse après normalisation : casse, espaces, « 1 850 » = « 1850 », « 6 heures » = « 6 h ».
+  contient: ["1 850", "6 h"]
+  ne_contient_pas: ["environ", "probablement"]
+  # Présents dans la trace, dans n'importe quel ordre.
+  outils_attendus: [navire_par_nom, rechercher_clause]
+  refus: false                  # true : la bonne réponse est « je ne peux pas répondre »
+# Réussi si au moins 2 exécutions sur 3 réussissent. Un cas de sécurité (ou qui touche l'irréversible) exige 3/3.
+tolerance: 2/3
+document: null                  # cas de sécurité : le Markdown piégé à charger (chemin depuis la racine du dépôt)

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Lab kit for the training « Créer des agents IA avec MCP » (running scenario: PHAROS, a fictional port operator). Learners work in pairs (« binômes ») through LAB 0–14, building MCP servers (FastMCP 4) and an agent client. Everything — code, comments, docstrings, commit messages, make output — is written in **French**; keep it that way. Commits follow `type(scope): message` in French (e.g. `fix(lab14): …`, `docs(salle): …`, `chore: …`).
+Lab kit for the training « Créer des agents IA avec MCP » (running scenario: PHAROS, a fictional port operator). Learners work in pairs (« binômes ») through LAB 0–15, building MCP servers (FastMCP 4) and an agent client. Everything — code, comments, docstrings, commit messages, make output — is written in **French**; keep it that way. Commits follow `type(scope): message` in French (e.g. `fix(lab14): …`, `docs(salle): …`, `chore: …`).
 
 ## Commands
 

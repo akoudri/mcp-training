@@ -1,0 +1,32 @@
+# Chaîne rapide (bloc 25.5) — fournie. Quelques dizaines de secondes à chaque push, sans aucun appel au modèle :
+# les tests, l'empreinte du catalogue de pharos-docs, le cloisonnement des données.
+# Le jeu d'évaluation n'y entre JAMAIS : il la ferait passer à plusieurs minutes, et plus personne ne l'attendrait.
+# (Dans un vrai dépôt, ce fichier vivrait dans .github/workflows/ ; ici, il est vérifié, pas exécuté.)
+name: rapide
+on:
+  push: {}
+  pull_request: {}
+
+jobs:
+  rapide:
+    runs-on: ubuntu-24.04
+    services:
+      pharos-db:
+        image: postgres:17.6
+        env: {POSTGRES_PASSWORD: pharos-salle-2026, POSTGRES_DB: pharos}
+        ports: ["5433:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres -d pharos" --health-interval 2s --health-retries 30
+    env:
+      PHAROS_DSN_TEST: postgresql://postgres:pharos-salle-2026@127.0.0.1:5433/pharos
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with: {version: "0.6.12"}
+      - run: uv sync --frozen
+      - name: Empreinte du catalogue — un contrat qui change se voit dans la revue
+        run: uv run pytest -q tests/pharos_docs/test_pharos_docs.py -k empreinte
+      - name: Cloisonnement — chaque identité ne voit que son périmètre
+        run: uv run pytest -q tests/pharos_data/test_cloisonnement.py
+      - name: Tests sans modèle
+        run: uv run pytest -q
