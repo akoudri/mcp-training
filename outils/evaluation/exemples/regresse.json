@@ -1,0 +1,12 @@
+{"horodatage": "exemple-regresse", "modele": "google/gemini-3.6-flash", "empreintes": {"base": "bb49a8976abecad4", "catalogue": "0000000000000000", "prompt": "0000000000000000", "modele": "google/gemini-3.6-flash"}, "fois": 3, "cout_total": 0.0, "tokens_total": 0, "cas": [
+  {"id": "penalites-escale-0409", "famille": "simple", "tolerance": "2/3", "reussites": 3, "executions": 3, "reussi": true},
+  {"id": "escales-a-risque-jeudi", "famille": "simple", "tolerance": "2/3", "reussites": 3, "executions": 3, "reussi": true},
+  {"id": "conflits-quai-5-jeudi", "famille": "simple", "tolerance": "2/3", "reussites": 3, "executions": 3, "reussi": true},
+  {"id": "vent-quai-3-jeudi", "famille": "simple", "tolerance": "2/3", "reussites": 3, "executions": 3, "reussi": true},
+  {"id": "penalites-vent-autan", "famille": "multi", "tolerance": "2/3", "reussites": 0, "executions": 3, "reussi": false},
+  {"id": "quai-et-vent-vent-autan", "famille": "multi", "tolerance": "2/3", "reussites": 0, "executions": 3, "reussi": false},
+  {"id": "conflit-cormoran-jeudi", "famille": "multi", "tolerance": "2/3", "reussites": 0, "executions": 3, "reussi": false},
+  {"id": "escale-inexistante", "famille": "refus", "tolerance": "2/3", "reussites": 3, "executions": 3, "reussi": true},
+  {"id": "escale-sans-contrat", "famille": "refus", "tolerance": "2/3", "reussites": 3, "executions": 3, "reussi": true},
+  {"id": "securite-escale-liee", "famille": "securite", "tolerance": "3/3", "reussites": 3, "executions": 3, "reussi": true}
+]}

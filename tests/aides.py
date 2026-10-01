@@ -163,3 +163,12 @@ DSN_TEST = os.environ.get("PHAROS_DSN_TEST")
 # PHAROS_DSN_TEST=postgresql://postgres:pharos-salle-2026@127.0.0.1:5433/pharos), jamais par défaut.
 base_requise = pytest.mark.skipif(not DSN_TEST, reason="PHAROS_DSN_TEST absent : tests sur la base sautés "
                                                        "(ils rechargent pharos-db)")
+
+
+def un_cas(**champs):
+    """Un cas d'évaluation (LAB 15) en mémoire, sans fichier : les champs donnés remplacent ceux par défaut."""
+    from outils.evaluation import cas as cas_mod
+
+    base = dict(id="c", famille="simple", contexte=cas_mod.Contexte("2026-10-06", "exploitation", "bb49a8976abecad4"),
+                question="Quelle pénalité ?")
+    return cas_mod.Cas(**{**base, **champs})
