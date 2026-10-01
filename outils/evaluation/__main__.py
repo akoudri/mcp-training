@@ -2,7 +2,7 @@
 
 python -m outils.evaluation empreinte                       (make lab15-empreinte)   le contexte à figer dans un cas
 python -m outils.evaluation lancer [--cas a,b] [--fois 3]   (make lab15-lancer)      le jeu : cas × exécutions
-python -m outils.evaluation referencer [--resultat P]       (make lab15-referencer)  fige un résultat comme référence
+python -m outils.evaluation referencer [--resultat P]       (make lab15-referencer)  fige (ou complète) la référence
 python -m outils.evaluation chaine [--publication]          (make lab15-chaine)      relance si un déclencheur a bougé
 
 Les cas sont dans evaluation/cas/ ; chaque lancement écrit sortie/lab15/<horodatage>.json. Le rapport et sa
@@ -31,10 +31,20 @@ SORTIE = RACINE / "sortie" / "lab15"
 JETON_CATALOGUE = "jeton-exploitation"
 
 
+class BaseInjoignable(Exception):
+    """La base de salle ne répond pas : une ligne pour le dire, pas de trace."""
+
+    def __str__(self) -> str:
+        return "base injoignable : make lab8-base"
+
+
 def base_courante() -> str:
     from pharos import base, empreintes
 
-    return asyncio.run(empreintes.empreinte_base(base.dsn(base.ADMIN)))
+    try:
+        return asyncio.run(empreintes.empreinte_base(base.dsn(base.ADMIN)))
+    except Exception as exc:
+        raise BaseInjoignable() from exc
 
 
 def empreintes_courantes() -> dict:
@@ -53,11 +63,16 @@ def empreintes_courantes() -> dict:
 def afficher_empreinte() -> int:
     from pharos import horloge
 
+    try:
+        empreinte = base_courante()
+    except BaseInjoignable as exc:
+        print(exc)
+        return 1
     courantes = empreintes_courantes()
     print("Contexte à figer dans chaque cas (contexte: {date, identite, base, confirmation}) :")
     print(f"  date        {horloge.aujourdhui().isoformat()}   (l'horloge des serveurs)")
     print(f"  identite    {' | '.join(cas_mod.IDENTITES)}")
-    print(f"  base        {base_courante()}   (la base de salle, make lab8-base)")
+    print(f"  base        {empreinte}   (la base de salle, make lab8-base)")
     print("  confirmation refuser (défaut) | accepter")
     print("\nDéclencheurs de la chaîne (comparés à evaluation/reference.json) :")
     for cle, valeur in courantes.items():
@@ -89,7 +104,12 @@ def lancer(filtre: str | None = None, fois: int = 3) -> Path | None:
         return None
     if not filtre and cas_mod.quota(cas):
         print("Quota non respecté (le jeu tourne quand même) : " + " · ".join(cas_mod.quota(cas)))
-    problemes = harnais.contexte_fige(cas, aujourdhui=horloge.aujourdhui().isoformat(), base=base_courante(),
+    try:
+        empreinte = base_courante()
+    except BaseInjoignable as exc:
+        print(exc)
+        return None
+    problemes = harnais.contexte_fige(cas, aujourdhui=horloge.aujourdhui().isoformat(), base=empreinte,
                                       racine=RACINE)
     if problemes:
         print("Contexte non figé : le jeu ne tourne pas.\n" + "\n".join(f"  - {p}" for p in problemes))
@@ -114,19 +134,62 @@ def lancer(filtre: str | None = None, fois: int = 3) -> Path | None:
     return chemin
 
 
+DECLENCHEURS = ("catalogue", "prompt", "modele")
+
+
 def referencer(chemin: str | None) -> int:
+    """Fige un résultat comme référence. Un jeu complet (tous les cas de evaluation/cas/) la remplace ; un jeu
+    partiel (CAS=…) la COMPLÈTE : ses cas remplacent leurs lignes, les autres restent — à condition que le
+    catalogue, le prompt et le modèle n'aient pas bougé depuis la référence. Trois exécutions par cas au moins."""
     try:
         source = Path(chemin) if chemin else resultats.dernier(SORTIE)
     except FileNotFoundError as exc:
         print(exc)
         return 1
     resultat = resultats.charger(source)
+    joues = {c["id"] for c in resultat.get("cas", [])}
+    if not joues:
+        print(f"{source.name} ne contient aucun cas : rien à figer.")
+        return 1
+    courts = sorted(c["id"] for c in resultat["cas"] if int(c["executions"]) < 3)
+    if courts:
+        print(f"Référence refusée : {', '.join(courts)} joué(s) moins de trois fois dans {source.name} — une "
+              "référence se prend sur trois exécutions par cas (make lab15-lancer … FOIS=3).")
+        return 1
+    try:
+        tous = {c.id for c in cas_mod.charger(CAS, RACINE)}
+    except cas_mod.CasInvalide as exc:
+        print(f"Cas refusé — {exc}")
+        return 1
+    nouvelle = resultats.reduire(resultat, source.name)
+    ancienne = json.loads(REFERENCE.read_text(encoding="utf-8") or "{}") if REFERENCE.exists() else {}
+    complete = tous <= joues
+    if not complete:
+        if not ancienne.get("cas"):
+            print(f"Jeu partiel ({len(joues)} cas sur {len(tous)}) et pas encore de référence : la première se prend "
+                  "sur le jeu complet (make lab15-lancer, puis make lab15-referencer).")
+            return 1
+        avant, apres = ancienne.get("empreintes", {}), resultat.get("empreintes", {})
+        bouge = [k for k in DECLENCHEURS if avant.get(k) != apres.get(k)]
+        if bouge:
+            print(f"Référence refusée : {', '.join(bouge)} a/ont changé depuis la référence — un jeu partiel ne la "
+                  "complète que dans le même contexte. La référence est à refaire sur le jeu complet "
+                  "(make lab15-lancer, puis make lab15-referencer).")
+            return 1
+        gardes = [c for c in ancienne["cas"] if c["id"] not in joues]
+        for c in gardes:
+            c.setdefault("resultat", ancienne.get("resultat", ""))
+        lignes = sorted(gardes + nouvelle["cas"], key=lambda c: c["id"])
+        sources = list(dict.fromkeys(c["resultat"] for c in lignes if c.get("resultat")))
+        nouvelle = {**ancienne, "resultat": " + ".join(sources), "cas": lignes}
+        print(f"Référence complétée depuis {source.name} : {', '.join(sorted(joues))} remplacé(s), "
+              f"{len(gardes)} cas gardé(s).")
+    else:
+        print(f"Référence figée depuis {source.name} (jeu complet : elle remplace la précédente).")
     REFERENCE.parent.mkdir(parents=True, exist_ok=True)
-    REFERENCE.write_text(json.dumps(resultats.reduire(resultat, source.name), ensure_ascii=False, indent=2) + "\n",
-                         encoding="utf-8")
-    print(f"Référence figée depuis {source.name} : {REFERENCE.relative_to(RACINE)} — le commiter avec "
-          "labs/lab15/reference.md.")
-    print(resultats.tableau(resultat))
+    REFERENCE.write_text(json.dumps(nouvelle, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    print("evaluation/reference.json écrit — le commiter avec labs/lab15/reference.md.")
+    print(resultats.tableau(resultat if complete else nouvelle))
     return 0
 
 

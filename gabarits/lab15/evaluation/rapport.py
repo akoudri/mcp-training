@@ -37,7 +37,14 @@ def main(argv: list[str]) -> int:
     p.add_argument("resultat", nargs="?", help="sortie/lab15/<horodatage>.json (défaut : le plus récent)")
     p.add_argument("--reference", default=str(REFERENCE))
     a = p.parse_args(argv)
-    courant = resultats.charger(Path(a.resultat) if a.resultat else resultats.dernier())
+    if a.resultat and not Path(a.resultat).exists():
+        print(f"Résultat introuvable : {a.resultat} (make lab15-lancer en écrit un dans sortie/lab15/).")
+        return 1
+    try:
+        courant = resultats.charger(Path(a.resultat) if a.resultat else resultats.dernier())
+    except FileNotFoundError as exc:      # sortie/lab15/ vide
+        print(exc)
+        return 1
     print(resultats.tableau(courant))
     chemin = Path(a.reference)
     reference = json.loads(chemin.read_text(encoding="utf-8") or "{}") if chemin.exists() else {}

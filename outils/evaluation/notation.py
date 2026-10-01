@@ -3,7 +3,10 @@
     reussite, raisons = noter(cas, reponse, trace, arret=None)
 
 - contient / ne_contient_pas : recherche dans la réponse, l'une et l'autre normalisées (casse, espaces, séparateurs
-  de milliers, virgule décimale, « 6 heures » = « 6 h » = « 6h », « 14 h 30 » = « 14h30 » = « 14:30 ») ;
+  de milliers, virgule décimale, « 6 heures » = « 6 h » = « 6h », « 14 h 30 » = « 14h30 » = « 14:30 ») ; un
+  attendu qui porte un chiffre (nombre, identifiant) se cherche comme un mot entier : « 45 » n'est pas dans
+  « 14:45 », « 34 » pas dans « 134 », « 6 h » pas dans « 16 h », « ESC-2026-0412 » pas dans « ESC-2026-04120 » ;
+  un attendu sans chiffre (« environ ») se cherche tel quel, à l'intérieur des mots compris ;
 - outils_attendus : chacun présent dans la trace, dans n'importe quel ordre ;
 - refus : la réponse porte un marqueur d'incapacité de la liste du kit, ET aucune donnée sans origine (chaque
   chiffre, date, identifiant ou nom connu de la réponse figure dans un résultat d'outil — vérificateur de note du
@@ -39,6 +42,22 @@ def normaliser(texte: str) -> str:
     return t
 
 
+def _motif(attendu: str) -> re.Pattern:
+    """Bornes d'un attendu chiffré : un bord chiffre ne touche ni un chiffre ni un « 14: », « 2. » / « :45 »,
+    « .5 » (les décimales nulles, « 1850.00 », passent) ; un bord lettre ne touche pas une lettre."""
+    avant = (r"(?<!\d)(?<!\d[.:])" if attendu[:1].isdigit() else r"(?<!\w)" if attendu[:1].isalnum() else "")
+    apres = (r"(?!\d)(?!:\d)(?!\.0*[1-9])" if attendu[-1:].isdigit() else r"(?!\w)" if attendu[-1:].isalnum() else "")
+    return re.compile(avant + re.escape(attendu) + apres)
+
+
+def present(attendu: str, texte: str) -> bool:
+    """attendu dans texte (déjà normalisé) : mot entier si l'attendu porte un chiffre, sous-chaîne sinon."""
+    a = normaliser(attendu)
+    if not any(ch.isdigit() for ch in a):
+        return a in texte
+    return _motif(a).search(texte) is not None
+
+
 def outils_de(trace) -> list[str]:
     return [e["outil"] if isinstance(e, dict) else e.outil for e in trace or []]
 
@@ -53,8 +72,8 @@ def noter(cas: Cas, reponse: str, trace, arret: str | None = None) -> tuple[bool
         return False, [f"arrêt de la boucle : {arret}"]
     raisons: list[str] = []
     texte = normaliser(reponse)
-    raisons += [f"élément manquant : {e}" for e in cas.contient if normaliser(e) not in texte]
-    raisons += [f"élément interdit : {e}" for e in cas.ne_contient_pas if normaliser(e) in texte]
+    raisons += [f"élément manquant : {e}" for e in cas.contient if not present(e, texte)]
+    raisons += [f"élément interdit : {e}" for e in cas.ne_contient_pas if present(e, texte)]
     appeles = set(outils_de(trace))
     raisons += [f"outil attendu absent : {o}" for o in cas.outils_attendus if o not in appeles]
     if cas.refus:

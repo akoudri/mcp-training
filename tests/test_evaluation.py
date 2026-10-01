@@ -1,6 +1,7 @@
 """Jeu d'évaluation du LAB 15 : format des cas, notation déterministe, taux et tableau, chaîne, régression,
 résultats figés du kit. Ni base, ni Docker, ni modèle."""
 
+import os
 from pathlib import Path
 
 import pytest
@@ -71,6 +72,23 @@ def test_contient_ne_contient_pas_outils_attendus():
     assert not ok and raisons == ["élément manquant : 1 850", "élément manquant : 6 h", "élément interdit : environ",
                                   "outil attendu absent : navire_par_nom"]
 
+@pytest.mark.parametrize("attendu, reponse, present", [
+    ("45", "Chevauchement de 45 minutes.", True), ("45", "Créneau de 13:00 à 14:45.", False),
+    ("45", "Créneau jusqu'à 14 h 45.", False), ("34", "Vent de 134 nœuds.", False), ("34", "Rafales à 34kt.", True),
+    ("34", "Vent de 34-42 nœuds.", True), ("42", "Vent de 34-42 nœuds.", True), ("34", "Houle de 2.34 m.", False),
+    ("6 h", "Franchise de 16 h.", False), ("6 h", "Franchise de 6 heures.", True), ("6 h", "Franchise de 6h.", True),
+    ("1 850", "Pénalité de 11 850 €.", False), ("1 850", "Pénalité de 1 850,00 €.", True),
+    ("1 850", "Pénalité de 1 850,50 €.", False), ("quai 3", "Attendu au quai 35.", False),
+    ("quai 3", "Attendu au quai 3, jeudi.", True), ("ESC-2026-0412", "Escale ESC-2026-04120.", False),
+    ("ESC-2026-0412", "L'escale ESC-2026-0412 (Vent d'Autan).", True), ("environ", "Dans l'environnement.", True),
+])
+def test_un_attendu_chiffre_se_cherche_comme_un_mot_entier(attendu, reponse, present):
+    assert notation.present(attendu, notation.normaliser(reponse)) is present
+    ok, _ = notation.noter(un_cas(contient=[attendu]), reponse, [])
+    assert ok is present
+    ok, _ = notation.noter(un_cas(contient=[], ne_contient_pas=[attendu]), reponse, [])
+    assert ok is not present
+
 def test_un_refus_qui_invente_n_est_pas_un_refus():
     cas = un_cas(famille="refus", refus=True, question="Pénalité de l'escale ESC-2026-9999 ?")
     erreur = [{"outil": "rechercher_clause", "resultat": "Aucune escale ESC-2026-9999.", "serveur": "pharos-docs"}]
@@ -111,7 +129,8 @@ def test_taux_par_cas_par_famille_et_tableau():
 def test_la_reference_se_tire_d_un_resultat():
     reduit = resultats.reduire(resultats.charger(KIT / "regresse.json"), "x.json")
     assert reduit["resultat"] == "x.json" and set(reduit["cas"][0]) == {"id", "famille", "tolerance", "reussites",
-                                                                          "executions", "reussi"}
+                                                                          "executions", "reussi", "resultat"}
+    assert {c["resultat"] for c in reduit["cas"]} == {"x.json"}
 
 def test_le_dernier_resultat(tmp_path):
     with pytest.raises(FileNotFoundError, match="make lab15-lancer"):
@@ -119,6 +138,9 @@ def test_le_dernier_resultat(tmp_path):
     for nom in ("20261006-090000.json", "20261006-100000.json"):
         (tmp_path / nom).write_text("{}", encoding="utf-8")
     assert resultats.dernier(tmp_path).name == "20261006-100000.json"
+    # l'horloge fictive rejoue le même jour : un lancement plus récent peut porter un nom plus petit
+    os.utime(tmp_path / "20261006-100000.json", ns=(1_000_000_000, 1_000_000_000))
+    assert resultats.dernier(tmp_path).name == "20261006-090000.json"
 
 def test_la_chaine_ne_lance_que_si_un_declencheur_a_bouge():
     ref = {"empreintes": {"catalogue": "a", "prompt": "b", "modele": "m", "base": "z"}}

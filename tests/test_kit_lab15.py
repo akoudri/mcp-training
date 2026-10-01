@@ -5,6 +5,8 @@ import os
 import subprocess
 import sys
 
+import pytest
+
 from outils import labs
 from outils.evaluation import cas as cas_mod
 from tests.aides import RACINE_KIT
@@ -66,3 +68,90 @@ def test_declencheurs_ne_plante_jamais_sur_une_forme_inattendue():
         assert lab15._declencheurs(flux) == vide, flux
     assert lab15._declencheurs({"on": {"push": {"paths": ["a", 3], "tags": ["v*"]}, "workflow_dispatch": None}}) == \
         {"paths": ["a"], "tags": ["v*"], "manuel": True, "entrees": {}}
+
+
+def _chaine(tmp_path, monkeypatch, evaluation: str):
+    import shutil
+
+    from outils.verifier import lab15
+    from outils.verifier.commun import Echec
+
+    (tmp_path / ".ci").mkdir(exist_ok=True)
+    shutil.copy(GABARITS / ".ci" / "rapide.yaml", tmp_path / ".ci" / "rapide.yaml")
+    (tmp_path / ".ci" / "evaluation.yaml").write_text(evaluation, encoding="utf-8")
+    monkeypatch.setattr(lab15, "RACINE", tmp_path)
+    try:
+        return lab15.chaine_separee(None)
+    except Echec as exc:
+        return f"ÉCHEC {exc}"
+
+
+DECLENCHEURS = ("name: evaluation\non:\n  push:\n    branches: ['**']\n    paths: [client/pharos_client/consigne.md, "
+                "serveurs/**]\n    tags: ['v*']\n  workflow_dispatch:\n    inputs: {modele: {required: true}}\n")
+
+
+def test_la_chaine_se_lit_dans_les_jobs_pas_dans_les_commentaires(tmp_path, monkeypatch):
+    gabarit = (GABARITS / ".ci" / "evaluation.yaml").read_text(encoding="utf-8")
+    assert "make lab15-chaine" in gabarit and "OPENROUTER_API_KEY" in gabarit
+    verdict = _chaine(tmp_path, monkeypatch, gabarit)
+    assert verdict.startswith("ÉCHEC") and "make lab15-chaine" in verdict and "secrets.OPENROUTER_API_KEY" in verdict
+    commentes = DECLENCHEURS + ("# make lab15-chaine  ${{ secrets.OPENROUTER_API_KEY }}\njobs:\n  evaluation:\n"
+                                "    steps:\n      - run: make construire  # puis make lab15-chaine\n")
+    verdict = _chaine(tmp_path, monkeypatch, commentes)
+    assert "un job qui lance make lab15-chaine" in verdict and "secrets.OPENROUTER_API_KEY" in verdict
+    for env_au in ("jobs:\n  evaluation:\n    env:\n      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}\n"
+                   "    steps:\n      - run: make lab15-chaine\n",
+                   "env:\n  OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}\njobs:\n  e:\n    steps:\n"
+                   "      - run: |\n          make lab8-base\n          make lab15-chaine PUBLICATION=1\n",
+                   "jobs:\n  e:\n    steps:\n      - name: jeu\n        env: {OPENROUTER_API_KEY: '${{ secrets.OPENROUTER_API_KEY }}'}"
+                   "\n        run: make lab15-chaine\n"):
+        assert not _chaine(tmp_path, monkeypatch, DECLENCHEURS + env_au).startswith("ÉCHEC"), env_au
+
+
+def test_la_chaine_de_la_solution_passe(tmp_path, monkeypatch):
+    solution = RACINE_KIT / "solutions" / "lab15" / ".ci" / "evaluation.yaml"
+    if not solution.exists():
+        pytest.skip("solution présente sur la branche de travail et la branche solutions uniquement")
+    assert not _chaine(tmp_path, monkeypatch, solution.read_text(encoding="utf-8")).startswith("ÉCHEC")
+
+
+def test_un_rapport_sans_resultat_le_dit_en_une_ligne(tmp_path):
+    env = {**os.environ, "PYTHONPATH": os.pathsep.join(str(p) for p in (RACINE_KIT / "src", RACINE_KIT))}
+    for rapport in (GABARITS / "evaluation" / "rapport.py",
+                    RACINE_KIT / "solutions" / "lab15" / "evaluation" / "rapport.py"):
+        if not rapport.exists():
+            continue
+        for argv, attendu in (([], "aucun résultat dans sortie/lab15"), (["absent.json"], "Résultat introuvable")):
+            sortie = subprocess.run([sys.executable, str(rapport), *argv], capture_output=True, text=True, env=env,
+                                    cwd=tmp_path)
+            assert sortie.returncode == 1 and sortie.stderr == "", (rapport, sortie.stderr)
+            assert sortie.stdout.count("\n") == 1 and attendu in sortie.stdout, (rapport, sortie.stdout)
+
+
+def test_sans_cas_instable_le_verificateur_donne_la_sortie(tmp_path, monkeypatch):
+    import json
+
+    from outils.verifier import lab15
+    from outils.verifier.commun import Echec
+
+    (tmp_path / "evaluation").mkdir()
+    (tmp_path / "labs" / "lab15").mkdir(parents=True)
+    monkeypatch.setattr(lab15, "RACINE", tmp_path)
+
+    def verdict(taux: dict, consignes: str) -> str:
+        cas = [{"id": i, "famille": f, "tolerance": "2/3", "reussites": r, "executions": 3, "reussi": r >= 2}
+               for i, (f, r) in taux.items()]
+        (tmp_path / "evaluation" / "reference.json").write_text(json.dumps({"cas": cas}), encoding="utf-8")
+        (tmp_path / "labs" / "lab15" / "reference.md").write_text(f"# x\n\n## Cas instables\n\n{consignes}\n",
+                                                                   encoding="utf-8")
+        try:
+            return lab15.cas_instable(None)
+        except Echec as exc:
+            return f"ÉCHEC {exc}"
+
+    stable = verdict({"a": ("simple", 3), "s": ("securite", 2)}, "- `a` : rien")
+    assert stable.startswith("ÉCHEC aucun cas instable dans la référence : c'est fréquent avec un bon agent")
+    assert "CAS=… FOIS=3" in stable and "complétée, pas remplacée" in stable and "corrigé" not in stable
+    oublie = verdict({"a": ("simple", 3), "b": ("refus", 2)}, "- `a` : rien")
+    assert oublie.startswith("ÉCHEC la référence a un cas instable — b 2/3") and "a n'y est pas instable" in oublie
+    assert verdict({"a": ("simple", 3), "b": ("refus", 2)}, "- `b` — 2/3") == "b 2/3"

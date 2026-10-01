@@ -99,6 +99,10 @@ Comparer au taux de référence. Vérifier trois choses :
 - l'écart se concentre sur une famille, et pas uniformément ;
 - **le rapport nomme le cas fautif**, sans qu'un humain ait à lire une trace.
 
+Le code de sortie de `make lab15-rapport` sur ce résultat est le verdict de la chaîne : 1, elle passe
+au rouge. Inutile de rejouer `make lab15-chaine` tant que la régression est posée — le catalogue a
+changé, elle relancerait le jeu complet et le paierait une seconde fois.
+
 Puis retirer la régression (`make lab15-regression-retirer`), et vérifier le retour à la référence.
 
 ### Étape 4 — La chaîne
@@ -184,8 +188,15 @@ plusieurs minutes, et plus personne ne l'attendrait — ce qui coûterait les qu
 25.5, pas seulement celui-ci.
 
 **Surveiller le coût.** Trente exécutions multipliées par cinq à dix appels d'outils : le budget se
-voit. C'est aussi une bonne raison de garder le jeu court et les cas bien choisis.
+voit — compter **≈ 1,0 à 1,1 $ par binôme** pour les deux jeux complets (référence, puis régression)
+et quelques essais à un cas, mesuré à l'étalonnage. C'est aussi une bonne raison de garder le jeu
+court et les cas bien choisis.
+
 `make lab15-lancer CAS=id1,id2 FOIS=1` essaie un cas sans payer les trente exécutions.
+
+**Aucun cas instable ?** C'est fréquent avec un bon agent. Écrire un cas plus exigeant (un refus,
+une question ambiguë), ou rejouer un cas limite — `make lab15-lancer CAS=… FOIS=3`, puis
+`make lab15-referencer` : la référence est complétée, pas remplacée — et le consigner.
 
 **Le jeu ne publie jamais.** La confirmation du LAB 12 y est refusée par défaut
 (`confirmation: refuser`) : un cas qui attend une publication mesure la demande de confirmation, pas

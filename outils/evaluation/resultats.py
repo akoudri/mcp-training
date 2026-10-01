@@ -1,6 +1,6 @@
 """Lire un résultat du jeu d'évaluation et en tirer les taux (LAB 15) — fourni, utilisé par evaluation/rapport.py.
 
-    resultat = charger(Path("sortie/lab15/20261006-101500.json"))   # ou dernier() : le plus récent de sortie/lab15/
+    resultat = charger(Path("sortie/lab15/20261006-101500.json"))   # ou dernier() : le plus récemment écrit de sortie/lab15/
     par_cas(resultat)        # {id: Taux(famille, reussites, executions, reussi)}
     par_famille(resultat)    # {famille: Taux} — exécutions réussies / exécutions, toutes celles de la famille
     print(tableau(resultat)) # le tableau par cas puis le taux par famille, lisible sans ouvrir une trace
@@ -10,8 +10,10 @@ Un résultat (écrit par le harnais) :
      "cas": [{"id", "famille", "tolerance": "2/3", "reussites", "executions", "reussi",
               "detail": [{"reussite", "raisons", "outils", "reponse", "tokens", "cout", "duree_s", "arret"}]}],
      "cout_total", "tokens_total"}
-Une référence (evaluation/reference.json, écrite par make lab15-referencer) a la même forme, réduite :
-    {"modele", "empreintes", "resultat", "cas": [{"id", "famille", "tolerance", "reussites", "executions", "reussi"}]}
+Une référence (evaluation/reference.json, écrite par make lab15-referencer) a la même forme, réduite ; chaque cas
+dit de quel résultat il vient (un jeu partiel complète la référence : « resultat » liste alors les sources) :
+    {"modele", "empreintes", "resultat", "cas": [{"id", "famille", "tolerance", "reussites", "executions", "reussi",
+                                                  "resultat"}]}
 """
 
 from __future__ import annotations
@@ -45,7 +47,9 @@ def charger(chemin: Path) -> dict:
 
 
 def dernier(dossier: Path = SORTIE) -> Path:
-    fichiers = sorted(Path(dossier).glob("*.json"))
+    """Le résultat écrit le plus récemment (date de modification du fichier) : les noms suivent l'horloge fictive
+    des serveurs, qui rejoue le même jour à chaque séance — l'ordre des noms n'est pas celui des lancements."""
+    fichiers = sorted(Path(dossier).glob("*.json"), key=lambda f: (f.stat().st_mtime_ns, f.name))
     if not fichiers:
         raise FileNotFoundError(f"aucun résultat dans {dossier} : lancer d'abord « make lab15-lancer ».")
     return fichiers[-1]
@@ -101,5 +105,5 @@ def tableau(resultat: dict) -> str:
 def reduire(resultat: dict, chemin: str = "") -> dict:
     """La référence tirée d'un résultat : taux par cas et empreintes, sans les réponses ni les traces."""
     return {"modele": resultat.get("modele"), "empreintes": resultat.get("empreintes", {}), "resultat": chemin,
-            "cas": [{k: c[k] for k in ("id", "famille", "tolerance", "reussites", "executions", "reussi")}
-                    for c in resultat.get("cas", [])]}
+            "cas": [{**{k: c[k] for k in ("id", "famille", "tolerance", "reussites", "executions", "reussi")},
+                     "resultat": chemin} for c in resultat.get("cas", [])]}

@@ -118,14 +118,19 @@ def cas_instable(ctx):
     texte = _reference_md()
     partie = texte.split("## Cas instables", 1)[1].split("\n## ", 1)[0] if "## Cas instables" in texte else texte
     taux = resultats.par_cas(reference)
+    instables = [i for i, t in taux.items() if t.famille != "securite" and 0 < t.reussites < t.executions]
+    if not instables:
+        raise Echec("aucun cas instable dans la référence : c'est fréquent avec un bon agent. Écrire un cas plus "
+                    "exigeant (refus, question ambiguë), ou rejouer un cas limite — make lab15-lancer CAS=… FOIS=3, "
+                    "puis make lab15-referencer (la référence est complétée, pas remplacée) — et le consigner dans "
+                    "labs/lab15/reference.md, section « Cas instables ».")
     nommes = [i for i in taux if re.search(rf"\b{re.escape(i)}\b", partie)]
-    if not nommes:
-        raise Echec("aucun cas instable consigné dans labs/lab15/reference.md (section « Cas instables ») : un jeu "
-                    "sans cas instable a probablement été corrigé jusqu'à passer.")
-    vrais = [i for i in nommes if taux[i].famille != "securite" and 0 < taux[i].reussites < taux[i].executions]
+    vrais = [i for i in nommes if i in instables]
     if not vrais:
-        raise Echec(f"cas consigné(s) comme instable(s) : {', '.join(nommes)} — mais leur taux de référence n'est "
-                    "ni 1/3 ni 2/3 (ou c'est un cas de sécurité, qui exige 3/3).")
+        deja = f" ({', '.join(nommes)} n'y est pas instable)" if nommes else ""
+        raise Echec("la référence a un cas instable — " + ", ".join(f"{i} {taux[i]}" for i in instables)
+                    + f" — à consigner comme tel, sans le corriger, dans labs/lab15/reference.md, section « Cas "
+                    f"instables »{deja}.")
     return ", ".join(f"{i} {taux[i]}" for i in vrais)
 
 
@@ -144,6 +149,28 @@ def _declencheurs(flux) -> dict:
     entrees = dispatch.get("inputs") if isinstance(dispatch, dict) else None
     return {"paths": textes(push.get("paths")), "tags": textes(push.get("tags")),
             "manuel": "workflow_dispatch" in on, "entrees": entrees if isinstance(entrees, dict) else {}}
+
+
+def _jobs(flux) -> tuple[list[str], list[str]]:
+    """Ce que les jobs exécutent vraiment : les `run:` de leurs étapes, et les valeurs de `env` (workflow, job,
+    étape) et de `with`. Les commentaires du fichier n'y figurent pas ; toute forme inattendue est ignorée."""
+    flux = flux if isinstance(flux, dict) else {}
+
+    def valeurs(bloc) -> list[str]:
+        return [str(x) for x in bloc.values() if isinstance(x, (str, int, float))] if isinstance(bloc, dict) else []
+
+    runs, env = [], valeurs(flux.get("env"))
+    jobs = flux.get("jobs") if isinstance(flux.get("jobs"), dict) else {}
+    for job in jobs.values():
+        if not isinstance(job, dict):
+            continue
+        env += valeurs(job.get("env"))
+        for etape in job.get("steps") if isinstance(job.get("steps"), list) else []:
+            if isinstance(etape, dict):
+                if isinstance(etape.get("run"), str):
+                    runs.append(etape["run"])
+                env += valeurs(etape.get("env")) + valeurs(etape.get("with"))
+    return runs, env
 
 
 @v.critere("La chaîne d'évaluation est séparée de la chaîne rapide, avec ses propres déclencheurs.")
@@ -166,10 +193,11 @@ def chaine_separee(ctx):
         manques.append("on.push.tags : la publication (v*)")
     if not d["manuel"] or not d["entrees"]:
         manques.append("workflow_dispatch avec une entrée (le modèle)")
-    if "lab15-chaine" not in texte:
+    runs, env = _jobs(flux)
+    if not any(re.search(r"\bmake\b[^\n]*\blab15-chaine\b", r) for r in runs):
         manques.append("un job qui lance make lab15-chaine")
-    if "secrets.OPENROUTER_API_KEY" not in texte:
-        manques.append("la clé depuis les secrets (secrets.OPENROUTER_API_KEY)")
+    if not any(re.search(r"\bsecrets\.OPENROUTER_API_KEY\b", e) for e in env):
+        manques.append("la clé depuis les secrets, dans un env: du job (secrets.OPENROUTER_API_KEY)")
     if manques:
         raise Echec(".ci/evaluation.yaml — il manque : " + " ; ".join(manques) + ".")
     rapide = chemins["rapide"].read_text(encoding="utf-8") if chemins["rapide"].exists() else ""

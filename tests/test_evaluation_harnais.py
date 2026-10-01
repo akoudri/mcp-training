@@ -2,7 +2,9 @@
 (identité, plan, confirmation, compteurs, garde de recalculer_plan_quai), parallélisme par processus, filtre CAS=.
 Ni base, ni Docker, ni modèle."""
 
+import json
 import os
+from pathlib import Path
 
 import pytest
 
@@ -131,3 +133,104 @@ def test_referencer_sans_resultat_le_dit_sans_trace(tmp_path, monkeypatch, capsy
     monkeypatch.setattr(cli, "SORTIE", tmp_path)
     assert cli.referencer(None) == 1
     assert "make lab15-lancer" in capsys.readouterr().out
+
+
+EMPREINTES = {"base": "b", "catalogue": "cat", "prompt": "pr", "modele": "m"}
+
+
+def _referencer_dans(tmp_path, monkeypatch, ids=("a", "b", "c")):
+    """Un dépôt minimal : trois cas dans evaluation/cas/, sortie/lab15/ et evaluation/reference.json."""
+    from outils.evaluation import __main__ as cli
+
+    cas = tmp_path / "evaluation" / "cas"
+    cas.mkdir(parents=True)
+    for i in ids:
+        (cas / f"{i}.yaml").write_text(f'id: {i}\nfamille: simple\ncontexte: {{date: "2026-10-06", identite: '
+                                       'exploitation, base: b}\nquestion: q\nattendu: {contient: [x]}\n',
+                                       encoding="utf-8")
+    monkeypatch.setattr(cli, "RACINE", tmp_path)
+    monkeypatch.setattr(cli, "CAS", cas)
+    monkeypatch.setattr(cli, "REFERENCE", tmp_path / "evaluation" / "reference.json")
+    monkeypatch.setattr(cli, "SORTIE", tmp_path / "sortie")
+    (tmp_path / "sortie").mkdir()
+    return cli
+
+
+def _resultat(tmp_path, nom, taux: dict, fois=3, **empreintes):
+    chemin = tmp_path / "sortie" / f"{nom}.json"
+    chemin.write_text(json.dumps({"modele": "m", "empreintes": {**EMPREINTES, **empreintes}, "fois": fois,
+                                  "cas": [{"id": i, "famille": "simple", "tolerance": "2/3", "reussites": r,
+                                           "executions": fois, "reussi": r * 3 >= 2 * fois, "detail": []}
+                                          for i, r in taux.items()]}), encoding="utf-8")
+    return str(chemin)
+
+
+def _taux(cli) -> dict:
+    ref = json.loads(cli.REFERENCE.read_text(encoding="utf-8"))
+    return {c["id"]: (c["reussites"], c["resultat"]) for c in ref["cas"]}
+
+
+def test_referencer_un_jeu_complet_remplace_la_reference(tmp_path, monkeypatch, capsys):
+    cli = _referencer_dans(tmp_path, monkeypatch)
+    assert cli.referencer(_resultat(tmp_path, "r1", {"a": 3, "b": 3, "c": 3})) == 0
+    assert cli.referencer(_resultat(tmp_path, "r2", {"a": 2, "b": 3, "c": 1}, catalogue="autre")) == 0
+    assert _taux(cli) == {"a": (2, "r2.json"), "b": (3, "r2.json"), "c": (1, "r2.json")}
+    assert json.loads(cli.REFERENCE.read_text(encoding="utf-8"))["empreintes"]["catalogue"] == "autre"
+    assert "jeu complet" in capsys.readouterr().out
+
+
+def test_referencer_un_jeu_partiel_complete_la_reference(tmp_path, monkeypatch, capsys):
+    cli = _referencer_dans(tmp_path, monkeypatch)
+    assert cli.referencer(_resultat(tmp_path, "r1", {"a": 3, "b": 3, "c": 3})) == 0
+    assert cli.referencer(_resultat(tmp_path, "r2", {"b": 2})) == 0
+    assert _taux(cli) == {"a": (3, "r1.json"), "b": (2, "r2.json"), "c": (3, "r1.json")}
+    ref = json.loads(cli.REFERENCE.read_text(encoding="utf-8"))
+    assert ref["resultat"] == "r1.json + r2.json" and ref["empreintes"] == EMPREINTES
+    assert "Référence complétée depuis r2.json : b remplacé(s), 2 cas gardé(s)" in capsys.readouterr().out
+    assert cli.referencer(_resultat(tmp_path, "r3", {"a": 1, "c": 2})) == 0
+    assert _taux(cli) == {"a": (1, "r3.json"), "b": (2, "r2.json"), "c": (2, "r3.json")}
+
+
+def test_referencer_refuse_un_jeu_partiel_hors_contexte_ou_trop_court(tmp_path, monkeypatch, capsys):
+    cli = _referencer_dans(tmp_path, monkeypatch)
+    assert cli.referencer(_resultat(tmp_path, "r0", {"b": 2})) == 1
+    assert "pas encore de référence" in capsys.readouterr().out and not cli.REFERENCE.exists()
+    assert cli.referencer(_resultat(tmp_path, "r1", {"a": 3, "b": 3, "c": 3})) == 0
+    avant = cli.REFERENCE.read_text(encoding="utf-8")
+    for nom, empreinte in (("r2", {"prompt": "autre"}), ("r3", {"modele": "autre"}), ("r4", {"catalogue": "x"})):
+        capsys.readouterr()
+        assert cli.referencer(_resultat(tmp_path, nom, {"b": 2}, **empreinte)) == 1
+        sortie = capsys.readouterr().out
+        assert "Référence refusée" in sortie and next(iter(empreinte)) in sortie and "jeu complet" in sortie
+    assert cli.referencer(_resultat(tmp_path, "r5", {"b": 1}, fois=1)) == 1
+    assert "FOIS=3" in capsys.readouterr().out
+    assert cli.referencer(_resultat(tmp_path, "r6", {"a": 1, "b": 1, "c": 1}, fois=2)) == 1
+    assert cli.REFERENCE.read_text(encoding="utf-8") == avant
+
+
+def test_referencer_prend_le_dernier_resultat_ecrit_pas_le_dernier_nom(tmp_path, monkeypatch):
+    cli = _referencer_dans(tmp_path, monkeypatch)
+    recent = _resultat(tmp_path, "20261006-090000", {"a": 1, "b": 1, "c": 1})
+    ancien = _resultat(tmp_path, "20261006-235959", {"a": 3, "b": 3, "c": 3})
+    os.utime(ancien, ns=(1_000_000_000, 1_000_000_000))
+    assert resultats.dernier(tmp_path / "sortie").name == "20261006-090000.json"
+    assert cli.referencer(None) == 0 and _taux(cli)["a"] == (1, Path(recent).name)
+
+
+def test_une_base_arretee_se_dit_en_une_ligne(tmp_path, monkeypatch, capsys):
+    from outils.evaluation import __main__ as cli
+    from pharos import empreintes
+
+    async def injoignable(dsn):
+        raise ConnectionRefusedError(111, "Connect call failed")
+
+    monkeypatch.setattr(empreintes, "empreinte_base", injoignable)
+    with pytest.raises(cli.BaseInjoignable):
+        cli.base_courante()
+    assert cli.afficher_empreinte() == 1
+    assert capsys.readouterr().out == "base injoignable : make lab8-base\n"
+    (tmp_path / "a.yaml").write_text('id: a\nfamille: simple\ncontexte: {date: "2026-10-06", identite: exploitation, '
+                                     'base: b}\nquestion: q\nattendu: {contient: [x]}\n', encoding="utf-8")
+    monkeypatch.setattr(cli, "CAS", tmp_path)
+    assert cli.lancer("a") is None
+    assert capsys.readouterr().out == "base injoignable : make lab8-base\n"
