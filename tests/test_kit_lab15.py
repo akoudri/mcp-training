@@ -46,3 +46,13 @@ def test_le_rapport_du_gabarit_dit_ce_qui_reste_a_ecrire(tmp_path):
                              "--reference", str(vide)], capture_output=True, text=True, env=env)
     assert sortie.returncode == 0 and "make lab15-referencer" in sortie.stdout
 
+
+def test_la_cle_on_d_un_workflow_se_lit_meme_quand_yaml_la_change_en_true():
+    import yaml
+
+    from outils.verifier import lab15
+
+    flux = yaml.safe_load("on:\n  push:\n    paths: [a]\n    tags: ['v*']\n  workflow_dispatch:\n    inputs: {modele: {}}\n")
+    assert True in flux
+    assert lab15._declencheurs(flux) == {"paths": ["a"], "tags": ["v*"], "manuel": True, "entrees": {"modele": {}}}
+    assert lab15._declencheurs({"name": "x"}) == {"paths": [], "tags": [], "manuel": False, "entrees": {}}
