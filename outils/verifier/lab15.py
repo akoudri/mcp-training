@@ -98,13 +98,15 @@ def taux_de_reference(ctx):
                     "FOIS=3, puis make lab15-referencer).")
     if "…" in texte.split("## Cas instables")[0]:
         raise Echec("labs/lab15/reference.md : le tableau de l'agent sain n'est pas rempli (« … »).")
-    if not re.search(r"[\w.-]+/[\w.:-]+", texte.split("\n## ")[0]):
+    if not re.search(r"(?<![\w/.-])(?=[\w.-]*[A-Za-z])[\w.-]+/[\w.:-]*[A-Za-z][\w.:-]*", texte.split("\n## ")[0]):
         raise Echec("labs/lab15/reference.md : nommer le modèle et sa version épinglée (bloc 10.2), ex. "
                     "google/gemini-3.6-flash.")
     globale = str(resultats.global_(reference))
     familles = resultats.par_famille(reference)
-    absents = [f"{f} {t}" for f, t in familles.items() if not re.search(rf"{f}\D[^\n]*\b{t}\b", texte)]
-    if globale not in texte or absents:
+    sain = texte.split("## Agent sain", 1)[1].split("\n## ", 1)[0] if "## Agent sain" in texte else ""
+    jeton = lambda t: rf"(?<![\d/]){re.escape(str(t))}(?![\d/])"
+    absents = [f"{f} {t}" for f, t in familles.items() if not re.search(rf"{f}\D[^\n]*{jeton(t)}", sain)]
+    if not re.search(jeton(globale), sain) or absents:
         raise Echec("labs/lab15/reference.md ne reprend pas les taux de evaluation/reference.json : "
                     f"global {globale}" + (f", {', '.join(absents)}" if absents else "") + ".")
     return f"global {globale} · " + " · ".join(f"{f} {t}" for f, t in familles.items())
@@ -127,12 +129,21 @@ def cas_instable(ctx):
     return ", ".join(f"{i} {taux[i]}" for i in vrais)
 
 
-def _declencheurs(flux: dict) -> dict:
-    on = flux.get("on", flux.get(True)) or {}       # YAML 1.1 : la clé « on » se lit True
-    push = (on.get("push") or {}) if isinstance(on, dict) else {}
-    return {"paths": push.get("paths") or [], "tags": push.get("tags") or [],
-            "manuel": isinstance(on, dict) and "workflow_dispatch" in on,
-            "entrees": ((on.get("workflow_dispatch") or {}).get("inputs") or {}) if isinstance(on, dict) else {}}
+def _declencheurs(flux) -> dict:
+    """Lit les déclencheurs d'un workflow ; toute forme inattendue (liste, `push: [...]`, valeur non texte) est
+    traitée comme absente plutôt que de faire planter le vérificateur."""
+    flux = flux if isinstance(flux, dict) else {}
+    on = flux.get("on", flux.get(True))
+    on = on if isinstance(on, dict) else {}
+    push = on.get("push") if isinstance(on.get("push"), dict) else {}
+
+    def textes(valeur) -> list[str]:
+        return [x for x in valeur if isinstance(x, str)] if isinstance(valeur, list) else []
+
+    dispatch = on.get("workflow_dispatch")
+    entrees = dispatch.get("inputs") if isinstance(dispatch, dict) else None
+    return {"paths": textes(push.get("paths")), "tags": textes(push.get("tags")),
+            "manuel": "workflow_dispatch" in on, "entrees": entrees if isinstance(entrees, dict) else {}}
 
 
 @v.critere("La chaîne d'évaluation est séparée de la chaîne rapide, avec ses propres déclencheurs.")

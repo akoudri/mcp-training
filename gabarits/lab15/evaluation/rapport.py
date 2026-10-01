@@ -7,7 +7,7 @@ par_cas, par_famille, global_, tableau ; un Taux a .famille, .reussites, .execut
 
 À écrire (étape 3) — comparer(courant, reference) :
   - pour chaque cas : famille, taux de référence, taux courant, écart ;
-  - un seuil d'investigation par famille (SEUILS) ;
+  - un seuil d'investigation par famille (SEUILS : les exécutions qu'une famille peut perdre) ;
   - une ligne « RÉGRESSION <id> (<famille>) : <avant> → <après> » par cas fautif ;
   - rouge (code de sortie 1) si une famille passe sous son seuil.
 Le rapport doit se lire sans ouvrir une trace : à trois heures du matin, c'est lui seul qu'on lira.
@@ -23,8 +23,8 @@ from pathlib import Path
 from outils.evaluation import resultats
 
 REFERENCE = Path("evaluation/reference.json")
-# Écart toléré par famille, en proportion des exécutions, avant d'investiguer : à décider (et à justifier).
-SEUILS: dict[str, float] = {}
+# Exécutions qu'une famille peut perdre par rapport à la référence avant d'investiguer : à décider (et à justifier).
+SEUILS: dict[str, int] = {}
 
 
 def comparer(courant: dict, reference: dict) -> tuple[list[str], bool]:

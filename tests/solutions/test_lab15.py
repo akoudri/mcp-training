@@ -104,6 +104,29 @@ def test_un_jeu_partiel_ne_fait_pas_chuter_les_familles_non_jouees(etat):
         sys.modules.pop("rapport", None)
 
 
+def test_un_cas_qui_s_effondre_met_sa_famille_au_rouge_pas_un_cas_instable(etat):
+    sys.path.insert(0, str(etat / "evaluation"))
+    try:
+        import importlib
+        rapport = importlib.import_module("rapport")
+        from outils.evaluation import resultats
+        ref = resultats.charger(KIT / "reference.json")
+        simple = next(c["id"] for c in ref["cas"] if c["famille"] == "simple")
+
+        def avec(reussites):
+            return {**ref, "cas": [{**c, "reussites": reussites, "reussi": reussites >= 2}
+                                   for c in ref["cas"] if c["id"] == simple]}
+
+        base = {**ref, "cas": [{**c, "reussites": 3, "reussi": True} for c in ref["cas"] if c["id"] == simple]}
+        _, rouge = rapport.comparer(avec(0), base)
+        assert rouge
+        _, rouge = rapport.comparer(avec(2), base)
+        assert not rouge
+    finally:
+        sys.path.remove(str(etat / "evaluation"))
+        sys.modules.pop("rapport", None)
+
+
 @base_requise
 async def test_les_cas_de_la_solution_se_jouent_de_bout_en_bout(etat, base_de_test, mocks_servis, monkeypatch, tmp_path):
     """Le harnais, sans parallélisme, sur deux cas de la solution : les vrais serveurs, un modèle simulé qui suit

@@ -56,3 +56,13 @@ def test_la_cle_on_d_un_workflow_se_lit_meme_quand_yaml_la_change_en_true():
     assert True in flux
     assert lab15._declencheurs(flux) == {"paths": ["a"], "tags": ["v*"], "manuel": True, "entrees": {"modele": {}}}
     assert lab15._declencheurs({"name": "x"}) == {"paths": [], "tags": [], "manuel": False, "entrees": {}}
+
+def test_declencheurs_ne_plante_jamais_sur_une_forme_inattendue():
+    from outils.verifier import lab15
+
+    vide = {"paths": [], "tags": [], "manuel": False, "entrees": {}}
+    for flux in (["a", "b"], None, "texte", {"on": ["push"]}, {"on": {"push": ["a"]}},
+                 {"on": {"push": {"paths": "a", "tags": [1, None]}}}):
+        assert lab15._declencheurs(flux) == vide, flux
+    assert lab15._declencheurs({"on": {"push": {"paths": ["a", 3], "tags": ["v*"]}, "workflow_dispatch": None}}) == \
+        {"paths": ["a"], "tags": ["v*"], "manuel": True, "entrees": {}}
