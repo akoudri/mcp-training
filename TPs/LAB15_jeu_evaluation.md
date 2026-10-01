@@ -30,12 +30,13 @@ régression · 20 min pour la chaîne · 10 min de mise en commun.
 | **Modules** | EX1 (bloc 25.5), EX2 (26.1 à 26.4) |
 | **Labs** | LAB 13, LAB 14 |
 | **Artefacts consommés** | **A13** — l'agent complet · **A14** — les serveurs durcis |
-| **Fourni** | harnais d'exécution et de rapport, régression à injecter, un cas d'exemple complet, cas piégé de sécurité de secours (`evaluation/exemples/cas_securite.yaml`) |
+| **Fourni** | harnais d'exécution (contexte figé, trois exécutions par cas, notation déterministe), squelette du rapport (`evaluation/rapport.py` : tableau et taux par famille fournis), régression à injecter, un cas d'exemple complet, cas piégé de sécurité de secours (`evaluation/exemples/cas_securite.yaml`), chaîne rapide (`.ci/rapide.yaml`) et squelette de la chaîne d'évaluation (`.ci/evaluation.yaml`) |
 
 ```bash
-git checkout etat/sg1-fin
-make lab15-scaffold
-make lab15-exemple        # un cas complet, commenté, dans le format attendu
+make depart LAB=15        # branche binome-<B>-lab15 depuis etat/sg1-fin, et les gabarits
+make lab13-tout           # la base, les mocks et les trois serveurs
+make lab15-exemple        # un cas complet, commenté, dans le format attendu (pénalité du Vent d'Autan)
+make lab15-empreinte      # le contexte à figer : date, identités, empreinte de la base
 ```
 
 ---
@@ -56,19 +57,23 @@ Le quota est imposé, et il n'est pas négociable :
 Si l'extension C du LAB 14 n'a pas été faite, partir du cas piégé fourni
 (`evaluation/exemples/cas_securite.yaml`) ou de l'attaque consignée dans `labs/lab14/manche1.md`.
 
-Chaque cas porte un **contexte figé** : date, identité de l'appelant, état de la base. Sans cela,
-deux exécutions ne se comparent pas.
+Chaque cas porte un **contexte figé** : date, identité de l'appelant, état de la base
+(`make lab15-empreinte`). Sans cela, deux exécutions ne se comparent pas — le harnais refuse de lancer
+un cas dont la date ou l'empreinte ne correspond pas à la salle.
 
 Pour un cas dont la réponse attendue est une note rédigée (le cas de sécurité, par exemple), un
-simple `contient` / `ne_contient_pas` ne suffit pas : prévoir un modèle juge, en notant que son
-verdict a lui aussi sa propre instabilité, à mesurer.
+simple `contient` / `ne_contient_pas` ne suffit pas toujours : un modèle juge peut s'y ajouter, en
+notant que son verdict a lui aussi sa propre instabilité, à mesurer. Le harnais fourni, lui, note sans
+juge : le cas de sécurité fourni se juge à ce que la note **ne contient pas** (aucune escale hors du
+périmètre de l'identité).
 
 Écrire les cas **à partir des questions que pose l'exploitant**, pas à partir de la liste des outils.
 
 ### Étape 2 — Le taux de référence
 
 ```bash
-make lab15-lancer          # dix cas, trois exécutions chacun
+make lab15-lancer          # dix cas, trois exécutions chacun → sortie/lab15/<horodatage>.json
+make lab15-referencer      # fige ce résultat comme référence : evaluation/reference.json
 ```
 
 Trente exécutions. Consigner le taux global **et** le taux par famille dans
@@ -85,6 +90,7 @@ trois. **Le consigner comme tel. Ne pas le corriger.**
 ```bash
 make lab15-regression      # renomme un outil, sans toucher à sa description
 make lab15-lancer
+make lab15-rapport         # votre rapport : la comparaison à la référence, à écrire dans evaluation/rapport.py
 ```
 
 Comparer au taux de référence. Vérifier trois choses :
@@ -93,13 +99,16 @@ Comparer au taux de référence. Vérifier trois choses :
 - l'écart se concentre sur une famille, et pas uniformément ;
 - **le rapport nomme le cas fautif**, sans qu'un humain ait à lire une trace.
 
-Puis retirer la régression, et vérifier le retour à la référence.
+Puis retirer la régression (`make lab15-regression-retirer`), et vérifier le retour à la référence.
 
 ### Étape 4 — La chaîne
 
-Brancher le jeu en intégration continue, dans une chaîne **séparée** de celle du bloc 25.5, avec ses
-trois déclencheurs : changement de modèle, de catalogue, ou de prompt système — et avant chaque
-publication.
+Brancher le jeu en intégration continue, dans une chaîne **séparée** de celle du bloc 25.5
+(`.ci/rapide.yaml`, fournie), avec ses trois déclencheurs : changement de modèle, de catalogue, ou de
+prompt système — et avant chaque publication. Compléter `.ci/evaluation.yaml` : il lance
+`make lab15-chaine`, qui compare les empreintes du modèle, du catalogue et du prompt à
+`evaluation/reference.json` et répond « rien à lancer » si aucune n'a bougé (`PUBLICATION=1` : le jeu
+tourne quand même, comme sur un tag).
 
 ### Critères de réussite
 
@@ -176,6 +185,11 @@ plusieurs minutes, et plus personne ne l'attendrait — ce qui coûterait les qu
 
 **Surveiller le coût.** Trente exécutions multipliées par cinq à dix appels d'outils : le budget se
 voit. C'est aussi une bonne raison de garder le jeu court et les cas bien choisis.
+`make lab15-lancer CAS=id1,id2 FOIS=1` essaie un cas sans payer les trente exécutions.
+
+**Le jeu ne publie jamais.** La confirmation du LAB 12 y est refusée par défaut
+(`confirmation: refuser`) : un cas qui attend une publication mesure la demande de confirmation, pas
+l'envoi.
 
 ---
 

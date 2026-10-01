@@ -32,12 +32,11 @@ d'utile de bout en bout — et le premier où l'on découvre ce que l'assemblage
 | **Modules** | OR3 (21.1 à 21.4), OR4 |
 | **Labs** | LAB 4, 5, 7, 9, 11, 12 |
 | **Artefacts consommés** | **A4, A5, A7, A9, A10, A11, A12** — sept |
-| **Fourni** | gabarit MCP App pour le plan de quai, vérificateur de note, jeu de trois questions |
+| **Fourni** | squelettes d'agrégation (`agregation.py`), de plan (`plan.py`) et de dérive (`derive.py`), la consigne système sortie de la boucle (`consigne.md`), gabarit MCP App pour le plan de quai, vérificateur de note, jeu de trois questions (`labs/lab13/questions.md`) — et une collision de départ : le module `serveurs/pharos_data/navires.py`, « livré par l'équipe référentiel », expose `navire_par_nom`, que `pharos-ops` expose aussi |
 
 ```bash
-git checkout etat/sr3-fin
-make lab13-tout           # démarre les trois serveurs et les mocks
-make lab13-scaffold
+make depart LAB=13        # branche binome-<B>-lab13 depuis etat/sr3-fin, et les gabarits
+make lab13-tout           # la base, les mocks et les trois serveurs (8101, 8102, 8103)
 ```
 
 ---
@@ -46,8 +45,9 @@ make lab13-scaffold
 
 ### Étape 1 — Brancher, et mesurer
 
-Configurer la boucle du LAB 4 pour qu'elle liste les trois serveurs. Puis relever, dans
-`labs/lab13/mesures.md` :
+Configurer la boucle du LAB 4 pour qu'elle liste les trois serveurs (`labs/lab13/serveurs.json`), et
+brancher le module `navires.py` sur `pharos-data` (`navires.enregistrer(mcp, …)`). Puis relever, avec
+`make lab13-catalogue`, dans `labs/lab13/mesures.md` :
 
 | | Valeur |
 |---|---|
@@ -62,13 +62,15 @@ Vérifier également qu'aucune collision de nom ne subsiste **sur le catalogue a
 Faire produire un plan avant toute action, selon le bloc 21.3. Il doit porter, pour chaque étape :
 le numéro, l'outil, **le serveur**, et la raison.
 
-L'afficher avant le premier appel.
+L'afficher avant le premier appel. Si l'exploitant répond « non », rien n'est exécuté : `executer`
+rend le plan, une réponse qui dit le refus (« Plan refusé par l'exploitant : rien n'a été exécuté. »)
+et une trace vide — ce n'est pas un arrêt anormal.
 
 ### Étape 3 — L'exécution complète
 
-Poser la question cible. L'agent doit :
+Poser la question cible (`make lab13-question`). L'agent doit :
 
-1. identifier l'escale à partir du nom du navire (`escales_du_jour`) ;
+1. identifier l'escale à partir du nom du navire (`navire_par_nom`) ;
 2. récupérer les clauses de pénalités du contrat ;
 3. interroger la météo sur le créneau ;
 4. évaluer le risque : critères de `escales_a_risque` + météo de `meteo_creneau` ; la note indique
@@ -83,14 +85,16 @@ make lab13-verifier-note
 ```
 
 Le vérificateur reprend chaque chiffre, chaque date et chaque nom de la note, et cherche son origine
-dans la trace. Tout ce qu'il ne trouve pas est signalé.
+dans la trace. Tout ce qu'il ne trouve pas est signalé. Il relit la dernière exécution de la question
+cible, gardée dans `labs/lab13/execution.json` : une note vide, ou un plan refusé, ne se vérifie pas.
 
 ### Étape 4 — La vue du plan de quai
 
 À partir du gabarit fourni, produire une vue statique du plan de placement en MCP App.
 
 **La réponse textuelle doit continuer d'exister en parallèle** : un client sans MCP Apps doit obtenir
-une réponse utilisable. Le vérifier avec le client sans extension du LAB 12.
+une réponse utilisable. Le vérifier avec le client sans extension (`make lab11-clients SANS_TASKS=1`) ;
+la vue, elle, s'affiche dans VS Code (`labs/lab13/client.config.json`).
 
 **Si le client déployé ne gère pas MCP Apps**, cette étape se réduit à la réponse textuelle : le
 module OR4 est conditionné à la compatibilité client, et le socle reste atteignable sans la vue.
@@ -103,7 +107,8 @@ Calculer, à partir de la trace et du plan :
 - les étapes annoncées et jamais exécutées ;
 - les enchaînements qui repartent en arrière.
 
-Consigner les trois nombres. Ils serviront de référence au module EX2.
+Les calculer avec `make lab13-derive`, puis consigner les trois nombres. Ils serviront de référence au
+module EX2.
 
 ### Critères de réussite
 
@@ -133,8 +138,10 @@ utilisable.
 
 ### B — La collision de noms
 
-Une collision a été introduite volontairement entre deux de vos serveurs. La trouver, mesurer son
-effet sur le taux de bon choix, puis la corriger par préfixage.
+La collision introduite volontairement est celle de départ : `navire_par_nom`, sur `pharos-data` et
+sur `pharos-ops`. La mesurer **avant** la correction du socle avec `make lab13-banc` — il joue le banc
+dans l'ordre de la configuration puis dans l'ordre inverse, et nomme l'outil que chaque ordre masque —
+puis la corriger par préfixage.
 
 L'intérêt est dans l'ordre : **mesurer avant de corriger**. Sinon on ne saura pas ce qu'elle coûtait.
 
@@ -168,6 +175,11 @@ pas en insistant dans le prompt.
 une hauteur de houle vraisemblable, une date approximative. Le vérificateur existe pour cela, et il
 attrapera ce que la relecture humaine laisse passer. C'est le mode d'échec n° 4 du bloc 2.3, à sa
 dernière apparition avant le module EX2.
+
+**Un seuil lu dans la description d'un outil n'a pas d'origine.** Les seuils de vent de 25 et 35 kt
+figurent dans la description de `meteo_alerte` : un modèle les recopie volontiers dans la note sans
+avoir appelé l'outil. Ils ne sont alors dans aucun résultat de la trace, et le vérificateur de note
+les signale « sans origine » — à juste titre : seul un résultat d'outil fait foi.
 
 **Ne pas ajouter d'outil pour « aider » le modèle à enchaîner.** Si l'enchaînement rate, la réponse
 est un outil métier qui porte la séquence — bloc 21.2 — et non une consigne supplémentaire dans le
