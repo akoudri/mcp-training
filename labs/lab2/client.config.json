@@ -1,0 +1,8 @@
+{
+  "servers": {
+    "pharos-legacy": {
+      "type": "http",
+      "url": "http://localhost:8104/mcp"
+    }
+  }
+}
