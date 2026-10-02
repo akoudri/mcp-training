@@ -1,0 +1,7 @@
+{
+  "serveurs": [
+    {"nom": "pharos-docs", "url": "http://observateur:8101/mcp"},
+    {"nom": "pharos-data", "url": "http://observateur:8102/mcp", "jeton": "jeton-exploitation"},
+    {"nom": "pharos-ops", "url": "http://observateur:8103/mcp", "jeton": "jeton-exploitation"}
+  ]
+}
