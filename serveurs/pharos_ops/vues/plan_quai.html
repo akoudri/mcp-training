@@ -1,0 +1,98 @@
+<!doctype html>
+<!-- Vue du plan de placement à quai (LAB 13, MCP App) — FOURNIE. pharos-ops la déclare comme ressource
+     ui://pharos-ops/plan-quai ; l'hôte (VS Code) la rend dans un iframe cloisonné et lui transmet le résultat de
+     recalculer_plan_quai (structuredContent) par postMessage, en JSON-RPC (spécification MCP Apps 2026-01-26).
+     Elle n'appelle aucun outil : elle montre. Le modèle, lui, ne la voit pas — il lit la réponse texte. -->
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Plan de quai — PHAROS</title>
+<style>
+  body { font: 13px system-ui, sans-serif; margin: 12px; color: var(--color-text-primary, #1b1b1b);
+         background: var(--color-background-primary, #fff); }
+  h1 { font-size: 15px; margin: 0 0 4px; }
+  .resume { color: #666; margin-bottom: 10px; }
+  .grille { position: relative; }
+  .ligne { display: flex; align-items: center; height: 30px; border-top: 1px solid #ddd; }
+  .quai { width: 60px; font-weight: 600; }
+  .piste { position: relative; flex: 1; height: 24px; background: #f6f6f6; }
+  .ferme { background: repeating-linear-gradient(45deg, #fde2e2, #fde2e2 6px, #fff 6px, #fff 12px); }
+  .escale { position: absolute; top: 2px; height: 20px; border-radius: 3px; padding: 0 4px; overflow: hidden;
+            white-space: nowrap; font-size: 11px; line-height: 20px; color: #fff; }
+  .maintenue { background: #2e7d32; } .deplacee { background: #1565c0; }
+  .a_deplacer { background: #ef6c00; } .a_decaler { background: #c62828; }
+  .axe { display: flex; margin-left: 60px; color: #888; font-size: 10px; }
+  .axe span { flex: 1; }
+  .legende span { display: inline-block; margin-right: 12px; }
+  .legende i { display: inline-block; width: 10px; height: 10px; margin-right: 4px; border-radius: 2px; }
+</style>
+</head>
+<body>
+<h1 id="titre">Plan de placement à quai</h1>
+<div class="resume" id="resume">En attente du résultat de recalculer_plan_quai…</div>
+<div class="axe" id="axe"></div>
+<div class="grille" id="grille"></div>
+<p class="legende">
+  <span><i class="maintenue"></i>maintenue</span><span><i class="deplacee"></i>déplacée</span>
+  <span><i class="a_deplacer"></i>à déplacer</span><span><i class="a_decaler"></i>à décaler</span>
+  <span><i class="ferme" style="border:1px solid #c62828"></i>coup de vent</span>
+</p>
+<script>
+  const QUAIS = [1, 2, 3, 4, 5, 6, 7];
+  const SEUIL_FERMETURE_KT = 30;
+  let prochainId = 1;
+
+  function envoyer(message) { window.parent.postMessage({ jsonrpc: "2.0", ...message }, "*"); }
+
+  function heures(iso, jour) {
+    // « 2026-10-08T14:00+02:00 » → heures depuis minuit du jour affiché, bornées à [0, 24]
+    const [d, h] = iso.split("T");
+    const [hh, mm] = h.slice(0, 5).split(":").map(Number);
+    const decalage = d < jour ? -24 : d > jour ? 24 : 0;
+    return Math.max(0, Math.min(24, decalage + hh + mm / 60));
+  }
+
+  function afficher(plan) {
+    if (!plan || !Array.isArray(plan.placements)) return;
+    document.getElementById("titre").textContent = `Plan de placement à quai — ${plan.date}`;
+    const resume = Object.entries(plan.resume || {}).map(([s, n]) => `${n} ${s.replace("_", " ")}`).join(", ");
+    document.getElementById("resume").textContent = `${plan.escales} escale(s) : ${resume}`;
+    document.getElementById("axe").innerHTML = [0, 4, 8, 12, 16, 20].map(h => `<span>${h} h</span>`).join("");
+    const grille = document.getElementById("grille");
+    grille.innerHTML = "";
+    for (const quai of QUAIS) {
+      const ici = plan.placements.filter(p => (p.quai_propose ?? p.quai_prevu) === quai);
+      const ferme = ici.some(p => (p.vent_max_kt ?? 0) >= SEUIL_FERMETURE_KT);
+      const ligne = document.createElement("div");
+      ligne.className = "ligne";
+      ligne.innerHTML = `<div class="quai">Quai ${quai}</div><div class="piste${ferme ? " ferme" : ""}"></div>`;
+      const piste = ligne.querySelector(".piste");
+      for (const p of ici) {
+        const debut = heures(p.debut, plan.date), fin = heures(p.fin, plan.date);
+        const bloc = document.createElement("div");
+        bloc.className = `escale ${p.statut}`;
+        bloc.style.left = `${(debut / 24) * 100}%`;
+        bloc.style.width = `${Math.max(1, ((fin - debut) / 24) * 100)}%`;
+        bloc.textContent = `${p.navire} (${p.escale_id})`;
+        bloc.title = `${p.escale_id} — ${p.navire}\n${p.debut} → ${p.fin}\nstatut : ${p.statut}` +
+          (p.motifs && p.motifs.length ? `\n${p.motifs.join("\n")}` : "");
+        piste.appendChild(bloc);
+      }
+      grille.appendChild(ligne);
+    }
+  }
+
+  window.addEventListener("message", (evenement) => {
+    const m = evenement.data || {};
+    if (m.id === 1 && m.result) {                                  // réponse à ui/initialize
+      envoyer({ method: "ui/notifications/initialized", params: {} });
+    } else if (m.method === "ui/notifications/tool-result") {       // le résultat de l'outil
+      afficher((m.params || {}).structuredContent);
+    }
+  });
+
+  envoyer({ id: prochainId++, method: "ui/initialize", params: {
+    protocolVersion: "2026-01-26", appInfo: { name: "pharos-plan-quai", version: "1.0.0" }, appCapabilities: {} } });
+</script>
+</body>
+</html>
