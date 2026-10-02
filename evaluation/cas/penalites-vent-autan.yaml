@@ -1,0 +1,17 @@
+id: penalites-vent-autan
+famille: multi
+contexte:
+  date: "2026-10-06"
+  identite: exploitation
+  base: bb49a8976abecad4
+  confirmation: refuser
+question: "Quelle est la pénalité de retard au contrat de manutention du Vent d'Autan ?"
+attendu:
+
+  contient: ["1 850", "6 h"]
+  ne_contient_pas: ["environ", "probablement"]
+
+  outils_attendus: [navire_par_nom, rechercher_clause]
+  refus: false
+tolerance: 2/3
+document: null
