@@ -1,0 +1,8 @@
+{
+  "servers": {
+    "pharos-docs": {
+      "type": "http",
+      "url": "http://localhost:8101/mcp"
+    }
+  }
+}
